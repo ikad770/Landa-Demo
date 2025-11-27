@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Landa Troubleshoot Suite – Design Demo</title>
+  <title>Landa Troubleshoot – UI Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -10,164 +10,279 @@
 
 <canvas id="bgStars"></canvas>
 
-<!-- SIDE NAV -->
-<aside id="demoSide" class="glass">
-  <div class="nav-logo">
-    <div class="logo-circle small"></div>
-    <div class="nav-title">
-      <div>Landa</div>
-      <span>Troubleshoot</span>
-    </div>
-  </div>
-
-  <nav>
-    <button class="nav-item active">Dashboard</button>
-    <button class="nav-item">Create Case</button>
-    <button class="nav-item">All Cases</button>
-    <button class="nav-item">RCA</button>
-    <button class="nav-item">Settings</button>
-  </nav>
-</aside>
-
-<!-- MAIN -->
-<main id="demoMain">
-
-  <header class="demo-header glass">
-    <div class="left">
-      <h1>Dashboard Preview</h1>
-      <p>High-tech glass + neon design</p>
-    </div>
-    <div class="right">
-      <span class="pill user"><span class="dot online"></span>Expert</span>
-    </div>
-  </header>
-
-  <!-- METRICS -->
-  <section class="panel">
-    <div class="panel-header">
-      <div class="panel-title">Metrics</div>
-      <div class="panel-sub">Live system indicators</div>
-    </div>
-
-    <div class="grid cols-3">
-      <div class="metric">
-        <div class="metric-label">Total Cases</div>
-        <div class="metric-value">128</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">By Press Type</div>
-        <div class="metric-value">Simplex 82 • Duplex 46</div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">Regions</div>
-        <div class="metric-value">NA • EU • APJ • IL</div>
+<div id="demoApp">
+  <!-- SIDE NAV -->
+  <aside class="sidebar glass">
+    <div class="sidebar-header">
+      <div class="logo-mark"></div>
+      <div class="logo-text">
+        <div class="logo-main">Landa</div>
+        <div class="logo-sub">Troubleshoot Suite</div>
       </div>
     </div>
-  </section>
 
-  <!-- PANEL -->
-  <section class="panel">
-    <div class="panel-header">
+    <nav class="nav">
+      <div class="nav-section-label">Main</div>
+      <button class="nav-item active">
+        <span class="nav-dot"></span>
+        Dashboard
+      </button>
+      <button class="nav-item">
+        <span class="nav-dot"></span>
+        Create Case
+      </button>
+      <button class="nav-item">
+        <span class="nav-dot"></span>
+        All Cases
+      </button>
+      <button class="nav-item">
+        <span class="nav-dot"></span>
+        Root Cause
+      </button>
+
+      <div class="nav-section-label">Quick</div>
+      <button class="nav-item nav-cta">
+        + New Case
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-dot"></div>
+        <div class="user-info">
+          <div class="user-name">Expert</div>
+          <div class="user-role">Internal Console</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- HEADER -->
+    <header class="topbar glass">
       <div>
-        <div class="panel-title">Create Case – Sample Form UI</div>
-        <div class="panel-sub">Modern structured approach</div>
+        <div class="topbar-title">Operations Overview</div>
+        <div class="topbar-sub">Space-grade UI • Internal use only</div>
       </div>
-    </div>
-
-    <div class="form-grid">
-      <div class="field-group">
-        <label class="field-label">Press Type</label>
-        <select class="field-input">
-          <option>Select…</option>
-          <option>Simplex</option>
-          <option>Duplex</option>
-        </select>
+      <div class="topbar-right">
+        <span class="badge-env">V21 • INTERNAL</span>
       </div>
+    </header>
 
-      <div class="field-group">
-        <label class="field-label">Press Name</label>
-        <select class="field-input">
-          <option>Select…</option>
-        </select>
-      </div>
+    <section class="content">
 
-      <div class="field-group">
-        <label class="field-label">System</label>
-        <select class="field-input">
-          <option>Select…</option>
-        </select>
-      </div>
+      <!-- METRICS -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Health Snapshot</div>
+            <div class="panel-sub">High-level metrics across the fleet</div>
+          </div>
+        </div>
+        <div class="grid grid-3">
+          <div class="metric-card">
+            <div class="metric-label">Total Cases</div>
+            <div class="metric-value">128</div>
+            <div class="metric-foot">Last 90 days</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">By Press Type</div>
+            <div class="metric-value">S 82 • D 46</div>
+            <div class="metric-foot">Simplex / Duplex</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Regions</div>
+            <div class="metric-value">NA • EU • APJ • IL</div>
+            <div class="metric-foot">Active installations</div>
+          </div>
+        </div>
+      </section>
 
-      <div class="field-group">
-        <label class="field-label">Sub System</label>
-        <select class="field-input">
-          <option>Select…</option>
-        </select>
-      </div>
+      <!-- TABLE PREVIEW -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Recent Cases</div>
+            <div class="panel-sub">Sample of how the table will look</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Case ID</th>
+                <th>Press</th>
+                <th>Region</th>
+                <th>System</th>
+                <th>Type</th>
+                <th>Title</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>C-20250101</td>
+                <td>S22 Primary</td>
+                <td>NA</td>
+                <td>Print Engine</td>
+                <td>HW</td>
+                <td>Banding on full-bleed jobs</td>
+              </tr>
+              <tr>
+                <td>C-20250102</td>
+                <td>D09 BJU</td>
+                <td>EU</td>
+                <td>IRD</td>
+                <td>SW</td>
+                <td>IRD mass-balance unstable</td>
+              </tr>
+              <tr>
+                <td>C-20250103</td>
+                <td>S27 Menasha</td>
+                <td>NA</td>
+                <td>Feeder</td>
+                <td>HW</td>
+                <td>Frequent jams on coated media</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-      <div class="field-group">
-        <label class="field-label">Area</label>
-        <select class="field-input">
-          <option>Select…</option>
-        </select>
-      </div>
+      <!-- FORM PREVIEW -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Create Case – Form Layout</div>
+            <div class="panel-sub">Structured, not “free text” feeling</div>
+          </div>
+        </div>
 
-      <div class="field-group">
-        <label class="field-label">Type</label>
-        <select class="field-input">
-          <option>HW</option>
-          <option>SW</option>
-          <option>EC</option>
-        </select>
-      </div>
-    </div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label class="field-label">Press Type</label>
+            <select class="field-input">
+              <option>Select…</option>
+              <option>Simplex</option>
+              <option>Duplex</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Press Name</label>
+            <select class="field-input">
+              <option>Select…</option>
+              <option>S22 Primary</option>
+              <option>S27 Menasha</option>
+              <option>D09 BJU</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Region</label>
+            <select class="field-input">
+              <option>Select…</option>
+              <option>NA</option>
+              <option>EU</option>
+              <option>APJ</option>
+              <option>IL</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">System</label>
+            <select class="field-input">
+              <option>Select…</option>
+              <option>Feeder</option>
+              <option>Print Engine</option>
+              <option>IRD</option>
+              <option>Coater</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Sub System</label>
+            <select class="field-input">
+              <option>Select…</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Type</label>
+            <select class="field-input">
+              <option>HW</option>
+              <option>SW</option>
+              <option>EC</option>
+            </select>
+          </div>
+        </div>
 
-    <div class="field-group" style="margin-top:10px;">
-      <label class="field-label">Summary</label>
-      <textarea class="field-input" rows="3"></textarea>
-    </div>
+        <div class="field-group field-wide">
+          <label class="field-label">Summary</label>
+          <textarea class="field-input" rows="3" placeholder="Short, structured description of the issue…"></textarea>
+        </div>
 
-    <div class="field-group" style="margin-top:10px;">
-      <label class="field-label">Resolution</label>
-      <textarea class="field-input" rows="3"></textarea>
-    </div>
+        <div class="field-group field-wide">
+          <label class="field-label">Resolution</label>
+          <textarea class="field-input" rows="3" placeholder="Final action taken, checks, and confirmation…"></textarea>
+        </div>
 
-    <button class="btn primary small" style="margin-top:16px;">Save</button>
+        <div class="form-actions">
+          <button class="btn ghost">Clear</button>
+          <button class="btn primary">Save Case</button>
+        </div>
+      </section>
 
-  </section>
+      <!-- RCA PREVIEW -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">RCA – Guided Flow</div>
+            <div class="panel-sub">How the wizard tree will feel</div>
+          </div>
+        </div>
 
-  <!-- RCA SAMPLE -->
-  <section class="panel">
-    <div class="panel-header">
-      <div>
-        <div class="panel-title">RCA – Guided Path Sample</div>
-        <div class="panel-sub">Visio-style logic</div>
-      </div>
-    </div>
+        <div class="rca-layout">
+          <div class="rca-col">
+            <div class="rca-step">
+              <div class="rca-step-title">1. Primary symptom</div>
+              <div class="rca-options">
+                <span class="rca-chip">Machine stops</span>
+                <span class="rca-chip active">Quality issue</span>
+                <span class="rca-chip">Registration</span>
+                <span class="rca-chip">Feeder / jams</span>
+              </div>
+            </div>
+            <div class="rca-step">
+              <div class="rca-step-title">2. System focus</div>
+              <div class="rca-options">
+                <span class="rca-chip">Feeder</span>
+                <span class="rca-chip active">Print Engine</span>
+                <span class="rca-chip">IRD</span>
+                <span class="rca-chip">Coater</span>
+              </div>
+            </div>
+          </div>
 
-    <div class="rca-tree">
-      <div class="rca-node">
-        <div class="label">1. What is the primary symptom?</div>
-        <span class="rca-option">Paper jam</span>
-        <span class="rca-option active">Quality issue</span>
-        <span class="rca-option">Stops during run</span>
-      </div>
+          <div class="rca-col rca-col-right">
+            <div class="rca-result-title">Top suggested resolutions</div>
+            <div class="rca-result-card">
+              <div class="rca-result-main">Adjust IRD mass-balance window</div>
+              <div class="rca-result-meta">IRD • SW • Based on 12 similar cases</div>
+              <div class="rca-result-text">
+                Verify mass-balance limits, reload IRD recipe, and confirm stability over 30 min run.
+              </div>
+            </div>
+            <div class="rca-result-card">
+              <div class="rca-result-main">Check ink temperature & circulation</div>
+              <div class="rca-result-meta">Print Engine • HW</div>
+              <div class="rca-result-text">
+                Validate sensor readings, flush loop, and ensure setpoints match job profile.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <div class="rca-node">
-        <div class="label">2. Which system is involved?</div>
-        <span class="rca-option">Feeder</span>
-        <span class="rca-option active">Print Engine</span>
-        <span class="rca-option">Coater</span>
-      </div>
-    </div>
-
-  </section>
-
-</main>
+    </section>
+  </main>
+</div>
 
 <script src="js/demo.js"></script>
 </body>
 </html>
-
