@@ -1,14 +1,15 @@
-// demo.js
+// js/demo.js
 window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById("bgStars");
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
   function resize() {
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
   }
   resize();
-  addEventListener("resize", resize);
+  window.addEventListener("resize", resize);
 
   const stars = Array.from({ length: 260 }, () => ({
     x: Math.random() * canvas.width,
@@ -20,7 +21,7 @@ window.addEventListener("DOMContentLoaded", () => {
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     stars.forEach(s => {
-      ctx.globalAlpha = 0.35 + Math.sin(Date.now() * 0.001 * s.v) * 0.3;
+      ctx.globalAlpha = 0.28 + Math.sin(Date.now() * 0.001 * s.v) * 0.25;
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
       ctx.fillStyle = "#ffffff";
