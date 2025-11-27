@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Landa Quantum – Troubleshoot Suite (V18.8-Dynamic)</title>
+<link rel="icon" type="image/svg+xml"
+  href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='2' y='2' width='36' height='36' rx='8' fill='%23000000' opacity='0.85' stroke='%23ffffff10'/%3E%3Ccircle cx='20' cy='20' r='8' fill='%2300aeef'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<canvas id="particles"></canvas>
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- LOGIN -->
+<section id="loginPage">
+  <div class="auth panel center">
+    <div class="logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 110">
+        <defs>
+          <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#00aeef"/>
+            <stop offset="100%" stop-color="#3bd0ff"/>
+          </linearGradient>
+        </defs>
+        <text x="50%" y="50%" text-anchor="middle" fill="url(#lg)"
+              font-family="Segoe UI, Inter, system-ui, sans-serif"
+              font-weight="700" font-size="56">Landa</text>
+        <text x="50%" y="82%" text-anchor="middle" fill="#9bb0d0"
+              font-family="Segoe UI, Inter, system-ui, sans-serif"
+              font-size="18" letter-spacing="2">Digital Printing</text>
+      </svg>
+      <div class="subtitle">Quantum Troubleshoot Suite</div>
+    </div>
+    <h2>Sign in to continue</h2>
+    <label class="label" for="authUser">Username</label>
+    <input class="input" id="authUser" placeholder="Username" autocomplete="username">
+    <label class="label" for="authPass">Password</label>
+    <input class="input" id="authPass" type="password" placeholder="Password" autocomplete="current-password">
+    <button class="btn primary full" id="btnLogin">Login</button>
+  </div>
+</section>
+
+<!-- APP -->
+<div class="app hidden" id="appRoot">
+  <header class="header">
+    <div class="header-left">
+      <button class="menu-btn btn small" id="btnMenu" aria-label="Toggle menu">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="header-title" id="logoHome" style="cursor:pointer">
+        <div class="logo-mini">
+          <svg viewBox="0 0 40 40">
+            <rect x="2" y="2" width="36" height="36" rx="8" fill="rgba(0,0,0,0.78)" stroke="rgba(255,255,255,0.08)"/>
+            <circle cx="20" cy="20" r="8" fill="#00aeef">
+              <animate attributeName="r" values="8;9;8" dur="2.6s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+        </div>
+        <h1>Landa Quantum – Troubleshoot Suite</h1>
+      </div>
+    </div>
+    <span class="badge-env">V18.8-Dynamic</span>
+  </header>
+
+  <div class="wrap">
+    <aside class="aside" id="aside">
+      <nav class="nav">
+        <a class="item active" data-route="dashboard">Dashboard</a>
+        <a class="item" data-route="create">Create Case</a>
+        <a class="item" data-route="cases">All Cases <span class="badge" id="casesCount">0</span></a>
+        <a class="item" data-route="diagnosis">Root Cause Analyzer</a>
+        <a class="item" data-route="settings">Settings</a>
+        <a class="item" id="btnLogout">Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <!-- Dashboard -->
+      <section id="page-dashboard" class="page">
+        <div class="grid cols-3">
+          <div class="panel"><div class="title">Total Cases</div><div id="kpiTotal" class="big">0</div></div>
+          <div class="panel"><div class="title">With Attachments</div><div id="kpiFiles" class="big">0</div></div>
+          <div class="panel"><div class="title">Last Updated</div><div id="kpiUpdated" class="big">—</div></div>
+        </div>
+      </section>
+
+      <!-- Create Case -->
+      <section id="page-create" class="page hidden">
+        <div class="panel">
+          <h2>Create New Case</h2>
+          <form id="caseForm" onsubmit="saveCase(event)">
+            <div class="grid cols-2">
+              
+              <!-- NEW FIELD ORDER -->
+              <div>
+                <label class="label v13">SF Case *</label>
+                <input class="input v13 field-sf" id="sfCase" inputmode="numeric" placeholder="123456">
+              </div>
+
+              <div>
+                <label class="label v13">Press Type *</label>
+                <div class="chips" id="machineTypeChips">
+                  <div class="chip active" data-type="Simplex">Simplex</div>
+                  <div class="chip" data-type="Duplex">Duplex</div>
+                </div>
+                <input type="hidden" id="machineType" value="Simplex">
+              </div>
+
+              <div>
+                <label class="label v13">Press Name *</label>
+                <div id="dd-model" class="dd field-pressname"></div>
+              </div>
+
+              <div>
+                <label class="label v13">Software Version</label>
+                <input class="input v13 field-sw" id="softwareVersion" placeholder="4.2.11">
+              </div>
+
+              <div>
+                <label class="label v13">System *</label>
+                <div id="dd-system" class="dd field-system"></div>
+              </div>
+
+              <div id="wrap-sub" class="hidden">
+                <label class="label v13">Sub-System *</label>
+                <div id="dd-sub" class="dd field-subsystem"></div>
+              </div>
+
+              <div id="wrap-cat" class="hidden">
+                <label class="label v13">Category *</label>
+                <div id="dd-cat" class="dd field-category"></div>
+              </div>
+
+              <div id="wrap-item" class="hidden">
+                <label class="label v13">Item *</label>
+                <div id="dd-item" class="dd field-item"></div>
+              </div>
+
+              <div class="fit-inline full">
+                <div>
+                  <label class="label v13">TFS</label>
+                  <div class="fit-inline">
+                    <input type="checkbox" id="tfsToggle" title="Enable TFS">
+                    <input class="input v13 hidden" id="tfsNumber" inputmode="numeric" placeholder="TFS-12345" style="max-width:220px">
+                  </div>
+                </div>
+              </div>
+
+              <div class="full"><hr style="border:0; border-top:1px solid var(--border)"></div>
+
+              <div class="full">
+                <label class="label v13">Issue Summary *</label>
+                <input class="input v13" id="issueSummary" placeholder="Clear 1-line summary (e.g., SetOff on S3 / IRD X)">
+              </div>
+
+              <div class="full">
+                <label class="label v13">Symptoms / Error Messages</label>
+                <textarea id="symptoms" class="input v13" placeholder="Short bullets or error codes"></textarea>
+              </div>
+
+              <div class="full">
+                <label class="label v13">Troubleshooting (steps)</label>
+                <div id="tsSteps" class="field-troubles"></div>
+                <button class="btn small" type="button" onclick="addStep()">+ Add step</button>
+              </div>
+
+              <div class="full">
+                <label class="label v13">Part (Catalog)</label>
+                <input class="input v13 field-troubles" id="partInput" placeholder="Type part number (e.g., 12-34567)…">
+              </div>
+
+              <div class="full">
+                <label class="label v13">Solution Implemented *</label>
+                <textarea id="solution" class="input v13 field-troubles" placeholder="What fixed the issue"></textarea>
+              </div>
+
+              <div class="full">
+                <label class="label v13">Verification Method</label>
+                <input id="verification" class="input v13 field-troubles" placeholder="How did we verify the fix?">
+              </div>
+
+              <div class="full">
+                <label class="label v13">Notes</label>
+                <textarea id="notes" class="input v13 field-troubles" placeholder="Anything noteworthy for future cases"></textarea>
+              </div>
+
+              <div class="full">
+                <label class="label v13">Attachments</label>
+                <div id="filesWrap"></div>
+                <button class="btn small" type="button" onclick="addFileRow()">+ Add another file</button>
+              </div>
+
+              <div class="inline full" style="margin-top:6px">
+                <button class="btn primary" type="submit">Save Case</button>
+                <button class="btn ghost" type="button" onclick="go('cases')">View All</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Other Pages -->
+      <section id="page-cases" class="page hidden"></section>
+      <section id="page-diagnosis" class="page hidden"></section>
+      <section id="page-settings" class="page hidden"></section>
+    </main>
+  </div>
+</div>
+
+<!-- Core app -->
+<script src="app.js"></script>
+<script src="fishbone.js"></script>
+
+<!-- Cases (Create / All Cases pages) -->
+<script src="js/cases.js"></script>
+
+<!-- Root Cause Analyzer – new system -->
+<script src="data/rca-data.js"></script>
+<script src="js/rca.js"></script>
+</body>
+</html>
