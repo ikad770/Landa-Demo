@@ -1,1 +1,65 @@
-<!-- index placeholder -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Landa Troubleshoot Console V2</title>
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="css/main.css" />
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+  <!-- ===== BACKGROUND SPACE + CMYK ===== -->
+  <div class="cmyk-layer"></div>
+  <div class="stars"></div>
+
+  <!-- ===== LOGIN PANEL ===== -->
+  <div id="loginPage" class="login-wrapper">
+    <div class="login-card glass">
+      <h2 class="logo-title">Landa Troubleshoot Console</h2>
+
+      <label class="login-label">Username</label>
+      <input id="authUser" type="text" placeholder="Enter username" class="login-input">
+
+      <label class="login-label">Password</label>
+      <input id="authPass" type="password" placeholder="Enter password" class="login-input">
+
+      <button id="btnLogin" class="login-btn">Login</button>
+
+      <p class="login-note">Authorized personnel only</p>
+    </div>
+  </div>
+
+  <!-- ===== MAIN APP ROOT (Hidden until login) ===== -->
+  <div id="appRoot" class="hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="side-title">Menu</div>
+
+      <button class="side-btn" onclick="go('dashboard')">📊 Dashboard</button>
+      <button class="side-btn" onclick="go('cases')">📝 Create Case</button>
+      <button class="side-btn" onclick="go('allcases')">📁 All Cases</button>
+      <button class="side-btn" onclick="go('rca')">🔍 RCA Wizard</button>
+      <button class="side-btn" onclick="go('settings')">⚙ Settings</button>
+
+      <button id="btnLogout" class="logout-btn">Logout</button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main id="mainView" class="main-content">
+      <h2>Loading…</h2>
+    </main>
+
+  </div>
+
+  <!-- Main JS -->
+  <script src="js/app.js"></script>
+
+</body>
+</html>
