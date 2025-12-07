@@ -1,65 +1,329 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Landa Troubleshoot Console V2</title>
-
-  <!-- Main CSS -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Landa Case Management Console</title>
   <link rel="stylesheet" href="css/main.css" />
-
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-
 </head>
 <body>
+  <canvas id="particles"></canvas>
+  <div id="toast-root"></div>
 
-  <!-- ===== BACKGROUND SPACE + CMYK ===== -->
-  <div class="cmyk-layer"></div>
-  <div class="stars"></div>
+  <!-- LOGIN -->
+  <section id="loginPage" class="login-wrapper">
+    <div class="cmyk-orbits">
+      <span class="orbit orbit-c"></span>
+      <span class="orbit orbit-m"></span>
+      <span class="orbit orbit-y"></span>
+      <span class="orbit orbit-k"></span>
+    </div>
 
-  <!-- ===== LOGIN PANEL ===== -->
-  <div id="loginPage" class="login-wrapper">
     <div class="login-card glass">
-      <h2 class="logo-title">Landa Troubleshoot Console</h2>
+      <div class="login-logo">
+        <div class="logo-mark">
+          <div class="logo-dot"></div>
+        </div>
+        <div class="logo-text">
+          <div class="logo-title">Landa Quantum</div>
+          <div class="logo-sub">Case Management &amp; RCA</div>
+        </div>
+      </div>
 
-      <label class="login-label">Username</label>
-      <input id="authUser" type="text" placeholder="Enter username" class="login-input">
+      <label class="login-label" for="authUser">Username</label>
+      <input id="authUser" class="login-input" autocomplete="username" />
 
-      <label class="login-label">Password</label>
-      <input id="authPass" type="password" placeholder="Enter password" class="login-input">
+      <label class="login-label" for="authPass">Password</label>
+      <input
+        id="authPass"
+        class="login-input"
+        type="password"
+        autocomplete="current-password"
+      />
 
       <button id="btnLogin" class="login-btn">Login</button>
+      <div class="login-note">Internal use only · LDP Service Experts</div>
+    </div>
+  </section>
 
-      <p class="login-note">Authorized personnel only</p>
+  <!-- APP -->
+  <div id="appRoot" class="app hidden">
+    <header class="app-header">
+      <div class="app-header-left">
+        <div class="header-logo">
+          <div class="logo-mark small">
+            <div class="logo-dot"></div>
+          </div>
+          <div>
+            <div class="hdr-title">Landa Quantum</div>
+            <div class="hdr-sub">Fleet Case Console</div>
+          </div>
+        </div>
+      </div>
+      <div class="app-header-right">
+        <span class="user-pill">
+          <span class="status-dot"></span>
+          Expert
+        </span>
+        <button id="btnLogout" class="btn ghost small">Logout</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- SIDEBAR -->
+      <aside class="sidebar" id="sidebar">
+        <div class="side-group">
+          <div class="side-label">Main</div>
+          <button class="side-item active" data-route="dashboard">📊 Dashboard</button>
+          <button class="side-item" data-route="create">📝 Create Case</button>
+          <button class="side-item" data-route="cases">📁 All Cases</button>
+          <button class="side-item" data-route="rca">🔍 Root Cause</button>
+        </div>
+
+        <div class="side-group">
+          <div class="side-label">System</div>
+          <button class="side-item" data-route="settings">⚙ Settings</button>
+        </div>
+
+        <div class="side-bottom">
+          <button class="btn primary full" data-route="create">+ New Case</button>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="main" id="main">
+        <!-- DASHBOARD -->
+        <section class="page" id="page-dashboard">
+          <div class="page-header">
+            <div>
+              <h1>Dashboard</h1>
+              <p>High-level view of fleet cases and activity</p>
+            </div>
+          </div>
+
+          <div class="grid grid-kpi">
+            <div class="panel kpi">
+              <div class="kpi-label">Total Cases</div>
+              <div class="kpi-value" id="kpi-total">0</div>
+              <div class="kpi-foot">Stored in console</div>
+            </div>
+            <div class="panel kpi">
+              <div class="kpi-label">Cases with Attachments</div>
+              <div class="kpi-value" id="kpi-files">0</div>
+              <div class="kpi-foot">Logs · photos · IRD data</div>
+            </div>
+            <div class="panel kpi">
+              <div class="kpi-label">Regions</div>
+              <div class="kpi-value" id="kpi-regions">0</div>
+              <div class="kpi-foot">Active service regions</div>
+            </div>
+            <div class="panel kpi">
+              <div class="kpi-label">Last Case Update</div>
+              <div class="kpi-value small" id="kpi-last">—</div>
+              <div class="kpi-foot">Local time</div>
+            </div>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>By Press Type</h3>
+                  <p>Simplex vs Duplex distribution</p>
+                </div>
+              </div>
+              <div id="dash-type" class="pill-cloud"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>By Region</h3>
+                  <p>Where issues are reported from</p>
+                </div>
+              </div>
+              <div id="dash-region" class="pill-cloud"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>Recent Cases</h3>
+                <p>Last 6 entries across the fleet</p>
+              </div>
+            </div>
+            <div id="dash-recent"></div>
+          </div>
+        </section>
+
+        <!-- CREATE CASE -->
+        <section class="page hidden" id="page-create">
+          <div class="page-header">
+            <div>
+              <h1>Create Case</h1>
+              <p>Structured capture – press, system, HW/SW, troubleshooting, attachments</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <form id="caseForm">
+              <div class="grid grid-3">
+                <div class="field">
+                  <label>Press Type</label>
+                  <select id="fPressType" class="input">
+                    <option value="">Select…</option>
+                    <option value="Simplex">Simplex</option>
+                    <option value="Duplex">Duplex</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>Press Name</label>
+                  <select id="fPressName" class="input"></select>
+                </div>
+
+                <div class="field">
+                  <label>Region</label>
+                  <select id="fRegion" class="input">
+                    <option value="">Select…</option>
+                    <option>NA</option>
+                    <option>EU</option>
+                    <option>APJ</option>
+                    <option>IL</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>System</label>
+                  <select id="fSystem" class="input"></select>
+                </div>
+
+                <div class="field">
+                  <label>Sub-System</label>
+                  <select id="fSubSystem" class="input"></select>
+                </div>
+
+                <div class="field">
+                  <label>Area</label>
+                  <select id="fArea" class="input"></select>
+                </div>
+
+                <div class="field">
+                  <label>Type</label>
+                  <select id="fType" class="input">
+                    <option value="HW">HW</option>
+                    <option value="SW">SW</option>
+                    <option value="EC">EC</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>Part (HW only)</label>
+                  <select id="fPart" class="input"></select>
+                </div>
+
+                <div class="field">
+                  <label>Date</label>
+                  <input id="fDate" type="date" class="input" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Case Title</label>
+                <input id="fTitle" class="input" placeholder="Short description (visible in lists)" />
+              </div>
+
+              <div class="field">
+                <label>Summary</label>
+                <textarea id="fSummary" class="input" rows="3"></textarea>
+              </div>
+
+              <div class="field">
+                <label>Resolution</label>
+                <textarea id="fResolution" class="input" rows="3"></textarea>
+              </div>
+
+              <div class="field">
+                <label>Troubleshooting steps</label>
+                <div id="stepsWrap" class="steps-wrap"></div>
+                <button type="button" id="btnAddStep" class="btn ghost small">+ Add step</button>
+              </div>
+
+              <div class="field">
+                <label>Attachments</label>
+                <input id="fFiles" type="file" multiple />
+                <div id="filesList" class="chips"></div>
+              </div>
+
+              <div class="actions">
+                <button type="reset" class="btn ghost">Clear</button>
+                <button type="submit" class="btn primary">Save Case</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ALL CASES -->
+        <section class="page hidden" id="page-cases">
+          <div class="page-header">
+            <div>
+              <h1>All Cases</h1>
+              <p>Fleet history – structured &amp; searchable</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>Cases</h3>
+                <p>Total: <span id="casesCount">0</span></p>
+              </div>
+            </div>
+            <div id="casesTableWrap"></div>
+          </div>
+        </section>
+
+        <!-- RCA -->
+        <section class="page hidden" id="page-rca">
+          <div class="page-header">
+            <div>
+              <h1>Root Cause Assistant</h1>
+              <p>Guided flow based on IRD &amp; service knowledge</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div id="fbRoot"></div>
+          </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section class="page hidden" id="page-settings">
+          <div class="page-header">
+            <div>
+              <h1>Settings</h1>
+              <p>Console preferences</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="field">
+              <label>Theme</label>
+              <select class="input" id="themeSelect">
+                <option value="dark">Dark (default)</option>
+              </select>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   </div>
 
-  <!-- ===== MAIN APP ROOT (Hidden until login) ===== -->
-  <div id="appRoot" class="hidden">
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="side-title">Menu</div>
-
-      <button class="side-btn" onclick="go('dashboard')">📊 Dashboard</button>
-      <button class="side-btn" onclick="go('cases')">📝 Create Case</button>
-      <button class="side-btn" onclick="go('allcases')">📁 All Cases</button>
-      <button class="side-btn" onclick="go('rca')">🔍 RCA Wizard</button>
-      <button class="side-btn" onclick="go('settings')">⚙ Settings</button>
-
-      <button id="btnLogout" class="logout-btn">Logout</button>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main id="mainView" class="main-content">
-      <h2>Loading…</h2>
-    </main>
-
-  </div>
-
-  <!-- Main JS -->
   <script src="js/app.js"></script>
-
+  <script src="js/cases.js"></script>
+  <script src="data/rca-data.js"></script>
+  <script src="js/fishbone.js"></script>
+  <script src="js/rca.js"></script>
 </body>
 </html>
