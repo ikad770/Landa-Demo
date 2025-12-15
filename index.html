@@ -5,16 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Landa Digital Printing – CRS Login</title>
 
-  <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-
-  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- p5 for stars -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-
-  <!-- Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -29,23 +22,20 @@
     }
 
     html, body {
-      margin: 0;
-      padding: 0;
       height: 100%;
+      margin: 0;
       font-family: 'Inter', system-ui, sans-serif;
       background: var(--bg-main);
       color: var(--text-main);
       overflow: hidden;
     }
 
-    /* Canvas (stars) */
     canvas {
       position: fixed !important;
       inset: 0;
       z-index: 0;
     }
 
-    /* Page wrapper */
     .login-page {
       position: relative;
       z-index: 2;
@@ -53,17 +43,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      pointer-events: none;
     }
 
     .login-wrapper {
       width: 100%;
       max-width: 420px;
       padding: 1rem;
-      pointer-events: all;
     }
 
-    /* Glass card */
     .glass-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -73,10 +60,9 @@
       padding: 2rem;
     }
 
-    /* Branding */
     .login-brand {
       text-align: center;
-      margin-bottom: 2.25rem;
+      margin-bottom: 2.2rem;
     }
 
     .brand-line-1 {
@@ -98,39 +84,78 @@
       color: var(--text-muted);
     }
 
-    /* Inputs */
-    .input-field,
-   .select-field {
-  width: 100%;
-  border-radius: 0.85rem;
-  background: rgba(15,23,42,0.98);
-  border: 1px solid rgba(51,65,85,0.9);
-  padding: 0.6rem 0.85rem;
-  font-size: 0.85rem;
-  color: #e5e7eb;
+    .input-field {
+      width: 100%;
+      border-radius: 0.85rem;
+      background: rgba(15,23,42,0.95);
+      border: 1px solid rgba(51,65,85,0.85);
+      padding: 0.6rem 0.85rem;
+      font-size: 0.85rem;
+      color: #fff;
+    }
 
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
+    .input-field:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
 
-  background-image:
-    linear-gradient(45deg, transparent 50%, #22d3ee 50%),
-    linear-gradient(135deg, #22d3ee 50%, transparent 50%);
-  background-position:
-    calc(100% - 16px) calc(50% - 2px),
-    calc(100% - 12px) calc(50% - 2px);
-  background-size: 4px 4px;
-  background-repeat: no-repeat;
-}
+    /* ---------- CUSTOM SELECT ---------- */
 
-.select-field option {
-  background-color: #020617;
-  color: #e5e7eb;
-}
+    .select-wrapper {
+      position: relative;
+    }
 
-    /* Button */
+    .select-display {
+      width: 100%;
+      border-radius: 0.85rem;
+      background: rgba(15,23,42,0.95);
+      border: 1px solid rgba(51,65,85,0.85);
+      padding: 0.6rem 0.85rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .select-display::after {
+      content: "▾";
+      color: var(--accent-cyan);
+      font-size: 0.75rem;
+    }
+
+    .select-options {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: rgba(2, 6, 23, 0.96);
+      border: 1px solid rgba(51,65,85,0.85);
+      border-radius: 0.85rem;
+      overflow: hidden;
+      display: none;
+      z-index: 10;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.7);
+    }
+
+    .select-options div {
+      padding: 0.6rem 0.85rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .select-options div:hover {
+      background: rgba(37,99,235,0.2);
+    }
+
+    .select-wrapper.open .select-options {
+      display: block;
+    }
+
+    /* ---------- BUTTON ---------- */
+
     .btn-primary {
-      margin-top: 0.75rem;
+      margin-top: 0.9rem;
       width: 100%;
       padding: 0.65rem;
       font-size: 0.8rem;
@@ -149,7 +174,6 @@
       box-shadow: 0 14px 34px rgba(37,99,235,0.65);
     }
 
-    /* Footer */
     footer {
       position: fixed;
       bottom: 14px;
@@ -159,101 +183,99 @@
       font-size: 0.7rem;
       color: #6b7280;
       z-index: 1;
-      pointer-events: none;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- LOGIN -->
   <div class="login-page">
     <div class="login-wrapper">
 
       <div class="login-brand">
-        <div class="brand-line-1">CRS</div>
-        <div class="brand-line-2">Case Resolution Suite</div>
-        <div class="brand-line-3">Landa Digital Printing</div>
+        <div class="brand-line-1">Landa Digital Printing</div>
+        <div class="brand-line-2">CRS</div>
+        <div class="brand-line-3">Case Resolution Suite</div>
       </div>
 
       <div class="glass-card">
-        <form id="login-form" class="space-y-5">
+        <form class="space-y-5">
           <div>
             <label class="text-sm mb-1 block">Username</label>
-            <input id="username" class="input-field" type="text" required />
+            <input class="input-field" type="text" />
           </div>
 
           <div>
             <label class="text-sm mb-1 block">Password</label>
-            <input id="password" class="input-field" type="password" required />
+            <input class="input-field" type="password" />
           </div>
 
           <div>
             <label class="text-sm mb-1 block">Access Level</label>
-            <select id="user-type" class="select-field">
-              <option value="expert">Expert</option>
-              <option value="service">Service Engineer</option>
-              <option value="manager">Manager</option>
-              <option value="rnd">R&amp;D</option>
-            </select>
+            <div class="select-wrapper" id="accessSelect">
+              <div class="select-display" id="selectedValue">Expert</div>
+              <div class="select-options">
+                <div data-value="expert">Expert</div>
+                <div data-value="service">Service Engineer</div>
+                <div data-value="manager">Manager</div>
+                <div data-value="rnd">R&amp;D</div>
+              </div>
+            </div>
           </div>
 
-          <button type="submit" class="btn-primary">
-            Access System
-          </button>
+          <button class="btn-primary">Access System</button>
         </form>
       </div>
 
     </div>
   </div>
 
-  <!-- FOOTER -->
   <footer>
     © 2025 Landa Digital Printing · Nanography® · AI-Powered Support System
   </footer>
 
-  <!-- Stars background -->
+  <!-- Stars -->
   <script>
-  let stars = [];
-
-  function setup() {
-    const c = createCanvas(windowWidth, windowHeight);
-    c.parent(document.body);
-
-    for (let i = 0; i < 220; i++) {
-      stars.push({
-        x: random(width),
-        y: random(height),
-        z: random(0.3, 1.2),
-        speed: random(0.15, 0.6)
-      });
-    }
-  }
-
-  function draw() {
-    clear();
-    noStroke();
-
-    for (let s of stars) {
-      fill(255, 255, 255, 140 * s.z);
-      circle(s.x, s.y, 2.2 * s.z);
-
-      // movement
-      s.y += s.speed * s.z;
-
-      if (s.y > height) {
-        s.y = 0;
-        s.x = random(width);
+    let stars = [];
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      for (let i = 0; i < 220; i++) {
+        stars.push({ x: random(width), y: random(height), z: random(0.4,1.2), s: random(0.2,0.6) });
       }
     }
-  }
+    function draw() {
+      clear();
+      noStroke();
+      for (let st of stars) {
+        fill(255,255,255,120 * st.z);
+        circle(st.x, st.y, 2.2 * st.z);
+        st.y += st.s * st.z;
+        if (st.y > height) { st.y = 0; st.x = random(width); }
+      }
+    }
+    function windowResized(){ resizeCanvas(windowWidth, windowHeight); }
+  </script>
 
-  function windowResized() {
-    resizeCanvas(windowWidth, windowHeight);
-  }
-</script>
+  <!-- Custom Select Logic -->
+  <script>
+    const wrapper = document.getElementById("accessSelect");
+    const display = document.getElementById("selectedValue");
 
-  <!-- Main logic -->
-  <script src="main.js"></script>
+    wrapper.addEventListener("click", () => {
+      wrapper.classList.toggle("open");
+    });
+
+    document.querySelectorAll(".select-options div").forEach(opt => {
+      opt.addEventListener("click", e => {
+        display.textContent = opt.textContent;
+        wrapper.classList.remove("open");
+      });
+    });
+
+    document.addEventListener("click", e => {
+      if (!wrapper.contains(e.target)) wrapper.classList.remove("open");
+    });
+  </script>
+
 </body>
 </html>
