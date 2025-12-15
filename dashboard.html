@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landa Dashboard - Case Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    
+    <style>
+
+        .logo-mark {
+            width: 32px;
+            height: 32px;
+            border-radius: 0.75rem;
+            background: #020617;
+            position: relative;
+            box-shadow:
+                0 0 0 1px rgba(15,23,42,1),
+                0 0 18px rgba(34, 211, 238, 0.8);
+            overflow: hidden;
+        }
+        .logo-mark::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 30%, #22d3ee, #0f172a);
+            top: 7px;
+            left: 7px;
+            box-shadow: 0 0 18px rgba(34, 211, 238, 0.9);
+        }
+
+        :root {
+            --bg-main: #020617;
+            --bg-surface: rgba(15, 23, 42, 0.98);
+            --border-soft: rgba(51, 65, 85, 0.9);
+            --border-strong: rgba(148, 163, 184, 0.7);
+            --accent-blue: #2563eb;
+            --accent-cyan: #06b6d4;
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.16), transparent 55%),
+                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.14), transparent 55%),
+                #020617;
+            color: var(--text-main);
+        }
+
+        .layout-shell {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: rgba(10, 16, 30, 0.98);
+            border-right: 1px solid rgba(15, 23, 42, 0.95);
+            box-shadow:
+                4px 0 24px rgba(15, 23, 42, 0.85),
+                0 0 0 1px rgba(15, 23, 42, 1);
+            padding: 1.25rem 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .sidebar-header img {
+            width: 32px;
+            height: 32px;
+            border-radius: 0.75rem;
+            box-shadow:
+                0 0 0 1px rgba(15, 23, 42, 1),
+                0 0 18px rgba(37, 99, 235, 0.8);
+        }
+
+        .logo-title {
+            font-family: 'Satoshi', system-ui, sans-serif;
+            font-size: 0.78rem;
+            letter-spacing: 0.26em;
+            text-transform: uppercase;
+        }
+
+        .logo-subtitle {
+            font-size: 0.65rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .sidebar-nav {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .nav-link {
+            display: block;
+            border-radius: 0.6rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.83rem;
+            color: #cbd5f5;
+        }
+
+        .nav-link:hover {
+            background: rgba(15, 23, 42, 0.96);
+            color: #eff6ff;
+        }
+
+        .nav-link-active {
+            background: rgba(37, 99, 235, 0.16);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(37, 99, 235, 0.6);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(30, 41, 59, 0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid var(--border-strong);
+            box-shadow:
+                0 10px 26px rgba(15, 23, 42, 0.98),
+                0 0 0 1px rgba(30, 64, 175, 0.4);
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 20%, var(--accent-cyan), #0f172a);
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 0 0 1px rgba(15, 23, 42, 1),
+                0 0 14px rgba(34, 211, 238, 0.9);
+        }
+
+        .user-name {
+            font-size: 0.8rem;
+        }
+
+        .user-role {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--text-muted);
+        }
+
+        .nav-logout {
+            border-radius: 999px;
+            padding: 0.45rem 0.85rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            border: 1px solid rgba(148, 163, 184, 0.65);
+            color: var(--text-muted);
+        }
+
+        .nav-logout:hover {
+            border-color: rgba(248, 250, 252, 0.95);
+            color: #e5e7eb;
+        }
+
+        .main-shell {
+            flex: 1;
+            min-height: 100vh;
+            padding: 1.75rem 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .page-title {
+            font-family: 'Satoshi', system-ui, sans-serif;
+            font-size: 0.95rem;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+        }
+
+        .page-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .metric-card,
+        .glass-card,
+        .case-card,
+        .solution-card,
+        .machine-card {
+            background: var(--bg-surface);
+            border-radius: 1rem;
+            border: 1px solid var(--border-strong);
+            box-shadow:
+                0 16px 42px rgba(15, 23, 42, 0.98),
+                0 0 0 1px rgba(15, 23, 42, 1);
+        }
+
+        .metric-card {
+            padding: 1.1rem 1.2rem;
+        }
+
+        .sub-card {
+            border-radius: 0.9rem;
+            border: 1px solid var(--border-soft);
+        }
+
+        .section-title {
+            font-family: 'Satoshi', system-ui, sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.26em;
+            text-transform: uppercase;
+            color: #e5e7eb;
+        }
+
+        .section-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .btn-primary {
+            border-radius: 999px;
+            background-image: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border: 1px solid rgba(191, 219, 254, 0.7);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            font-weight: 600;
+            padding-inline: 1.25rem;
+            padding-block: 0.65rem;
+            box-shadow:
+                0 16px 34px rgba(37, 99, 235, 0.7),
+                0 0 0 1px rgba(15, 23, 42, 0.95);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg,
+                        rgba(59, 130, 246, 0.22),
+                        transparent,
+                        rgba(56, 189, 248, 0.24));
+            opacity: 0;
+            transform: translateX(-22%);
+            transition: all 0.22s ease-out;
+        }
+
+        .btn-primary:hover::before {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow:
+                0 20px 44px rgba(37, 99, 235, 0.88),
+                0 0 0 1px rgba(59, 130, 246, 0.96);
+        }
+
+        .badge {
+            border-radius: 999px;
+            font-size: 0.7rem;
+            padding: 0.12rem 0.55rem;
+            border: 1px solid rgba(148, 163, 184, 0.65);
+        }
+
+        .table-header {
+            background: rgba(15, 23, 42, 0.98);
+        }
+
+        .table-row-hover:hover {
+            background: rgba(15, 23, 42, 0.94);
+        }
+    </style>
+
+
+
+</head>
+<body class="min-h-screen relative">
+    <div id="starfield-container"></div>
+    
+    
+    
+    
+    <div class="layout-shell">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-mark"></div>
+                <div class="ml-3 leading-tight">
+                    <div class="logo-title">LANDA</div>
+                    <div class="logo-subtitle">Case Management</div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
+                <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
+                <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
+                <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-pill">
+                    <div class="user-avatar" id="nav-user-avatar">EX</div>
+                    <div class="flex flex-col leading-tight">
+                        <span class="user-name" id="nav-user-name">Expert User</span>
+                        <span class="user-role" id="nav-user-role">EXPERT ACCESS</span>
+                    </div>
+                </div>
+                <button onclick="logout()" class="nav-logout">Logout</button>
+            </div>
+        </aside>
+        <div class="main-shell">
+<!-- Main Content -->
+    <main class="pt-8 px-6 pb-8">
+        <!-- Page Header -->
+        <div class="page-header mb-8">
+            <div>
+                <div class="page-title text-xs tracking-[0.3em] uppercase text-slate-300">System Dashboard</div>
+                <div class="page-subtitle mt-1 text-sm text-gray-400">Real-time overview of Landa presses, cases and service activity</div>
+            </div>
+            <div class="hidden md:flex items-center space-x-2 text-xs text-gray-500">
+                <span>Home</span>
+                <span>/</span>
+                <span class="text-gray-300">Dashboard</span>
+            </div>
+        </div>
+
+
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="metric-card rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Total Cases</p>
+                        <p class="text-3xl font-bold text-white" id="total-cases">24</p>
+                    </div>
+                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Resolved Cases</p>
+                        <p class="text-3xl font-bold text-green-400" id="resolved-cases">18</p>
+                    </div>
+                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">In Progress</p>
+                        <p class="text-3xl font-bold text-yellow-400" id="in-progress-cases">6</p>
+                    </div>
+                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Avg Rating</p>
+                        <p class="text-3xl font-bold text-blue-400" id="avg-rating">4.7</p>
+                    </div>
+                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Cases by Status Chart -->
+            <div class="glass-card rounded-xl p-6">
+                <h3 class="text-xl font-semibold mb-4">Cases by Status</h3>
+                <div id="status-chart" style="height: 300px;"></div>
+            </div>
+
+            <!-- Cases by Machine Type -->
+            <div class="glass-card rounded-xl p-6">
+                <h3 class="text-xl font-semibold mb-4">Cases by Machine Type</h3>
+                <div id="machine-chart" style="height: 300px;"></div>
+            </div>
+        </div>
+
+        <!-- Recent Cases -->
+        <div class="glass-card rounded-xl p-6 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-semibold">Recent Cases</h3>
+                <a href="cases.html" class="btn-primary px-4 py-2 rounded-lg text-sm">View All Cases</a>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-700">
+                            <th class="text-left py-3 px-4 text-gray-400">Case ID</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Machine</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Subject</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Status</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Owner</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-cases-table">
+                        <tr class="border-b border-gray-800 hover:bg-gray-800 transition-colors">
+                            <td class="py-3 px-4 font-mono text-blue-400">SF-2024-005</td>
+                            <td class="py-3 px-4">S3</td>
+                            <td class="py-3 px-4">UV Lamp Not Curing Properly</td>
+                            <td class="py-3 px-4">
+                                <span class="status-indicator status-resolved"></span>
+                                <span class="text-green-400">Resolved</span>
+                            </td>
+                            <td class="py-3 px-4">Yossi Cohen</td>
+                            <td class="py-3 px-4 text-gray-400">2024-12-05</td>
+                        </tr>
+                        <tr class="border-b border-gray-800 hover:bg-gray-800 transition-colors">
+                            <td class="py-3 px-4 font-mono text-blue-400">SF-2024-004</td>
+                            <td class="py-3 px-4">D4</td>
+                            <td class="py-3 px-4">Color Consistency Issues</td>
+                            <td class="py-3 px-4">
+                                <span class="status-indicator status-progress"></span>
+                                <span class="text-yellow-400">In Progress</span>
+                            </td>
+                            <td class="py-3 px-4">Maya Stern</td>
+                            <td class="py-3 px-4 text-gray-400">2024-12-04</td>
+                        </tr>
+                        <tr class="border-b border-gray-800 hover:bg-gray-800 transition-colors">
+                            <td class="py-3 px-4 font-mono text-blue-400">SF-2024-003</td>
+                            <td class="py-3 px-4">S2</td>
+                            <td class="py-3 px-4">Print Registration Error</td>
+                            <td class="py-3 px-4">
+                                <span class="status-indicator status-resolved"></span>
+                                <span class="text-green-400">Resolved</span>
+                            </td>
+                            <td class="py-3 px-4">David Gold</td>
+                            <td class="py-3 px-4 text-gray-400">2024-12-03</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="machine-card rounded-xl p-6 text-center">
+                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-semibold mb-2">Create New Case</h4>
+                <p class="text-gray-400 text-sm mb-4">Document a new technical issue or service request</p>
+                <a href="create-case.html" class="btn-primary px-6 py-2 rounded-lg text-sm inline-block">Create Case</a>
+            </div>
+
+            <div class="machine-card rounded-xl p-6 text-center">
+                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-semibold mb-2">Find Solutions</h4>
+                <p class="text-gray-400 text-sm mb-4">Search troubleshooting guides and known solutions</p>
+                <a href="troubleshooting.html" class="btn-primary px-6 py-2 rounded-lg text-sm inline-block">Search Solutions</a>
+            </div>
+
+            <div class="machine-card rounded-xl p-6 text-center">
+                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-semibold mb-2">View Analytics</h4>
+                <p class="text-gray-400 text-sm mb-4">Analyze performance metrics and trends</p>
+                <button onclick="showAnalytics()" class="btn-primary px-6 py-2 rounded-lg text-sm">View Reports</button>
+            </div>
+        </div>
+    </main>
+        </div>
+    </div>
+
+
+    <script src="main.js"></script>
+    <script>
+        // Initialize charts when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCharts();
+            animateMetrics();
+        });
+
+        function initializeCharts() {
+            // Status Chart
+            const statusChart = echarts.init(document.getElementById('status-chart'));
+            const statusOption = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                    borderColor: '#0066cc',
+                    textStyle: { color: '#ffffff' }
+                },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    center: ['50%', '50%'],
+                    data: [
+                        { value: 18, name: 'Resolved', itemStyle: { color: '#10b981' } },
+                        { value: 6, name: 'In Progress', itemStyle: { color: '#f59e0b' } },
+                        { value: 2, name: 'Open', itemStyle: { color: '#ef4444' } }
+                    ],
+                    label: {
+                        color: '#ffffff',
+                        fontSize: 12
+                    },
+                    labelLine: {
+                        lineStyle: { color: '#ffffff' }
+                    }
+                }]
+            };
+            statusChart.setOption(statusOption);
+
+            // Machine Type Chart
+            const machineChart = echarts.init(document.getElementById('machine-chart'));
+            const machineOption = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                    borderColor: '#0066cc',
+                    textStyle: { color: '#ffffff' }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['S1', 'S2', 'S3', 'S4', 'D3', 'D4', 'D5'],
+                    axisLine: { lineStyle: { color: '#666' } },
+                    axisLabel: { color: '#ffffff' }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: { lineStyle: { color: '#666' } },
+                    axisLabel: { color: '#ffffff' },
+                    splitLine: { lineStyle: { color: '#333' } }
+                },
+                series: [{
+                    data: [3, 4, 2, 1, 5, 6, 3],
+                    type: 'bar',
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#0066cc' },
+                            { offset: 1, color: '#00d4ff' }
+                        ])
+                    },
+                    barWidth: '60%'
+                }]
+            };
+            machineChart.setOption(machineOption);
+
+            // Make charts responsive
+            window.addEventListener('resize', () => {
+                statusChart.resize();
+                machineChart.resize();
+            });
+        }
+
+        function animateMetrics() {
+            if (typeof anime !== 'undefined') {
+                anime({
+                    targets: '.metric-card',
+                    opacity: [0, 1],
+                    translateY: [30, 0],
+                    duration: 800,
+                    delay: anime.stagger(100),
+                    easing: 'easeOutExpo'
+                });
+
+                anime({
+                    targets: '.glass-card, .machine-card',
+                    opacity: [0, 1],
+                    translateY: [50, 0],
+                    duration: 1000,
+                    delay: anime.stagger(200, {start: 400}),
+                    easing: 'easeOutExpo'
+                });
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('landaUser');
+            window.location.href = 'index.html';
+        }
+
+        function showAnalytics() {
+            alert('Analytics dashboard coming soon! This will show detailed performance reports and trends.');
+        }
+    </script>
+</body>
+</html>
