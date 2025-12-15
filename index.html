@@ -202,32 +202,44 @@
 
   <!-- Stars background -->
   <script>
-    let stars = [];
-    function setup() {
-      const c = createCanvas(windowWidth, windowHeight);
-      c.parent(document.body);
-      for (let i = 0; i < 180; i++) {
-        stars.push({
-          x: random(width),
-          y: random(height),
-          z: random(0.3, 1)
-        });
+  let stars = [];
+
+  function setup() {
+    const c = createCanvas(windowWidth, windowHeight);
+    c.parent(document.body);
+
+    for (let i = 0; i < 220; i++) {
+      stars.push({
+        x: random(width),
+        y: random(height),
+        z: random(0.3, 1.2),
+        speed: random(0.15, 0.6)
+      });
+    }
+  }
+
+  function draw() {
+    clear();
+    noStroke();
+
+    for (let s of stars) {
+      fill(255, 255, 255, 140 * s.z);
+      circle(s.x, s.y, 2.2 * s.z);
+
+      // movement
+      s.y += s.speed * s.z;
+
+      if (s.y > height) {
+        s.y = 0;
+        s.x = random(width);
       }
     }
+  }
 
-    function draw() {
-      clear();
-      noStroke();
-      fill(255, 255, 255, 120);
-      for (let s of stars) {
-        circle(s.x, s.y, 2 * s.z);
-      }
-    }
-
-    function windowResized() {
-      resizeCanvas(windowWidth, windowHeight);
-    }
-  </script>
+  function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+  }
+</script>
 
   <!-- Main logic -->
   <script src="main.js"></script>
