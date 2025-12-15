@@ -1,415 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Landa Case Management - Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landa Digital Printing – CRS Login</title>
 
-    
-    <style>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
 
-        .logo-mark {
-            width: 32px;
-            height: 32px;
-            border-radius: 0.75rem;
-            background: #020617;
-            position: relative;
-            box-shadow:
-                0 0 0 1px rgba(15,23,42,1),
-                0 0 18px rgba(34, 211, 238, 0.8);
-            overflow: hidden;
-        }
-        .logo-mark::before {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            border-radius: 999px;
-            background: radial-gradient(circle at 30% 30%, #22d3ee, #0f172a);
-            top: 7px;
-            left: 7px;
-            box-shadow: 0 0 18px rgba(34, 211, 238, 0.9);
-        }
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-        :root {
-            --bg-main: #020617;
-            --accent-blue: #2563eb;
-            --accent-cyan: #06b6d4;
-            --border-strong: rgba(148, 163, 184, 0.55);
-            --surface: rgba(15, 23, 42, 0.96);
-            --text-main: #e5e7eb;
-            --text-muted: #9ca3af;
-        }
+  <style>
+    :root {
+      --bg-main: #020617;
+      --surface: rgba(15, 23, 42, 0.96);
+      --border: rgba(148, 163, 184, 0.55);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --accent-blue: #2563eb;
+      --accent-cyan: #22d3ee;
+    }
 
-        body {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background:
-                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.16), transparent 55%),
-                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.14), transparent 55%),
-                #020617;
-            color: var(--text-main);
-            overflow: hidden;
-        }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(37,99,235,0.18), transparent 55%),
+        radial-gradient(circle at 100% 0%, rgba(6,182,212,0.18), transparent 55%),
+        var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
 
-        #starfield-container canvas {
-            opacity: 0.85;
-            filter: blur(0.25px);
-        }
+    .glass-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 22px 52px rgba(0,0,0,0.6);
+    }
 
-        .glass-card {
-            background: var(--surface);
-            border-radius: 1.25rem;
-            border: 1px solid var(--border-strong);
-            box-shadow:
-                0 22px 52px rgba(15, 23, 42, 0.98),
-                0 0 0 1px rgba(30, 64, 175, 0.35);
-            backdrop-filter: blur(18px);
-        }
+    /* Branding */
+    .login-brand {
+      text-align: center;
+      margin-bottom: 2.25rem;
+    }
 
-        .hero-title {
-            font-family: 'Satoshi', system-ui, sans-serif;
-            font-size: 1.5rem;
-            letter-spacing: 0.32em;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
+    .brand-line-1 {
+      font-size: 1.85rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
 
-        .subtitle {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
+    .brand-line-2 {
+      margin-top: 0.35rem;
+      font-size: 1.1rem;
+      letter-spacing: 0.32em;
+      color: var(--accent-cyan);
+    }
 
-        .login-header {
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
-            letter-spacing: 0.28em;
-            text-transform: uppercase;
-            color: #a5b4fc;
-        }
+    .brand-line-3 {
+      margin-top: 0.25rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
 
-        .input-field {
-            width: 100%;
-            border-radius: 0.9rem;
-            background: rgba(15, 23, 42, 0.96);
-            border: 1px solid rgba(51, 65, 85, 0.9);
-            padding-inline: 0.9rem;
-            padding-block: 0.65rem;
-            font-size: 0.85rem;
-            transition: all 0.18s ease;
-        }
+    /* Inputs */
+    .input-field,
+    .select-field {
+      width: 100%;
+      border-radius: 0.85rem;
+      background: rgba(15,23,42,0.96);
+      border: 1px solid rgba(51,65,85,0.9);
+      padding: 0.6rem 0.85rem;
+      font-size: 0.85rem;
+      color: #fff;
+    }
 
-        .input-field:focus {
-            outline: none;
-            border-color: rgba(59, 130, 246, 1);
-            box-shadow:
-                0 0 0 1px rgba(59, 130, 246, 0.95),
-                0 18px 40px rgba(15, 23, 42, 0.98);
-            background: rgba(15, 23, 42, 0.98);
-        }
+    .input-field:focus,
+    .select-field:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
 
-        .btn-primary {
-            border-radius: 999px;
-            background-image: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
-            border: 1px solid rgba(191, 219, 254, 0.7);
-            font-size: 0.8rem;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            font-weight: 600;
-            padding-inline: 1.4rem;
-            padding-block: 0.8rem;
-            box-shadow:
-                0 18px 36px rgba(37, 99, 235, 0.75),
-                0 0 0 1px rgba(15, 23, 42, 0.95);
-            position: relative;
-            overflow: hidden;
-        }
+    /* Button */
+    .btn-primary {
+      margin-top: 0.5rem;
+      width: 100%;
+      padding: 0.65rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 600;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      color: #020617;
+      box-shadow: 0 10px 26px rgba(37,99,235,0.55);
+    }
 
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(120deg,
-                        rgba(59, 130, 246, 0.22),
-                        transparent,
-                        rgba(56, 189, 248, 0.22));
-            opacity: 0;
-            transform: translateX(-24%);
-            transition: all 0.22s ease-out;
-        }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 34px rgba(37,99,235,0.7);
+    }
 
-        .btn-primary:hover::before {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow:
-                0 22px 46px rgba(37, 99, 235, 0.9),
-                0 0 0 1px rgba(59, 130, 246, 0.98);
-        }
-
-        .radio-custom {
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 999px;
-            border: 1px solid rgba(148, 163, 184, 0.8);
-            background: rgba(15, 23, 42, 0.98);
-            position: relative;
-            transition: all 0.18s ease;
-        }
-
-        .radio-custom:checked {
-            border-color: rgba(59, 130, 246, 1);
-            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.95);
-        }
-
-        .radio-custom:checked::after {
-            content: '';
-            position: absolute;
-            inset: 3px;
-            border-radius: 999px;
-            background: radial-gradient(circle at 30% 30%, var(--accent-cyan), var(--accent-blue));
-        }
-
-        .user-type-label {
-            font-size: 0.8rem;
-        }
-
-        .helper-text {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
-
-        .footnote {
-            font-size: 0.7rem;
-            color: #6b7280;
-        }
-        .login-brand {
- .login-button {
-  padding: 0.65rem;
-  font-size: 0.9rem;
-  letter-spacing: 0.12em;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #0ea5e9, #22d3ee);
-  color: #020617;
-}
-
-.brand-line-1 {
-  font-size: 1.9rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: #e5e7eb;
-}
-
-.brand-line-2 {
-  margin-top: 0.4rem;
-  font-size: 1.2rem;
-  letter-spacing: 0.35em;
-  color: #22d3ee;
-}
-
-.brand-line-3 {
-  margin-top: 0.3rem;
-  font-size: 0.95rem;
-  color: rgba(148,163,184,0.9);
-}       
-    </style>
-
-
-
+    footer {
+      position: absolute;
+      bottom: 18px;
+      width: 100%;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #6b7280;
+    }
+  </style>
 </head>
-<body class="min-h-screen flex items-center justify-center relative">
-    <div id="starfield-container"></div>
-    
-    <!-- Main Container -->
-    <div class="relative z-10 w-full max-w-md mx-4">
-        
-        
-        
-        <!-- Logo Section -->
-        <div class="login-brand">
-  <div class="brand-line-1">Landa Digital Printing</div>
-  <div class="brand-line-2">CRS</div>
-  <div class="brand-line-3">Case Resolution Suite</div>
-</div>
 
-        <!-- Login Form -->
-        <div class="glass-card rounded-2xl p-8 shadow-2xl">
-            <form id="login-form" class="space-y-6">
-                <!-- Username Field -->
-                <div>
-                    <label for="username" class="block text-sm font-medium text-gray-300 mb-2">
-                        Username
-                    </label>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username"
-                        required
-                        class="input-field w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none"
-                        placeholder="Enter your expert username"
-                        value="Expert"
-                    >
-                </div>
+<body class="flex items-center justify-center relative">
 
-                <!-- Password Field -->
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-300 mb-2">
-                        Access Code
-                    </label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password"
-                        required
-                        class="input-field w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none"
-                        placeholder="Enter secure access code"
-                        value="Landa123456"
-                    >
-                </div>
-
-                <!-- User Type Selection -->
-                <div>
-                  <label>Access Level</label>
-<select id="user-type">
-  <option value="expert">Expert</option>
-  <option value="service">Service Engineer</option>
-  <option value="manager">Manager</option>
-  <option value="rnd">R&D</option>
-</select>
-                </div>
-
-                <!-- Submit Button -->
-                <button 
-                    type="submit" 
-                    class="btn-primary w-full py-4 px-6 rounded-lg text-white font-bold text-lg shadow-lg"
-                >
-                    ACCESS SYSTEM
-                </button>
-            </form>
-
-        <!-- Footer -->
-        <div class="text-center mt-8">
-            <p class="text-gray-500 text-sm">
-                © 2025 Landa Digital Printing | Nanography® Technology | AI-Powered Support System
-            </p>
-        </div>
+  <div class="w-full max-w-md px-4">
+    <!-- Branding -->
+    <div class="login-brand">
+      <div class="brand-line-1">Landa Digital Printing</div>
+      <div class="brand-line-2">CRS</div>
+      <div class="brand-line-3">Case Resolution Suite</div>
     </div>
 
-    <!-- Loading Animation -->
-    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="glass-card rounded-lg p-8 text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
-            <p class="text-white">Quantum Authentication...</p>
+    <!-- Login Card -->
+    <div class="glass-card p-8">
+      <form id="login-form" class="space-y-5">
+        <div>
+          <label class="text-sm mb-1 block">Username</label>
+          <input id="username" class="input-field" type="text" required>
         </div>
+
+        <div>
+          <label class="text-sm mb-1 block">Password</label>
+          <input id="password" class="input-field" type="password" required>
+        </div>
+
+        <div>
+          <label class="text-sm mb-1 block">Access Level</label>
+          <select id="user-type" class="select-field">
+            <option value="expert">Expert</option>
+            <option value="service">Service Engineer</option>
+            <option value="manager">Manager</option>
+            <option value="rnd">R&amp;D</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-primary">
+          Access System
+        </button>
+      </form>
     </div>
+  </div>
 
-    <script src="main.js"></script>
-    <script>
-        // Enhanced starfield with quantum particles
-        document.addEventListener('DOMContentLoaded', () => {
-            // Animate form elements on load
-            if (typeof anime !== 'undefined') {
-                anime.timeline({
-                    easing: 'easeOutExpo',
-                })
-                .add({
-                    targets: '.glass-card',
-                    opacity: [0, 1],
-                    translateY: [50, 0],
-                    duration: 1000,
-                })
-                .add({
-                    targets: '.input-field',
-                    opacity: [0, 1],
-                    translateX: [-30, 0],
-                    duration: 800,
-                    delay: anime.stagger(100)
-                }, '-=500')
-                .add({
-                    targets: '.btn-primary',
-                    opacity: [0, 1],
-                    scale: [0.8, 1],
-                    duration: 600,
-                }, '-=400');
-            }
+  <footer>
+    © 2025 Landa Digital Printing · Nanography® · AI-Powered Support System
+  </footer>
 
-            // Form validation and interaction
-            const form = document.getElementById('login-form');
-            const inputs = form.querySelectorAll('.input-field');
-            
-            inputs.forEach(input => {
-                input.addEventListener('focus', () => {
-                    if (typeof anime !== 'undefined') {
-                        anime({
-                            targets: input,
-                            scale: [1, 1.02],
-                            duration: 200,
-                            easing: 'easeOutQuad'
-                        });
-                    }
-                });
-
-                input.addEventListener('blur', () => {
-                    if (typeof anime !== 'undefined') {
-                        anime({
-                            targets: input,
-                            scale: [1.02, 1],
-                            duration: 200,
-                            easing: 'easeOutQuad'
-                        });
-                    }
-                });
-            });
-
-            // Add quantum particle effect
-            createQuantumParticles();
-        });
-
-        function createQuantumParticles() {
-            // Add floating quantum particles for extra futuristic feel
-            const particles = [];
-            for (let i = 0; i < 20; i++) {
-                const particle = document.createElement('div');
-                particle.style.cssText = `
-                    position: fixed;
-                    width: 2px;
-                    height: 2px;
-                    background: #00d4ff;
-                    border-radius: 50%;
-                    pointer-events: none;
-                    z-index: -1;
-                    opacity: 0.6;
-                `;
-                particle.style.left = Math.random() * window.innerWidth + 'px';
-                particle.style.top = Math.random() * window.innerHeight + 'px';
-                document.body.appendChild(particle);
-                particles.push(particle);
-            }
-
-            // Animate particles
-            if (typeof anime !== 'undefined') {
-                particles.forEach((particle, index) => {
-                    anime({
-                        targets: particle,
-                        translateY: [0, -100],
-                        opacity: [0.6, 0],
-                        duration: 8000 + Math.random() * 4000,
-                        delay: Math.random() * 2000,
-                        loop: true,
-                        easing: 'linear'
-                    });
-                });
-            }
-        }
-    </script>
+  <script src="main.js"></script>
 </body>
 </html>
