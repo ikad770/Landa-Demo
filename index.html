@@ -100,21 +100,33 @@
 
     /* Inputs */
     .input-field,
-    .select-field {
-      width: 100%;
-      border-radius: 0.85rem;
-      background: rgba(15,23,42,0.95);
-      border: 1px solid rgba(51,65,85,0.85);
-      padding: 0.6rem 0.85rem;
-      font-size: 0.85rem;
-      color: #fff;
-    }
+   .select-field {
+  width: 100%;
+  border-radius: 0.85rem;
+  background: rgba(15,23,42,0.98);
+  border: 1px solid rgba(51,65,85,0.9);
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+  color: #e5e7eb;
 
-    .input-field:focus,
-    .select-field:focus {
-      outline: none;
-      border-color: var(--accent-blue);
-    }
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image:
+    linear-gradient(45deg, transparent 50%, #22d3ee 50%),
+    linear-gradient(135deg, #22d3ee 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) calc(50% - 2px),
+    calc(100% - 12px) calc(50% - 2px);
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+}
+
+.select-field option {
+  background-color: #020617;
+  color: #e5e7eb;
+}
 
     /* Button */
     .btn-primary {
