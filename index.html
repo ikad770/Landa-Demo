@@ -11,45 +11,34 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    :root {
-      --bg: #020617;
-      --glass: rgba(15,23,42,0.92);
-      --border: rgba(148,163,184,0.45);
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --blue: #2563eb;
-      --cyan: #22d3ee;
+    :root{
+      --bg:#020617;
+      --glass:rgba(15,23,42,.92);
+      --border:rgba(148,163,184,.45);
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --blue:#2563eb;
+      --cyan:#22d3ee;
+      --ok:#22c55e;
+      --err:#ef4444;
     }
 
     html,body{
-      margin:0;
-      height:100%;
+      margin:0;height:100%;
       font-family:Inter,system-ui,sans-serif;
-      background:var(--bg);
-      color:var(--text);
+      background:var(--bg);color:var(--text);
       overflow:hidden;
     }
 
-    canvas{
-      position:fixed!important;
-      inset:0;
-      z-index:0;
-    }
+    canvas{position:fixed!important;inset:0;z-index:0}
 
     .page{
-      position:relative;
-      z-index:2;
+      position:relative;z-index:2;
       min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      display:flex;align-items:center;justify-content:center;
     }
 
-    .wrap{
-      width:100%;
-      max-width:420px;
-      padding:1rem;
-    }
+    .wrap{width:100%;max-width:420px;padding:1rem}
 
     .glass{
       background:var(--glass);
@@ -73,8 +62,7 @@
       border:1px solid rgba(51,65,85,.85);
       border-radius:.85rem;
       padding:.6rem .85rem;
-      color:#fff;
-      font-size:.85rem;
+      color:#fff;font-size:.85rem;
     }
 
     .input:focus{outline:none;border-color:var(--blue)}
@@ -82,52 +70,31 @@
     /* Custom select */
     .select{position:relative}
     .select-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
+      display:flex;justify-content:space-between;align-items:center;
       cursor:pointer;
     }
     .select-head::after{
-      content:"▾";
-      color:var(--cyan);
-      font-size:.95rem;
+      content:"▾";color:var(--cyan);font-size:1rem;
     }
     .options{
-      position:absolute;
-      top:calc(100% + 6px);
-      left:0;right:0;
+      position:absolute;top:calc(100% + 6px);left:0;right:0;
       background:rgba(2,6,23,.96);
       border:1px solid rgba(51,65,85,.85);
       border-radius:.85rem;
-      overflow:hidden;
-      display:none;
-      z-index:10;
+      overflow:hidden;display:none;z-index:10;
       box-shadow:0 18px 40px rgba(0,0,0,.7);
     }
     .options div{
-      padding:.6rem .85rem;
-      font-size:.85rem;
-      cursor:pointer;
+      padding:.6rem .85rem;font-size:.85rem;cursor:pointer;
     }
     .options div:hover{background:rgba(37,99,235,.25)}
     .select.open .options{display:block}
 
-    .status{
-      text-align:center;
-      font-size:.85rem;
-    }
-    .ok{color:#22c55e}
-    .err{color:#ef4444}
-
     .btn{
-      margin-top:.9rem;
-      width:100%;
-      padding:.65rem;
-      border-radius:999px;
-      font-size:.8rem;
-      letter-spacing:.16em;
-      font-weight:600;
-      text-transform:uppercase;
+      margin-top:1rem;width:100%;
+      padding:.65rem;border-radius:999px;
+      font-size:.8rem;letter-spacing:.16em;
+      font-weight:600;text-transform:uppercase;
       background:linear-gradient(135deg,var(--blue),var(--cyan));
       color:#020617;
       box-shadow:0 10px 26px rgba(37,99,235,.45);
@@ -136,14 +103,23 @@
     .btn:hover{transform:translateY(-1px);box-shadow:0 14px 34px rgba(37,99,235,.65)}
 
     footer{
-      position:fixed;
-      bottom:14px;
-      width:100%;
-      text-align:center;
-      font-size:.7rem;
-      color:#6b7280;
-      z-index:1;
+      position:fixed;bottom:14px;width:100%;
+      text-align:center;font-size:.7rem;color:#6b7280;z-index:1;
     }
+
+    /* Toast */
+    .toast{
+      position:fixed;right:24px;top:24px;
+      padding:.8rem 1.1rem;
+      border-radius:.85rem;
+      font-size:.85rem;
+      box-shadow:0 12px 30px rgba(0,0,0,.6);
+      opacity:0;transform:translateY(-10px);
+      transition:.3s;z-index:20;
+    }
+    .toast.show{opacity:1;transform:translateY(0)}
+    .toast.ok{background:rgba(34,197,94,.15);color:var(--ok);border:1px solid rgba(34,197,94,.4)}
+    .toast.err{background:rgba(239,68,68,.15);color:var(--err);border:1px solid rgba(239,68,68,.4)}
   </style>
 </head>
 
@@ -184,10 +160,7 @@
           </div>
         </div>
 
-        <div id="status" class="status hidden"></div>
-
         <button class="btn">Access System</button>
-
       </form>
     </div>
 
@@ -197,6 +170,8 @@
 <footer>
   © 2025 Landa Digital Printing · Nanography® · AI-Powered Support System
 </footer>
+
+<div id="toast" class="toast"></div>
 
 <!-- Stars -->
 <script>
@@ -218,14 +193,15 @@ function draw(){
 function windowResized(){resizeCanvas(windowWidth,windowHeight)}
 </script>
 
-<!-- Login logic -->
+<!-- Logic -->
 <script>
 const form=document.getElementById("loginForm");
-const status=document.getElementById("status");
+const toast=document.getElementById("toast");
 const roleSelect=document.getElementById("roleSelect");
 const roleValue=document.getElementById("roleValue");
 let role="expert";
 
+/* select logic */
 roleSelect.addEventListener("click",e=>{
   roleSelect.classList.toggle("open");
 });
@@ -240,23 +216,27 @@ document.addEventListener("click",e=>{
   if(!roleSelect.contains(e.target))roleSelect.classList.remove("open");
 });
 
+/* toast */
+function showToast(msg,type){
+  toast.textContent=msg;
+  toast.className=`toast show ${type}`;
+  setTimeout(()=>toast.classList.remove("show"),2500);
+}
+
+/* login */
 form.onsubmit=e=>{
   e.preventDefault();
+
   const u=username.value.trim();
   const p=password.value.trim();
-  status.classList.remove("hidden","ok","err");
 
-  if(!u||!p){
-    status.textContent="Access denied";
-    status.classList.add("err");
-    return;
+  if(u==="Expert" && p==="Landa123456"){
+    showToast("Access successful","ok");
+    localStorage.setItem("landaUser",JSON.stringify({username:u,role}));
+    setTimeout(()=>location.href="dashboard.html",1200);
+  }else{
+    showToast("Access denied","err");
   }
-
-  localStorage.setItem("landaUser",JSON.stringify({username:u,role}));
-  status.textContent="Access successful";
-  status.classList.add("ok");
-
-  setTimeout(()=>location.href="dashboard.html",900);
 };
 </script>
 
