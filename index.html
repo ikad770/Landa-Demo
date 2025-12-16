@@ -159,7 +159,7 @@
             </div>
           </div>
         </div>
-
+<div id="login-status" class="login-status hidden"></div>
         <button class="btn">Access System</button>
       </form>
     </div>
@@ -195,7 +195,7 @@ function windowResized(){resizeCanvas(windowWidth,windowHeight)}
 
 <!-- Logic -->
 <script>
-const form=document.getElementById("loginForm");
+const form=document.getElementById("Form");
 const toast=document.getElementById("toast");
 const roleSelect=document.getElementById("roleSelect");
 const roleValue=document.getElementById("roleValue");
@@ -206,9 +206,10 @@ roleSelect.addEventListener("click",e=>{
   roleSelect.classList.toggle("open");
 });
 document.querySelectorAll(".options div").forEach(opt=>{
-  opt.onclick=()=>{
-    role=opt.dataset.role;
-    roleValue.textContent=opt.textContent;
+  opt.onclick=(e)=>{
+    e.stopPropagation();              // 👈 זה התיקון
+    role = opt.dataset.role;
+    roleValue.textContent = opt.textContent;
     roleSelect.classList.remove("open");
   };
 });
@@ -223,7 +224,7 @@ function showToast(msg,type){
   setTimeout(()=>toast.classList.remove("show"),2500);
 }
 
-/* login */
+/*  */
 form.onsubmit=e=>{
   e.preventDefault();
 
