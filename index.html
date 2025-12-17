@@ -47,6 +47,17 @@ canvas{position:fixed!important;inset:0;z-index:0}
   backdrop-filter:blur(18px);
   box-shadow:0 22px 52px rgba(0,0,0,.6);
   padding:2rem;
+  transition: border-color .3s ease, box-shadow .3s ease;
+}
+
+/* ✨ glow on interaction */
+.glass:hover,
+.glass:focus-within{
+  border-color: var(--cyan);
+  box-shadow:
+    0 0 0 1px rgba(34,211,238,.35),
+    0 0 28px rgba(34,211,238,.15),
+    0 22px 52px rgba(0,0,0,.6);
 }
 
 .brand{text-align:center;margin-bottom:2.2rem}
