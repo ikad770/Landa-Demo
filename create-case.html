@@ -1,476 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Case - Landa Case Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Case – Landa CRS</title>
 
-    
-    <style>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-        .logo-mark {
-            width: 32px;
-            height: 32px;
-            border-radius: 0.75rem;
-            background: #020617;
-            position: relative;
-            box-shadow:
-                0 0 0 1px rgba(15,23,42,1),
-                0 0 18px rgba(34, 211, 238, 0.8);
-            overflow: hidden;
-        }
-        .logo-mark::before {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            border-radius: 999px;
-            background: radial-gradient(circle at 30% 30%, #22d3ee, #0f172a);
-            top: 7px;
-            left: 7px;
-            box-shadow: 0 0 18px rgba(34, 211, 238, 0.9);
-        }
-
-        :root {
-            --bg-main: #020617;
-            --bg-surface: rgba(15, 23, 42, 0.98);
-            --border-soft: rgba(51, 65, 85, 0.9);
-            --border-strong: rgba(148, 163, 184, 0.7);
-            --accent-blue: #2563eb;
-            --accent-cyan: #06b6d4;
-            --text-main: #e5e7eb;
-            --text-muted: #9ca3af;
-        }
-
-        body {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background:
-                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.16), transparent 55%),
-                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.14), transparent 55%),
-                #020617;
-            color: var(--text-main);
-        }
-
-        .layout-shell {
-            min-height: 100vh;
-            display: flex;
-        }
-
-        .sidebar {
-            width: 240px;
-            background: rgba(10, 16, 30, 0.98);
-            border-right: 1px solid rgba(15, 23, 42, 0.95);
-            box-shadow:
-                4px 0 24px rgba(15, 23, 42, 0.85),
-                0 0 0 1px rgba(15, 23, 42, 1);
-            padding: 1.25rem 1rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1.75rem;
-        }
-
-        .sidebar-header img {
-            width: 32px;
-            height: 32px;
-            border-radius: 0.75rem;
-            box-shadow:
-                0 0 0 1px rgba(15, 23, 42, 1),
-                0 0 18px rgba(37, 99, 235, 0.8);
-        }
-
-        .logo-title {
-            font-family: 'Satoshi', system-ui, sans-serif;
-            font-size: 0.78rem;
-            letter-spacing: 0.26em;
-            text-transform: uppercase;
-        }
-
-        .logo-subtitle {
-            font-size: 0.65rem;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-        }
-
-        .sidebar-nav {
-            margin-top: 0.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .nav-link {
-            display: block;
-            border-radius: 0.6rem;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.83rem;
-            color: #cbd5f5;
-        }
-
-        .nav-link:hover {
-            background: rgba(15, 23, 42, 0.96);
-            color: #eff6ff;
-        }
-
-        .nav-link-active {
-            background: rgba(37, 99, 235, 0.16);
-            color: var(--accent-cyan);
-            border: 1px solid rgba(37, 99, 235, 0.6);
-        }
-
-        .sidebar-footer {
-            margin-top: auto;
-            padding-top: 1.25rem;
-            border-top: 1px solid rgba(30, 41, 59, 0.9);
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .user-pill {
-            display: flex;
-            align-items: center;
-            gap: 0.45rem;
-            padding: 0.35rem 0.75rem;
-            border-radius: 999px;
-            background: rgba(15, 23, 42, 0.96);
-            border: 1px solid var(--border-strong);
-            box-shadow:
-                0 10px 26px rgba(15, 23, 42, 0.98),
-                0 0 0 1px rgba(30, 64, 175, 0.4);
-        }
-
-        .user-avatar {
-            width: 24px;
-            height: 24px;
-            border-radius: 999px;
-            background: radial-gradient(circle at 30% 20%, var(--accent-cyan), #0f172a);
-            font-size: 0.7rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow:
-                0 0 0 1px rgba(15, 23, 42, 1),
-                0 0 14px rgba(34, 211, 238, 0.9);
-        }
-
-        .user-name {
-            font-size: 0.8rem;
-        }
-
-        .user-role {
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            letter-spacing: 0.16em;
-            color: var(--text-muted);
-        }
-
-        .nav-logout {
-            border-radius: 999px;
-            padding: 0.45rem 0.85rem;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.16em;
-            border: 1px solid rgba(148, 163, 184, 0.65);
-            color: var(--text-muted);
-        }
-
-        .nav-logout:hover {
-            border-color: rgba(248, 250, 252, 0.95);
-            color: #e5e7eb;
-        }
-
-        .main-shell {
-            flex: 1;
-            min-height: 100vh;
-            padding: 1.75rem 2rem;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.75rem;
-        }
-
-        .page-title {
-            font-family: 'Satoshi', system-ui, sans-serif;
-            font-size: 0.95rem;
-            letter-spacing: 0.28em;
-            text-transform: uppercase;
-        }
-
-        .page-subtitle {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .metric-card,
-        .glass-card,
-        .case-card,
-        .solution-card,
-        .machine-card {
-            background: var(--bg-surface);
-            border-radius: 1rem;
-            border: 1px solid var(--border-strong);
-            box-shadow:
-                0 16px 42px rgba(15, 23, 42, 0.98),
-                0 0 0 1px rgba(15, 23, 42, 1);
-        }
-
-        .metric-card {
-            padding: 1.1rem 1.2rem;
-        }
-
-        .sub-card {
-            border-radius: 0.9rem;
-            border: 1px solid var(--border-soft);
-        }
-
-        .section-title {
-            font-family: 'Satoshi', system-ui, sans-serif;
-            font-size: 0.8rem;
-            letter-spacing: 0.26em;
-            text-transform: uppercase;
-            color: #e5e7eb;
-        }
-
-        .section-subtitle {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-        }
-
-        .btn-primary {
-            border-radius: 999px;
-            background-image: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
-            border: 1px solid rgba(191, 219, 254, 0.7);
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            letter-spacing: 0.18em;
-            font-weight: 600;
-            padding-inline: 1.25rem;
-            padding-block: 0.65rem;
-            box-shadow:
-                0 16px 34px rgba(37, 99, 235, 0.7),
-                0 0 0 1px rgba(15, 23, 42, 0.95);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(120deg,
-                        rgba(59, 130, 246, 0.22),
-                        transparent,
-                        rgba(56, 189, 248, 0.24));
-            opacity: 0;
-            transform: translateX(-22%);
-            transition: all 0.22s ease-out;
-        }
-
-        .btn-primary:hover::before {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow:
-                0 20px 44px rgba(37, 99, 235, 0.88),
-                0 0 0 1px rgba(59, 130, 246, 0.96);
-        }
-
-        .badge {
-            border-radius: 999px;
-            font-size: 0.7rem;
-            padding: 0.12rem 0.55rem;
-            border: 1px solid rgba(148, 163, 184, 0.65);
-        }
-
-        .table-header {
-            background: rgba(15, 23, 42, 0.98);
-        }
-
-        .table-row-hover:hover {
-            background: rgba(15, 23, 42, 0.94);
-        }
-    </style>
-
-
-
+<style>
+body{
+  font-family:Inter,system-ui,sans-serif;
+  background:#020617;
+  color:#e5e7eb;
+}
+</style>
 </head>
-<body class="min-h-screen relative">
-    <div id="starfield-container"></div>
-    
-    
-    
-    
-    <div class="layout-shell">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-mark"></div>
-                <div class="ml-3 leading-tight">
-                    <div class="logo-title">LANDA</div>
-                    <div class="logo-subtitle">Case Management</div>
-                </div>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
-                <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
-                <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
-                <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="user-pill">
-                    <div class="user-avatar" id="nav-user-avatar">EX</div>
-                    <div class="flex flex-col leading-tight">
-                        <span class="user-name" id="nav-user-name">Expert User</span>
-                        <span class="user-role" id="nav-user-role">EXPERT ACCESS</span>
-                    </div>
-                </div>
-                <button onclick="logout()" class="nav-logout">Logout</button>
-            </div>
-        </aside>
-        <div class="main-shell">
-<!-- Main Content -->
-    
-    <main class="pt-16 px-6 pb-10">
-        <!-- Page Header -->
-        <div class="page-header mb-8">
-            <div>
-                <div class="page-title text-xs tracking-[0.3em] uppercase text-slate-300">Create Case</div>
-                <div class="page-subtitle mt-1 text-sm text-gray-400">Document a new technical case for a specific Landa press</div>
-            </div>
-            <div class="hidden md:flex items-center space-x-2 text-xs text-gray-500">
-                <span>Home</span>
-                <span>/</span>
-                <span class="text-gray-300">Create Case</span>
-            </div>
-        </div>
 
-        <!-- Single Page Form -->
-        <div class="glass-card rounded-xl p-8">
-            <form id="case-form" class="space-y-10">
-                <!-- Section: Machine Information -->
-                <section>
-                    <h3 class="text-sm font-semibold tracking-[0.22em] uppercase text-slate-300 mb-4">Machine Information</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-300 mb-2">SF Case Number</label>
-                            <input type="text" id="sf-case" name="sfCase" required class="form-input w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none" placeholder="e.g., SF-2024-XXX">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-300 mb-2">Case Owner</label>
-                            <input type="text" id="case-owner" name="caseOwner" required class="form-input w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none" placeholder="Enter owner name">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-300 mb-2">Press Type</label>
-                            <div class="flex items-center space-x-6">
-                                <label class="inline-flex items-center">
-                                    <input type="radio" name="pressType" value="Simplex" class="radio-custom mr-2" checked>
-                                    <span class="text-sm text-gray-300">Simplex (S-Series)</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="radio" name="pressType" value="Duplex" class="radio-custom mr-2">
-                                    <span class="text-sm text-gray-300">Duplex (D-Series)</span>
-                                </label>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-300 mb-2">Press Name</label>
-                            <input type="text" id="press-name" name="pressName" required class="form-input w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none" placeholder="e.g., S1, D3">
-                        </div>
-                    </div>
-                </section>
+<body class="min-h-screen">
 
-                <!-- Section: System Details -->
-                <section>
-                    <h3 class="text-sm font-semibold tracking-[0.22em] uppercase text-slate-300 mb-4">System Details</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-300 mb-2">System</label>
-                            <input type="text" id="system" name="system" class="form-input w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none" placeholder="e.g., Printing, Paper Handling">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-300 mb-2">Sub-System</label>
-                            <input type="text" id="sub-system" name="subSystem" class="form-input w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none" placeholder="e.g., Ink Delivery, Feeder">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-300 mb-2">Area (HW / SW / EC)</label>
-                            <input type="text" id="area" name="area" class="form-input w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none" placeholder="e.g., HW">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-300 mb-2">Subject</label>
-                            <input type="text" id="subject" name="subject" required class="form-input w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none" placeholder="Brief issue subject">
-                        </div>
-                    </div>
-                </section>
+<div class="max-w-5xl mx-auto px-6 py-12">
+  <h1 class="text-2xl font-semibold mb-8">Create New Case</h1>
 
-                <!-- Section: Issue Description -->
-                <section>
-                    <h3 class="text-sm font-semibold tracking-[0.22em] uppercase text-slate-300 mb-4">Issue Description</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-300 mb-2">Issue Description</label>
-                            <textarea id="issue-description" name="description" rows="4" class="form-input w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none" placeholder="Detailed description of the issue..."></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-300 mb-2">Initial Troubleshooting Performed</label>
-                            <textarea id="initial-steps" name="initialSteps" rows="3" class="form-input w-full px-4 py-3 rounded-lg text-white placeholder-gray-500 focus:outline-none" placeholder="Steps already taken on site..."></textarea>
-                        </div>
-                    </div>
-                </section>
+  <form id="case-form" class="space-y-8">
 
-                <!-- Section: Attachments & Actions -->
-                <section>
-                    <h3 class="text-sm font-semibold tracking-[0.22em] uppercase text-slate-300 mb-4">Attachments & Actions</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-300 mb-2">Attachments (optional)</label>
-                            <input type="file" id="attachments" multiple class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500">
-                            <p class="text-[11px] text-gray-500 mt-2">You can attach logs, photos, screenshots or configuration files.</p>
-                        </div>
-                        <div class="flex justify-end space-x-3">
-                            <button type="button" class="px-4 py-2 rounded-full text-xs uppercase tracking-[0.18em] border border-slate-600 text-gray-300 hover:border-slate-300 hover:text-slate-50">Save Draft</button>
-                            <button type="submit" class="btn-primary px-8 py-3 rounded-full text-xs">Submit Case</button>
-                        </div>
-                    </div>
-                </section>
-            </form>
-        </div>
-    </main>
-
-        </div>
+    <!-- Machine Info -->
+    <div>
+      <label class="block text-sm mb-1">SF Case Number</label>
+      <input id="sf-case" class="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-2" placeholder="SF-2024-XXX">
     </div>
 
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm mb-1">Press Type</label>
+        <div class="flex gap-4">
+          <label><input type="radio" name="pressType" value="Simplex"> Simplex</label>
+          <label><input type="radio" name="pressType" value="Duplex"> Duplex</label>
+        </div>
+      </div>
 
-    <script src="main.js"></script>
-    
-    <script src="main.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof animatePageLoad === 'function') {
-                animatePageLoad();
-            }
-        });
+      <div>
+        <label class="block text-sm mb-1">Press Name</label>
+        <input id="press-name" class="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-2" placeholder="S1 / D3">
+      </div>
+    </div>
 
-        function logout() {
-            localStorage.removeItem('landaUser');
-            window.location.href = 'index.html';
-        }
-    </script>
+    <div>
+      <label class="block text-sm mb-1">Case Owner</label>
+      <input id="case-owner" class="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-2">
+    </div>
+
+    <!-- System -->
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm mb-1">System</label>
+        <input id="system" class="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-2">
+      </div>
+      <div>
+        <label class="block text-sm mb-1">Sub System</label>
+        <input id="sub-system" class="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-2">
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">Area (HW / SW / EC)</label>
+      <input id="area" class="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-2">
+    </div>
+
+    <!-- Description -->
+    <div>
+      <label class="block text-sm mb-1">Subject</label>
+      <input id="subject" class="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-2">
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">Issue Description</label>
+      <textarea id="issue-description" class="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-3 h-32"></textarea>
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">Initial Troubleshooting</label>
+      <textarea id="initial-steps" class="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-3 h-28"></textarea>
+    </div>
+
+    <div class="pt-6">
+      <button class="px-8 py-3 rounded-full bg-gradient-to-r from-blue-600 to-cyan-400 text-slate-950 font-semibold tracking-widest">
+        CREATE CASE
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<script>
+document.getElementById('case-form').addEventListener('submit', function(e){
+  e.preventDefault();
+
+  const caseData = {
+    id: document.getElementById('sf-case').value || `SF-${Date.now()}`,
+    owner: document.getElementById('case-owner').value,
+    pressType: document.querySelector('input[name="pressType"]:checked')?.value || '',
+    pressName: document.getElementById('press-name').value,
+    system: document.getElementById('system').value,
+    subSystem: document.getElementById('sub-system').value,
+    area: document.getElementById('area').value,
+    subject: document.getElementById('subject').value,
+    description: document.getElementById('issue-description').value,
+    initialSteps: document.getElementById('initial-steps').value,
+    status: 'Resolved',
+    date: new Date().toISOString(),
+    rating: null,
+    parts: [],
+    attachments: []
+  };
+
+  const cases = JSON.parse(localStorage.getItem('landaCases')) || [];
+  cases.unshift(caseData);
+  localStorage.setItem('landaCases', JSON.stringify(cases));
+
+  window.location.href = 'dashboard.html';
+});
+</script>
+
 </body>
 </html>
