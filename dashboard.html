@@ -391,6 +391,48 @@
         .pill-green{border-color: rgba(16,185,129,0.55); color:#34d399; background: rgba(16,185,129,0.08);}
         .pill-cyan{border-color: rgba(34,211,238,0.55); color:#67e8f9; background: rgba(34,211,238,0.08);}
 
+    
+        /* --- Case modal layout (match Cases page) --- */
+        .case-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:2.25rem;}
+        @media (max-width: 720px){.case-detail-grid{grid-template-columns:1fr;gap:1.25rem;}}
+        .case-kv{display:grid;grid-template-columns:140px 1fr;gap:.4rem .9rem;font-size:.95rem;line-height:1.45;}
+        .case-kv .k{color:rgba(148,163,184,.92);}
+        .case-kv .v{color:rgba(226,232,240,.95);font-weight:600;}
+        .case-section{margin-top:1.1rem;}
+        .case-section-title{font-size:1.05rem;font-weight:700;color:rgba(226,232,240,.98);margin-bottom:.55rem;}
+        .case-desc{color:rgba(226,232,240,.92);font-size:.98rem;line-height:1.6;}
+        .steps{display:flex;flex-direction:column;gap:.55rem;margin-top:.25rem;}
+        .step{display:flex;gap:.75rem;align-items:flex-start;color:rgba(226,232,240,.92);font-size:.95rem;line-height:1.5;}
+        .step-badge{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;
+            background:rgba(37,99,235,.22);
+            border:1px solid rgba(37,99,235,.55);
+            color:#c7d2fe;font-weight:700;font-size:.85rem;flex:0 0 26px;
+            box-shadow:0 0 0 1px rgba(6,182,212,.08), 0 10px 24px rgba(0,0,0,.35);
+        }
+        .parts-list{margin:.25rem 0 0 0;padding-left:1.1rem;color:rgba(226,232,240,.92);font-size:.95rem;line-height:1.55;}
+        .case-footer{margin-top:1.25rem;padding-top:1rem;border-top:1px solid rgba(148,163,184,.18);
+            display:flex;flex-wrap:wrap;gap:.9rem 1.2rem;align-items:center;justify-content:space-between;}
+        .case-meta{display:flex;flex-wrap:wrap;gap:.9rem 1.2rem;align-items:center;color:rgba(148,163,184,.95);font-size:.9rem;}
+        .case-meta strong{color:rgba(226,232,240,.95);font-weight:600;}
+        .case-cta{display:flex;gap:.75rem;align-items:center;}
+        .btn-close{
+            border:1px solid rgba(37,99,235,.55);
+            background:rgba(37,99,235,.22);
+            color:#e2e8f0;
+            padding:.6rem 1.05rem;
+            border-radius:.8rem;
+            font-weight:700;
+            letter-spacing:.18em;
+            font-size:.8rem;
+            text-transform:uppercase;
+            transition:transform .15s ease, box-shadow .2s ease, border-color .2s ease;
+        }
+        .btn-close:hover{
+            transform:translateY(-1px);
+            border-color:rgba(34,211,238,.7);
+            box-shadow:0 0 0 1px rgba(34,211,238,.22), 0 18px 40px rgba(0,0,0,.45);
+        }
+
     </style>
 
 
@@ -640,6 +682,7 @@
             animateMetrics();
             wireCaseModal();
             wireChartToggles();
+            wireChartClicks();
         });
 
         function ensureAuth(){
@@ -786,6 +829,27 @@
             return dt.toISOString().slice(0,10);
         }
 
+        function normalizeSteps(val){
+            if(!val) return [];
+            if(Array.isArray(val)) return val.filter(Boolean).map(v => (typeof v === 'string' ? v.trim() : String(v))).filter(Boolean);
+            if(typeof val === 'string'){
+                // split by lines or bullets
+                return val.split(/\r?\n|•|-\s+/).map(s=>s.trim()).filter(Boolean).slice(0, 12);
+            }
+            return [String(val)];
+        }
+
+        function normalizeParts(val){
+            if(!val) return [];
+            if(Array.isArray(val)) return val.filter(Boolean).map(v => (typeof v === 'string' ? v.trim() : String(v))).filter(Boolean);
+            if(typeof val === 'string'){
+                return val.split(/\r?\n|,|•/).map(s=>s.trim()).filter(Boolean).slice(0, 12);
+            }
+            return [String(val)];
+        }
+
+
+
         // ---------- CHARTS ----------
         const charts = {};
 
@@ -907,7 +971,9 @@
             chart.setOption({
                 backgroundColor: 'transparent',
                 tooltip: { trigger: 'axis', axisPointer: { type:'shadow' }, ...tooltip },
-                grid: { left: 30, right: 16, top: 18, bottom: 40 },
+                grid: { left: 28, right: 18, top: 18, bottom: 44 },
+                animationDuration: 650,
+                animationEasing: 'cubicOut',
                 xAxis: {
                     type: 'category',
                     data: labels,
@@ -947,85 +1013,101 @@
             });
         }
 
+        
         function openCaseModal(c){
             const modal = document.getElementById('case-modal');
             const body = document.getElementById('case-modal-body');
             if(!modal || !body) return;
 
-            const steps = Array.isArray(c.troubleshooting) ? c.troubleshooting : [];
-            const parts = Array.isArray(c.partsUsed) ? c.partsUsed : [];
+            const steps = normalizeSteps(c.troubleshootingSteps || c.steps || c.troubleshooting || c.initialSteps);
+            const parts = normalizeParts(c.parts || c.partsUsed);
+
+            const attachmentsCount = (Array.isArray(c.attachments) ? c.attachments.length : (Number(c.attachments) || 0));
+            const rating = (c.rating !== undefined && c.rating !== null && c.rating !== '' ? Number(c.rating) : null);
 
             body.innerHTML = `
-                <div class="flex items-start justify-between gap-6 mb-5">
+                <div class="flex items-start justify-between gap-6 mb-6">
                     <div>
-                        <div id="case-modal-title" class="text-2xl font-semibold text-blue-300">${escapeHtml(c.id || 'Case')}</div>
-                        <div class="mt-2 flex flex-wrap gap-2">
-                            <span class="pill pill-cyan">${escapeHtml(c.pressType || 'Press')} · ${escapeHtml(c.press || '—')}</span>
+                        <div id="case-modal-title" class="text-2xl md:text-3xl font-semibold text-blue-300">${escapeHtml(c.id || 'Case')}</div>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <span class="pill pill-cyan">${escapeHtml(c.pressType || 'Press')} · ${escapeHtml(c.press || c.pressName || '—')}</span>
                             <span class="pill pill-green">${escapeHtml((c.status || 'Resolved').toString())}</span>
                             <span class="pill">${escapeHtml(formatDate(c.date))}</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="sub-card p-4">
-                        <div class="section-title mb-2">Context</div>
-                        <div class="text-sm text-slate-200 leading-6">
-                            <div class="mb-2"><span class="text-slate-400">System:</span> ${escapeHtml(c.system || '—')}</div>
-                            <div class="mb-2"><span class="text-slate-400">Sub-System:</span> ${escapeHtml(c.subSystem || '—')}</div>
-                            <div class="mb-2"><span class="text-slate-400">Area:</span> ${escapeHtml(c.area || '—')}</div>
-                            <div class="mb-2"><span class="text-slate-400">Owner:</span> ${escapeHtml(c.owner || '—')}</div>
-                            <div><span class="text-slate-400">Region:</span> ${escapeHtml(c.region || '—')}</div>
+                <div class="case-detail-grid">
+                    <div>
+                        <div class="case-kv">
+                            <div class="k">Machine Type</div><div class="v">${escapeHtml(c.pressType || '—')} - ${escapeHtml(c.press || c.pressName || '—')}</div>
+                            <div class="k">System</div><div class="v">${escapeHtml(c.system || '—')}</div>
+                            ${c.subSystem ? `<div class="k">Sub-System</div><div class="v">${escapeHtml(c.subSystem)}</div>` : ``}
+                        </div>
+
+                        <div class="case-section">
+                            <div class="case-section-title">Description</div>
+                            <div class="case-desc">${escapeHtml(c.description || c.issue || c.subject || '—')}</div>
+                        </div>
+
+                        <div class="case-section">
+                            <div class="case-section-title">Troubleshooting Steps</div>
+                            ${steps.length ? `
+                                <div class="steps">
+                                    ${steps.map((s,i)=>`
+                                        <div class="step">
+                                            <div class="step-badge">${i+1}</div>
+                                            <div>${escapeHtml(s)}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : `<div class="text-sm text-slate-400">No troubleshooting steps recorded.</div>`}
+                        </div>
+
+                        <div class="case-section">
+                            <div class="case-section-title">Parts Used</div>
+                            ${parts.length ? `
+                                <ul class="parts-list">
+                                    ${parts.map(p=>`<li>${escapeHtml(p)}</li>`).join('')}
+                                </ul>
+                            ` : `<div class="text-sm text-slate-400">No parts recorded.</div>`}
                         </div>
                     </div>
 
-                    <div class="sub-card p-4">
-                        <div class="section-title mb-2">Description</div>
-                        <div class="text-sm text-slate-200 leading-6">
-                            <div class="font-medium mb-1">${escapeHtml(c.subject || '—')}</div>
-                            <div class="text-slate-300">${escapeHtml(c.description || '—')}</div>
+                    <div>
+                        <div class="case-kv">
+                            <div class="k">Status</div><div class="v" style="color:#34d399">${escapeHtml((c.status || 'Resolved').toString())}</div>
+                            <div class="k">Date</div><div class="v">${escapeHtml(formatDate(c.date))}</div>
+                            ${c.region ? `<div class="k">Region</div><div class="v">${escapeHtml(c.region)}</div>` : ``}
+                            ${c.owner ? `<div class="k">Owner</div><div class="v">${escapeHtml(c.owner)}</div>` : ``}
+                            ${c.subject ? `<div class="k">Subject</div><div class="v">${escapeHtml(c.subject)}</div>` : ``}
                         </div>
+
+                        ${c.notes ? `
+                            <div class="case-section">
+                                <div class="case-section-title">Notes</div>
+                                <div class="case-desc">${escapeHtml(c.notes)}</div>
+                            </div>
+                        ` : ``}
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                    <div class="sub-card p-4">
-                        <div class="section-title mb-3">Troubleshooting Steps</div>
-                        ${
-                            steps.length
-                            ? `<ol class="space-y-2 text-sm">${steps.map((s,i)=>`
-                                    <li class="flex gap-3">
-                                        <span class="w-7 h-7 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-xs text-cyan-200">${i+1}</span>
-                                        <span class="text-slate-200">${escapeHtml(stepText(s))}</span>
-                                    </li>`).join('')}</ol>`
-                            : `<div class="text-sm text-slate-400">No steps recorded.</div>`
-                        }
+                <div class="case-footer">
+                    <div class="case-meta">
+                        <span>Owner: <strong>${escapeHtml(c.owner || '—')}</strong></span>
+                        <span>Rating: <strong>${rating ? `⭐ ${rating.toFixed(1)}` : '—'}</strong></span>
+                        <span>Attachments: <strong>${attachmentsCount || '0'}</strong></span>
                     </div>
-
-                    <div class="sub-card p-4">
-                        <div class="section-title mb-3">Parts Used</div>
-                        ${
-                            parts.length
-                            ? `<ul class="space-y-2 text-sm">${parts.map(p=>`
-                                    <li class="text-slate-200">• ${escapeHtml(partText(p))}</li>
-                                `).join('')}</ul>`
-                            : `<div class="text-sm text-slate-400">No parts recorded.</div>`
-                        }
+                    <div class="case-cta">
+                        <button class="btn-close" type="button" data-close="1">Close</button>
                     </div>
-                </div>
-
-                <div class="mt-6 pt-4 border-t border-slate-700 flex items-center justify-between text-sm text-slate-400">
-                    <div class="flex items-center gap-4">
-                        <span>Rating: <span class="text-slate-200">${typeof c.rating==='number' ? c.rating.toFixed(1) : '—'}</span></span>
-                        <span>Attachments: <span class="text-slate-200">${Array.isArray(c.attachments) ? c.attachments.length : 0}</span></span>
-                    </div>
-                    <button type="button" class="btn-primary px-5 py-2" onclick="closeCaseModal()">Close</button>
                 </div>
             `;
 
             modal.classList.remove('hidden');
             modal.setAttribute('aria-hidden','false');
         }
+
 
         function closeCaseModal(){
             const modal = document.getElementById('case-modal');
@@ -1078,6 +1160,30 @@
         function showAnalytics() {
             alert('Analytics dashboard coming soon! This will show detailed performance reports and trends.');
         }
-    </script>
+    
+        function wireChartClicks(){
+            const config = [
+                { key:'region', field:'region' },
+                { key:'system', field:'system' },
+                { key:'press', field:'press' },
+                { key:'part', field:'part' }
+            ];
+
+            config.forEach(({key, field}) => {
+                const chart = charts[key];
+                if(!chart) return;
+                chart.off('click');
+                chart.on('click', (params) => {
+                    const label = params && params.name ? String(params.name) : null;
+                    if(!label) return;
+                    // Pass filter via query + localStorage for robustness
+                    localStorage.setItem('landaCasesFilter', JSON.stringify({ field, value: label }));
+                    const qs = new URLSearchParams({ filter: field, value: label });
+                    window.location.href = `cases.html?${qs.toString()}`;
+                });
+            });
+        }
+
+</script>
 </body>
 </html>
