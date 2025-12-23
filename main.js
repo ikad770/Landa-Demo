@@ -447,7 +447,6 @@ class LandaSystem {
 
             return matchesSearch && matchesPressType && matchesPressName && matchesSystem && matchesStatus && matchesRegion && matchesPart;
         });
-    };
     }
 
     // Get case statistics
