@@ -12,8 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     
-        <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<style>
+    <style>
 
         .logo-mark {
             width: 32px;
@@ -310,100 +309,23 @@
             background: rgba(15, 23, 42, 0.94);
         }
     
-        .chart-toggle{
-            display:flex;
-            gap:0.4rem;
-            padding:0.25rem;
-            border-radius:999px;
-            border:1px solid rgba(148,163,184,0.55);
-            background: rgba(15,23,42,0.55);
-        }
-        .chart-btn{
-            border-radius:999px;
-            padding:0.28rem 0.6rem;
-            font-size:0.7rem;
-            letter-spacing:0.14em;
-            text-transform:uppercase;
-            color: rgba(226,232,240,0.9);
-            border:1px solid transparent;
-        }
-        .chart-btn:hover{
-            background: rgba(37,99,235,0.14);
-            border-color: rgba(37,99,235,0.35);
-        }
-        .chart-btn.is-active{
-            background: rgba(6,182,212,0.12);
-            border-color: rgba(6,182,212,0.55);
-            color: #67e8f9;
-        }
+/* === Futuristic chart styling === */
+.chart-card{
+  background: rgba(15,23,42,.78);
+  border: 1px solid rgba(148,163,184,.28);
+  border-radius: 16px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 22px 48px rgba(0,0,0,.55);
+  overflow: hidden;
+}
+.chart-card:hover{
+  border-color: rgba(34,211,238,.40);
+  box-shadow:
+    0 0 0 1px rgba(34,211,238,.22),
+    0 0 26px rgba(34,211,238,.10),
+    0 22px 48px rgba(0,0,0,.55);
+}
 
-        .case-modal{
-            position: fixed;
-            inset: 0;
-            z-index: 50;
-        }
-        .case-modal.hidden{display:none;}
-        .case-modal-backdrop{
-            position:absolute;inset:0;
-            background: rgba(2,6,23,0.62);
-            backdrop-filter: blur(6px);
-        }
-        .case-modal-panel{
-            position:relative;
-            width: min(920px, calc(100% - 2rem));
-            max-height: calc(100% - 2rem);
-            overflow:auto;
-            margin: 1rem auto;
-            background: rgba(15,23,42,0.96);
-            border:1px solid rgba(148,163,184,0.55);
-            border-radius: 1.25rem;
-            box-shadow:
-                0 26px 80px rgba(0,0,0,0.75),
-                0 0 0 1px rgba(6,182,212,0.18);
-            padding: 1.25rem 1.25rem 1.1rem;
-        }
-        .case-modal-close{
-            position:absolute;
-            top:0.9rem;right:0.9rem;
-            width: 36px;height:36px;
-            border-radius:999px;
-            border:1px solid rgba(148,163,184,0.55);
-            background: rgba(2,6,23,0.25);
-            color: rgba(226,232,240,0.9);
-            font-size: 1.25rem;
-            line-height: 1;
-        }
-        .case-modal-close:hover{
-            border-color: rgba(6,182,212,0.65);
-            box-shadow: 0 0 0 1px rgba(34,211,238,0.25), 0 0 24px rgba(34,211,238,0.12);
-        }
-        .pill{
-            display:inline-flex;
-            align-items:center;
-            gap:0.4rem;
-            border-radius:999px;
-            padding:0.2rem 0.6rem;
-            font-size:0.72rem;
-            border:1px solid rgba(148,163,184,0.55);
-            color: rgba(226,232,240,0.9);
-            background: rgba(2,6,23,0.22);
-        }
-        .pill-green{border-color: rgba(16,185,129,0.55); color:#34d399; background: rgba(16,185,129,0.08);}
-        .pill-cyan{border-color: rgba(34,211,238,0.55); color:#67e8f9; background: rgba(34,211,238,0.08);}
-
-    
-.modal {
-            background: rgba(2, 6, 23, 0.85);
-            backdrop-filter: blur(14px);
-        }
-.modal-content {
-            background: #020617;
-            border-radius: 1.25rem;
-            border: 1px solid rgba(148,163,184,0.7);
-            box-shadow:
-                0 26px 60px rgba(15,23,42,0.98),
-                0 0 0 1px rgba(15,23,42,1);
-        }
 </style>
 
 
@@ -517,51 +439,18 @@
             </div>
         </div>
 
-        
         <!-- Charts Section -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Cases by Status Chart -->
             <div class="glass-card rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold">Cases by Region</h3>
-                    <div class="chart-toggle" data-chart="region">
-                        <button class="chart-btn is-active" data-type="bar">Bars</button>
-                        <button class="chart-btn" data-type="pie">Pie</button>
-                    </div>
-                </div>
-                <div id="chart-region" style="height: 300px;"></div>
+                <h3 class="text-xl font-semibold mb-4">Cases by Status</h3>
+                <div id="status-chart" style="height: 300px;"></div>
             </div>
 
+            <!-- Cases by Machine Type -->
             <div class="glass-card rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold">Cases by System</h3>
-                    <div class="chart-toggle" data-chart="system">
-                        <button class="chart-btn is-active" data-type="bar">Bars</button>
-                        <button class="chart-btn" data-type="pie">Pie</button>
-                    </div>
-                </div>
-                <div id="chart-system" style="height: 300px;"></div>
-            </div>
-
-            <div class="glass-card rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold">Cases by Press</h3>
-                    <div class="chart-toggle" data-chart="press">
-                        <button class="chart-btn is-active" data-type="bar">Bars</button>
-                        <button class="chart-btn" data-type="pie">Pie</button>
-                    </div>
-                </div>
-                <div id="chart-press" style="height: 300px;"></div>
-            </div>
-
-            <div class="glass-card rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold">Cases by Part</h3>
-                    <div class="chart-toggle" data-chart="part">
-                        <button class="chart-btn is-active" data-type="bar">Bars</button>
-                        <button class="chart-btn" data-type="pie">Pie</button>
-                    </div>
-                </div>
-                <div id="chart-part" style="height: 300px;"></div>
+                <h3 class="text-xl font-semibold mb-4">Cases by Machine Type</h3>
+                <div id="machine-chart" style="height: 300px;"></div>
             </div>
         </div>
 
@@ -585,7 +474,39 @@
                         </tr>
                     </thead>
                     <tbody id="recent-cases-table">
-                        <!-- populated by JS -->
+                        <tr class="border-b border-gray-800 hover:bg-gray-800 transition-colors">
+                            <td class="py-3 px-4 font-mono text-blue-400">SF-2024-005</td>
+                            <td class="py-3 px-4">S3</td>
+                            <td class="py-3 px-4">UV Lamp Not Curing Properly</td>
+                            <td class="py-3 px-4">
+                                <span class="status-indicator status-resolved"></span>
+                                <span class="text-green-400">Resolved</span>
+                            </td>
+                            <td class="py-3 px-4">Yossi Cohen</td>
+                            <td class="py-3 px-4 text-gray-400">2024-12-05</td>
+                        </tr>
+                        <tr class="border-b border-gray-800 hover:bg-gray-800 transition-colors">
+                            <td class="py-3 px-4 font-mono text-blue-400">SF-2024-004</td>
+                            <td class="py-3 px-4">D4</td>
+                            <td class="py-3 px-4">Color Consistency Issues</td>
+                            <td class="py-3 px-4">
+                                <span class="status-indicator status-progress"></span>
+                                <span class="text-yellow-400">In Progress</span>
+                            </td>
+                            <td class="py-3 px-4">Maya Stern</td>
+                            <td class="py-3 px-4 text-gray-400">2024-12-04</td>
+                        </tr>
+                        <tr class="border-b border-gray-800 hover:bg-gray-800 transition-colors">
+                            <td class="py-3 px-4 font-mono text-blue-400">SF-2024-003</td>
+                            <td class="py-3 px-4">S2</td>
+                            <td class="py-3 px-4">Print Registration Error</td>
+                            <td class="py-3 px-4">
+                                <span class="status-indicator status-resolved"></span>
+                                <span class="text-green-400">Resolved</span>
+                            </td>
+                            <td class="py-3 px-4">David Gold</td>
+                            <td class="py-3 px-4 text-gray-400">2024-12-03</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -631,506 +552,86 @@
     </div>
 
 
-    
-    <!-- Case Modal -->
-    <div id="case-modal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="modal-content rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-6">
-                <h3 id="modal-title" class="text-2xl font-bold text-blue-400"></h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
-            </div>
-            
-            <div id="modal-content">
-                <!-- Modal content will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
     <script src="main.js"></script>
     <script>
+        // Initialize charts when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            ensureAuth();
-            hydrateUserPill();
-            renderDashboard();
             initializeCharts();
             animateMetrics();
-            wireCaseModal();
-            wireChartToggles();
         });
 
-        function ensureAuth(){
-            const user = safeJson(localStorage.getItem('landaUser'));
-            if(!user){
-                window.location.href = 'index.html';
-            }
-        }
-
-        function hydrateUserPill(){
-            const user = safeJson(localStorage.getItem('landaUser')) || {};
-            const nameEl = document.getElementById('nav-user-name');
-            const roleEl = document.getElementById('nav-user-role');
-            const avatarEl = document.getElementById('nav-user-avatar');
-            const displayName = user.username || user.name || 'Expert User';
-            const role = (user.role || user.access || 'EXPERT').toString().toUpperCase();
-            if(nameEl) nameEl.textContent = displayName;
-            if(roleEl) roleEl.textContent = role + ' ACCESS';
-            if(avatarEl) avatarEl.textContent = (displayName.trim()[0] || 'E').toUpperCase() + (displayName.trim()[1] || 'X').toUpperCase();
-        }
-
-        function safeJson(value){
-            try{ return value ? JSON.parse(value) : null; } catch(e){ return null; }
-        }
-
-        function getCases(){
-            // Try multiple keys for backward compatibility
-            const keys = ['landaCases','cases','landa_cases','landaCaseData'];
-            for(const k of keys){
-                const data = safeJson(localStorage.getItem(k));
-                if(Array.isArray(data)) return data;
-            }
-            return [];
-        }
-
-                function normalizeCase(c){
-            const out = { ...c };
-
-            // Core ids
-            out.id = out.id || out.caseId || out.sfCase || out.sfCaseNumber || out.sf_case || out.SF || out.case || '';
-
-            // Press
-            out.pressName = out.pressName || out.press || out.machine || out.press_name || out.machineName || '';
-            out.pressType = out.pressType || out.machineType || out.press_type || '';
-
-            // Keep a generic 'press' for dashboard aggregations
-            out.press = out.press || out.pressName || out.machine || '';
-
-            // System hierarchy
-            out.system = out.system || out.mainSystem || out.systemName || '';
-            out.subSystem = out.subSystem || out.subsystem || out.sub_system || '';
-            out.area = out.area || out.hwSwEc || out.hw_sw_ec || '';
-
-            // Content
-            out.subject = out.subject || out.title || out.issueSubject || '';
-            out.description = out.description || out.issueDescription || out.details || '';
-
-            // Meta
-            out.owner = out.owner || out.caseOwner || out.createdBy || '';
-            out.region = out.region || out.site || out.location || '';
-            out.status = (out.status || 'Resolved').toString();
-            out.date = out.date || out.createdAt || out.created_at || out.updatedAt || out.updated_at || '';
-
-            // Troubleshooting: cases.html expects troubleshootSteps: string[]
-            if(Array.isArray(out.troubleshootSteps)){
-                // ok
-            } else if(Array.isArray(out.troubleshooting)){
-                out.troubleshootSteps = out.troubleshooting.map(stepText).filter(Boolean);
-            } else if(Array.isArray(out.steps)){
-                out.troubleshootSteps = out.steps.map(stepText).filter(Boolean);
-            } else if(typeof out.initialSteps === 'string' && out.initialSteps.trim()){
-                out.troubleshootSteps = out.initialSteps.split("\n")
-                    .map(s=>s.trim())
-                    .filter(Boolean);
-            } else {
-                out.troubleshootSteps = [];
-            }
-
-            // Parts: cases.html expects parts: string[]
-            if(Array.isArray(out.parts)){
-                out.parts = out.parts.map(partText).filter(Boolean);
-            } else if(Array.isArray(out.partsUsed)){
-                out.parts = out.partsUsed.map(partText).filter(Boolean);
-            } else {
-                out.parts = [];
-            }
-
-            // Rating: number
-            out.rating = (typeof out.rating === 'number')
-                ? out.rating
-                : (out.rating != null && out.rating !== '' ? Number(out.rating) : null);
-
-            // Attachments: cases.html expects a number
-            if(typeof out.attachments === 'number'){
-                // ok
-            } else if(Array.isArray(out.attachments)){
-                out.attachments = out.attachments.length;
-            } else if(Array.isArray(out.files)){
-                out.attachments = out.files.length;
-            } else {
-                out.attachments = out.attachments ? 1 : 0;
-            }
-
-            return out;
-        }
-
-        function renderDashboard(){
-            const raw = getCases().map(normalizeCase);
-
-            // Metrics
-            const total = raw.length;
-            const resolved = raw.filter(c => c.status.toLowerCase() === 'resolved').length;
-            const inProgress = raw.filter(c => c.status.toLowerCase().includes('progress')).length;
-            const ratings = raw.map(c => c.rating).filter(v => typeof v === 'number' && !Number.isNaN(v));
-            const avg = ratings.length ? (ratings.reduce((a,b)=>a+b,0) / ratings.length) : 0;
-
-            const totalEl = document.getElementById('total-cases');
-            const resolvedEl = document.getElementById('resolved-cases');
-            const progressEl = document.getElementById('in-progress-cases');
-            const avgEl = document.getElementById('avg-rating');
-
-            if(totalEl) totalEl.textContent = total || 0;
-            if(resolvedEl) resolvedEl.textContent = resolved || 0;
-            if(progressEl) progressEl.textContent = inProgress || 0;
-            if(avgEl) avgEl.textContent = avg ? avg.toFixed(1) : '0.0';
-
-            // Recent cases
-            const tbody = document.getElementById('recent-cases-table');
-            if(!tbody) return;
-
-            const sorted = raw
-                .slice()
-                .sort((a,b)=> (new Date(b.date||0)).getTime() - (new Date(a.date||0)).getTime())
-                .slice(0, 6);
-
-            if(sorted.length === 0){
-                tbody.innerHTML = `
-                    <tr>
-                        <td class="py-6 px-4 text-gray-400" colspan="6">
-                            No cases yet. Create your first case to populate analytics.
-                        </td>
-                    </tr>`;
-                return;
-            }
-
-            tbody.innerHTML = sorted.map((c) => {
-                const status = (c.status || 'Resolved').toString();
-                const isResolved = status.toLowerCase() === 'resolved';
-                const statusDot = isResolved ? 'status-resolved' : 'status-progress';
-                const statusTextClass = isResolved ? 'text-green-400' : 'text-yellow-400';
-                const safeId = escapeHtml(c.id || '—');
-                const safePress = escapeHtml((c.press || '').toString() || '—');
-                const safeSubject = escapeHtml((c.subject || '').toString() || '—');
-                const safeOwner = escapeHtml((c.owner || '').toString() || '—');
-                const safeDate = escapeHtml(formatDate(c.date));
-                const encoded = encodeURIComponent(JSON.stringify(c));
-                return `
-                    <tr class="border-b border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer table-row-hover"
-                        data-case="${encoded}">
-                        <td class="py-3 px-4 font-mono text-blue-400">${safeId}</td>
-                        <td class="py-3 px-4">${safePress}</td>
-                        <td class="py-3 px-4">${safeSubject}</td>
-                        <td class="py-3 px-4">
-                            <span class="status-indicator ${statusDot}"></span>
-                            <span class="${statusTextClass}">${escapeHtml(status)}</span>
-                        </td>
-                        <td class="py-3 px-4">${safeOwner}</td>
-                        <td class="py-3 px-4 text-gray-400">${safeDate}</td>
-                    </tr>
-                `;
-            }).join('');
-
-            tbody.querySelectorAll('tr[data-case]').forEach(row => {
-                row.addEventListener('click', () => {
-                    const payload = row.getAttribute('data-case');
-                    if(!payload) return;
-                    try{
-                        const data = JSON.parse(decodeURIComponent(payload));
-                        openCaseDetail(data.id);
-                    }catch(e){}
-                });
-            });
-        }
-
-        function escapeHtml(str){
-            return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
-        }
-
-        function formatDate(d){
-            if(!d) return '—';
-            const dt = new Date(d);
-            if(Number.isNaN(dt.getTime())) return String(d);
-            return dt.toISOString().slice(0,10);
-        }
-
-        // ---------- CHARTS ----------
-        const charts = {};
-
-        function initializeCharts(){
-            const cases = getCases().map(normalizeCase);
-
-            const agg = {
-                region: countBy(cases, c => (c.region || 'Unspecified')),
-                system: countBy(cases, c => (c.system || 'Unspecified')),
-                press:  countBy(cases, c => (c.press || 'Unspecified')),
-                part:   countByParts(cases)
-            };
-
-            charts.region = echarts.init(document.getElementById('chart-region'));
-            charts.system = echarts.init(document.getElementById('chart-system'));
-            charts.press  = echarts.init(document.getElementById('chart-press'));
-            charts.part   = echarts.init(document.getElementById('chart-part'));
-
-            // default types
-            setChart('region', 'bar', agg.region);
-            setChart('system', 'bar', agg.system);
-            setChart('press',  'bar', agg.press);
-            setChart('part',   'bar', agg.part);
-
-            window.addEventListener('resize', () => {
-                Object.values(charts).forEach(c => c && c.resize());
-            });
-        }
-
-        function wireChartToggles(){
-            document.querySelectorAll('.chart-toggle').forEach(group => {
-                const key = group.getAttribute('data-chart');
-                group.querySelectorAll('.chart-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        group.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('is-active'));
-                        btn.classList.add('is-active');
-                        refreshSingleChart(key, btn.getAttribute('data-type'));
-                    });
-                });
-            });
-        }
-
-        function refreshSingleChart(key, type){
-            const cases = getCases().map(normalizeCase);
-            let data;
-            if(key === 'region') data = countBy(cases, c => (c.region || 'Unspecified'));
-            if(key === 'system') data = countBy(cases, c => (c.system || 'Unspecified'));
-            if(key === 'press')  data = countBy(cases, c => (c.press || 'Unspecified'));
-            if(key === 'part')   data = countByParts(cases);
-            setChart(key, type, data || {});
-        }
-
-        function countBy(items, fn){
-            const map = {};
-            items.forEach(it => {
-                const k = (fn(it) || 'Unspecified').toString().trim() || 'Unspecified';
-                map[k] = (map[k] || 0) + 1;
-            });
-            return map;
-        }
-
-        function countByParts(cases){
-            const map = {};
-            cases.forEach(c => {
-                const parts = Array.isArray(c.partsUsed) ? c.partsUsed : [];
-                if(parts.length === 0){
-                    map['Unspecified'] = (map['Unspecified'] || 0) + 1;
-                    return;
-                }
-                parts.forEach(p => {
-                    const name = (p.name || p.part || p.partName || p || 'Unspecified').toString().trim() || 'Unspecified';
-                    map[name] = (map[name] || 0) + 1;
-                });
-            });
-            return map;
-        }
-
-        function topN(map, n=8){
-            const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
-            const head = entries.slice(0, n);
-            const rest = entries.slice(n);
-            if(rest.length){
-                const other = rest.reduce((sum, [,v])=>sum+v, 0);
-                head.push(['Other', other]);
-            }
-            return head;
-        }
-
-        
-        function navigateFromChart(key, value){
-            const payload = { key, value };
-            try{ localStorage.setItem('landaCasesFilter', JSON.stringify(payload)); }catch(e){}
-            const url = `cases.html?filter=${encodeURIComponent(key)}&value=${encodeURIComponent(value)}`;
-            window.location.href = url;
-        }
-
-function setChart(key, type, map){
-            const chart = charts[key];
-            if(!chart) return;
-
-
-            chart.off && chart.off("click");
-            chart.on && chart.on("click", function(params){
-                const name = params && params.name ? params.name : null;
-                if(!name) return;
-                // map dashboard keys to cases fields
-                const keyMap = { region:"region", system:"system", press:"press", part:"part" };
-                navigateFromChart(keyMap[key] || key, name);
-            });
-
-            const entries = topN(map, 7);
-            const labels = entries.map(e=>e[0]);
-            const values = entries.map(e=>e[1]);
-
-            const tooltip = {
-                backgroundColor: 'rgba(15, 23, 42, 0.92)',
-                borderColor: 'rgba(6, 182, 212, 0.6)',
-                textStyle: { color: '#ffffff' }
-            };
-
-            if(type === 'pie'){
-                chart.setOption({
-                    backgroundColor: 'transparent',
-                textStyle: { fontFamily: 'Inter, system-ui, sans-serif', color: '#e5e7eb' },
-                    tooltip: { trigger: 'item', ...tooltip },
-                    legend: { bottom: 0, textStyle: { color: 'rgba(226,232,240,0.85)' } },
-                    series: [{
-                        type: 'pie',
-                        radius: ['42%', '72%'],
-                        center: ['50%', '52%'],
-                        data: labels.map((l,i)=>({ name:l, value:values[i] })),
-                        label: { color: '#e5e7eb', fontSize: 12 },
-                        labelLine: { lineStyle: { color: 'rgba(148,163,184,0.8)' } }
-                    }]
-                }, true);
-                return;
-            }
-
-            chart.setOption({
+        function initializeCharts() {
+            // Status Chart
+            const statusChart = echarts.init(document.getElementById('status-chart'));
+            const statusOption = {
                 backgroundColor: 'transparent',
-                textStyle: { fontFamily: 'Inter, system-ui, sans-serif', color: '#e5e7eb' },
-                tooltip: { trigger: 'axis', axisPointer: { type:'shadow' }, ...tooltip },
-                grid: { left: 36, right: 18, top: 22, bottom: 46, containLabel: true },
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                    borderColor: '#0066cc',
+                    textStyle: { color: '#ffffff' }
+                },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    center: ['50%', '50%'],
+                    data: [
+                        { value: 18, name: 'Resolved', itemStyle: { color: '#10b981' } },
+                        { value: 6, name: 'In Progress', itemStyle: { color: '#f59e0b' } },
+                        { value: 2, name: 'Open', itemStyle: { color: '#ef4444' } }
+                    ],
+                    label: {
+                        color: '#ffffff',
+                        fontSize: 12
+                    },
+                    labelLine: {
+                        lineStyle: { color: '#ffffff' }
+                    }
+                }]
+            };
+            statusChart.setOption(statusOption);
+
+            // Machine Type Chart
+            const machineChart = echarts.init(document.getElementById('machine-chart'));
+            const machineOption = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                    borderColor: '#0066cc',
+                    textStyle: { color: '#ffffff' }
+                },
                 xAxis: {
                     type: 'category',
-                    data: labels,
-                    axisLine: { lineStyle: { color: 'rgba(148,163,184,0.45)' } },
-                    axisLabel: { color: '#e5e7eb', rotate: labels.some(l=>l.length>8) ? 20 : 0 }
+                    data: ['S1', 'S2', 'S3', 'S4', 'D3', 'D4', 'D5'],
+                    axisLine: { lineStyle: { color: '#666' } },
+                    axisLabel: { color: '#ffffff' }
                 },
                 yAxis: {
                     type: 'value',
-                    axisLine: { lineStyle: { color: 'rgba(148,163,184,0.45)' } },
-                    axisLabel: { color: '#e5e7eb' },
-                    splitLine: { lineStyle: { color: 'rgba(51,65,85,0.55)' } }
+                    axisLine: { lineStyle: { color: '#666' } },
+                    axisLabel: { color: '#ffffff' },
+                    splitLine: { lineStyle: { color: '#333' } }
                 },
                 series: [{
-                    data: values,
+                    data: [3, 4, 2, 1, 5, 6, 3],
                     type: 'bar',
-                    barWidth: '58%',
                     itemStyle: {
-                        borderRadius: [8,8,0,0],
                         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: '#2563eb' },
-                            { offset: 1, color: '#06b6d4' }
+                            { offset: 0, color: '#0066cc' },
+                            { offset: 1, color: '#00d4ff' }
                         ])
-                    }
+                    },
+                    barWidth: '60%'
                 }]
-            }, true);
-        }
+            };
+            machineChart.setOption(machineOption);
 
-        // ---------- MODAL ----------
-        // Unified Case Modal (exact format as cases.html)
-        function openCaseDetail(caseId) {
-            const source = (getCases && getCases().length)
-                ? getCases().map(normalizeCase)
-                : (window.landaSystem && Array.isArray(window.landaSystem.cases) ? window.landaSystem.cases : []);
-            const case_ = source.find(c => c.id === caseId);
-
-            if (case_) {
-                document.getElementById('modal-title').textContent = case_.id;
-                document.getElementById('modal-content').innerHTML = createCaseDetailContent(case_);
-                document.getElementById('case-modal').classList.remove('hidden');
-            }
-        }
-
-        function createCaseDetailContent(case_) {
-            const statusColor = case_.status === 'Resolved' ? 'text-green-400' : 
-                               case_.status === 'In Progress' ? 'text-yellow-400' : 'text-red-400';
-
-            return `
-                <div class="space-y-6">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-400 mb-1">Machine Type</h4>
-                            <p class="text-white">${case_.pressType} - ${case_.pressName}</p>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-400 mb-1">Status</h4>
-                            <p class="${statusColor} font-semibold">${case_.status}</p>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-400 mb-1">System</h4>
-                            <p class="text-white">${case_.system}</p>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-400 mb-1">Date</h4>
-                            <p class="text-white">${formatDate(case_.date)}</p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 class="text-lg font-semibold mb-2">Description</h4>
-                        <p class="text-gray-300">${escapeHtml(case_.description || '—')}</p>
-                    </div>
-
-                    <div>
-                        <h4 class="text-lg font-semibold mb-2">Troubleshooting Steps</h4>
-                        <div class="space-y-2">
-                            ${(case_.troubleshootSteps || []).map((step, index) => `
-                                <div class="flex items-start space-x-3">
-                                    <span class="flex-shrink-0 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">
-                                        ${index + 1}
-                                    </span>
-                                    <span class="text-gray-300">${escapeHtml(step)}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-
-                    ${(case_.parts && case_.parts.length > 0) ? `
-                        <div>
-                            <h4 class="text-lg font-semibold mb-2">Parts Used</h4>
-                            <ul class="list-disc list-inside text-gray-300 space-y-1">
-                                ${case_.parts.map(part => `<li>${escapeHtml(part)}</li>`).join('')}
-                            </ul>
-                        </div>
-                    ` : ''}
-
-                    <div class="flex items-center justify-between pt-4 border-t border-gray-700">
-                        <div class="flex items-center space-x-4">
-                            <span class="text-sm text-gray-400">Owner: ${escapeHtml(case_.owner || '—')}</span>
-                            <span class="text-sm text-gray-400">Rating: ⭐ ${case_.rating ?? '—'}</span>
-                            <span class="text-sm text-gray-400">Attachments: 📎 ${case_.attachments ?? 0}</span>
-                        </div>
-                        <button onclick="closeModal()" class="btn-primary px-4 py-2 rounded-lg text-sm">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function closeModal() {
-            document.getElementById('case-modal').classList.add('hidden');
-        }
-
-
-        function wireCaseModal(){
-            const modal = document.getElementById('case-modal');
-            if(!modal) return;
-            modal.querySelectorAll('[data-close="1"]').forEach(el => {
-                el.addEventListener('click', closeModal);
+            // Make charts responsive
+            window.addEventListener('resize', () => {
+                statusChart.resize();
+                machineChart.resize();
             });
-            document.addEventListener('keydown', (e) => {
-                if(e.key === 'Escape') closeModal();
-            });
-        }
-
-        function stepText(s){
-            if(typeof s === 'string') return s;
-            if(!s || typeof s !== 'object') return '—';
-            return s.text || s.step || s.description || JSON.stringify(s);
-        }
-
-        function partText(p){
-            if(typeof p === 'string') return p;
-            if(!p || typeof p !== 'object') return '—';
-            const name = p.name || p.part || p.partName || 'Part';
-            const code = p.code || p.partNumber || p.id || '';
-            return code ? `${name} — ${code}` : name;
         }
 
         function animateMetrics() {
@@ -1164,6 +665,57 @@ function setChart(key, type, map){
             alert('Analytics dashboard coming soon! This will show detailed performance reports and trends.');
         }
     </script>
+
+<script>
+const chartTheme = {
+  colorText: "rgba(226,232,240,.92)",
+  colorMuted: "rgba(148,163,184,.78)",
+  grid: "rgba(148,163,184,.14)",
+  cyan: "rgba(34,211,238,1)"
+};
+
+const glowPlugin = {
+  id: 'softGlow',
+  beforeDatasetsDraw(chart) {
+    const { ctx } = chart;
+    ctx.save();
+    ctx.shadowColor = "rgba(34,211,238,.20)";
+    ctx.shadowBlur = 18;
+  },
+  afterDatasetsDraw(chart) {
+    chart.ctx.restore();
+  }
+};
+
+function futuristicOptions({ onClick } = {}) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'nearest', intersect: false },
+    plugins: {
+      legend: { labels: { color: chartTheme.colorMuted } },
+      tooltip: {
+        backgroundColor: "rgba(2,6,23,.92)",
+        borderColor: "rgba(34,211,238,.28)",
+        borderWidth: 1,
+        titleColor: chartTheme.colorText,
+        bodyColor: chartTheme.colorText,
+        padding: 12
+      }
+    },
+    scales: {
+      x: { ticks: { color: chartTheme.colorMuted }, grid: { color: chartTheme.grid } },
+      y: { ticks: { color: chartTheme.colorMuted }, grid: { color: chartTheme.grid } }
+    },
+    onClick
+  };
+}
+
+function goCasesFilter(filter, value) {
+  localStorage.setItem("landaCasesFilter", JSON.stringify({ filter, value }));
+  window.location.href = `cases.html?filter=${encodeURIComponent(filter)}&value=${encodeURIComponent(value)}`;
+}
+</script>
+
 </body>
 </html>
-
