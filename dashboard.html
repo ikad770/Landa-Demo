@@ -727,7 +727,9 @@
             } else if(Array.isArray(out.steps)){
                 out.troubleshootSteps = out.steps.map(stepText).filter(Boolean);
             } else if(typeof out.initialSteps === 'string' && out.initialSteps.trim()){
-                out.troubleshootSteps = out.initialSteps.split(\n).map(s=>s.trim()).filter(Boolean);
+                out.troubleshootSteps = out.initialSteps.split("\n")
+                    .map(s=>s.trim())
+                    .filter(Boolean);
             } else {
                 out.troubleshootSteps = [];
             }
