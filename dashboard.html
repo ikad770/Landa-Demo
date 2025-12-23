@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landa Dashboard - Case Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    
+        <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+
+        .logo-mark {
+            width: 32px;
+            height: 32px;
+            border-radius: 0.75rem;
+            background: #020617;
+            position: relative;
+            box-shadow:
+                0 0 0 1px rgba(15,23,42,1),
+                0 0 18px rgba(34, 211, 238, 0.8);
+            overflow: hidden;
+        }
+        .logo-mark::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 30%, #22d3ee, #0f172a);
+            top: 7px;
+            left: 7px;
+            box-shadow: 0 0 18px rgba(34, 211, 238, 0.9);
+        }
+
+        :root {
+            --bg-main: #020617;
+            --bg-surface: rgba(15, 23, 42, 0.98);
+            --border-soft: rgba(51, 65, 85, 0.9);
+            --border-strong: rgba(148, 163, 184, 0.7);
+            --accent-blue: #2563eb;
+            --accent-cyan: #06b6d4;
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.16), transparent 55%),
+                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.14), transparent 55%),
+                #020617;
+            color: var(--text-main);
+        }
+
+        .layout-shell {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: rgba(10, 16, 30, 0.98);
+            border-right: 1px solid rgba(15, 23, 42, 0.95);
+            box-shadow:
+                4px 0 24px rgba(15, 23, 42, 0.85),
+                0 0 0 1px rgba(15, 23, 42, 1);
+            padding: 1.25rem 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .sidebar-header img {
+            width: 32px;
+            height: 32px;
+            border-radius: 0.75rem;
+            box-shadow:
+                0 0 0 1px rgba(15, 23, 42, 1),
+                0 0 18px rgba(37, 99, 235, 0.8);
+        }
+
+        .logo-title {
+            font-family: 'Satoshi', system-ui, sans-serif;
+            font-size: 0.78rem;
+            letter-spacing: 0.26em;
+            text-transform: uppercase;
+        }
+
+        .logo-subtitle {
+            font-size: 0.65rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .sidebar-nav {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .nav-link {
+            display: block;
+            border-radius: 0.6rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.83rem;
+            color: #cbd5f5;
+        }
+
+        .nav-link:hover {
+            background: rgba(15, 23, 42, 0.96);
+            color: #eff6ff;
+        }
+
+        .nav-link-active {
+            background: rgba(37, 99, 235, 0.16);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(37, 99, 235, 0.6);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(30, 41, 59, 0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid var(--border-strong);
+            box-shadow:
+                0 10px 26px rgba(15, 23, 42, 0.98),
+                0 0 0 1px rgba(30, 64, 175, 0.4);
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 20%, var(--accent-cyan), #0f172a);
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 0 0 1px rgba(15, 23, 42, 1),
+                0 0 14px rgba(34, 211, 238, 0.9);
+        }
+
+        .user-name {
+            font-size: 0.8rem;
+        }
+
+        .user-role {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--text-muted);
+        }
+
+        .nav-logout {
+            border-radius: 999px;
+            padding: 0.45rem 0.85rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            border: 1px solid rgba(148, 163, 184, 0.65);
+            color: var(--text-muted);
+        }
+
+        .nav-logout:hover {
+            border-color: rgba(248, 250, 252, 0.95);
+            color: #e5e7eb;
+        }
+
+        .main-shell {
+            flex: 1;
+            min-height: 100vh;
+            padding: 1.75rem 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .page-title {
+            font-family: 'Satoshi', system-ui, sans-serif;
+            font-size: 0.95rem;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+        }
+
+        .page-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .metric-card,
+        .glass-card,
+        .case-card,
+        .solution-card,
+        .machine-card {
+            background: var(--bg-surface);
+            border-radius: 1rem;
+            border: 1px solid var(--border-strong);
+            box-shadow:
+                0 16px 42px rgba(15, 23, 42, 0.98),
+                0 0 0 1px rgba(15, 23, 42, 1);
+        }
+
+        .metric-card {
+            padding: 1.1rem 1.2rem;
+        }
+
+        .sub-card {
+            border-radius: 0.9rem;
+            border: 1px solid var(--border-soft);
+        }
+
+        .section-title {
+            font-family: 'Satoshi', system-ui, sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.26em;
+            text-transform: uppercase;
+            color: #e5e7eb;
+        }
+
+        .section-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .btn-primary {
+            border-radius: 999px;
+            background-image: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border: 1px solid rgba(191, 219, 254, 0.7);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            font-weight: 600;
+            padding-inline: 1.25rem;
+            padding-block: 0.65rem;
+            box-shadow:
+                0 16px 34px rgba(37, 99, 235, 0.7),
+                0 0 0 1px rgba(15, 23, 42, 0.95);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg,
+                        rgba(59, 130, 246, 0.22),
+                        transparent,
+                        rgba(56, 189, 248, 0.24));
+            opacity: 0;
+            transform: translateX(-22%);
+            transition: all 0.22s ease-out;
+        }
+
+        .btn-primary:hover::before {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow:
+                0 20px 44px rgba(37, 99, 235, 0.88),
+                0 0 0 1px rgba(59, 130, 246, 0.96);
+        }
+
+        .badge {
+            border-radius: 999px;
+            font-size: 0.7rem;
+            padding: 0.12rem 0.55rem;
+            border: 1px solid rgba(148, 163, 184, 0.65);
+        }
+
+        .table-header {
+            background: rgba(15, 23, 42, 0.98);
+        }
+
+        .table-row-hover:hover {
+            background: rgba(15, 23, 42, 0.94);
+        }
+    
+        .chart-toggle{
+            display:flex;
+            gap:0.4rem;
+            padding:0.25rem;
+            border-radius:999px;
+            border:1px solid rgba(148,163,184,0.55);
+            background: rgba(15,23,42,0.55);
+        }
+        .chart-btn{
+            border-radius:999px;
+            padding:0.28rem 0.6rem;
+            font-size:0.7rem;
+            letter-spacing:0.14em;
+            text-transform:uppercase;
+            color: rgba(226,232,240,0.9);
+            border:1px solid transparent;
+        }
+        .chart-btn:hover{
+            background: rgba(37,99,235,0.14);
+            border-color: rgba(37,99,235,0.35);
+        }
+        .chart-btn.is-active{
+            background: rgba(6,182,212,0.12);
+            border-color: rgba(6,182,212,0.55);
+            color: #67e8f9;
+        }
+
+        .case-modal{
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+        }
+        .case-modal.hidden{display:none;}
+        .case-modal-backdrop{
+            position:absolute;inset:0;
+            background: rgba(2,6,23,0.62);
+            backdrop-filter: blur(6px);
+        }
+        .case-modal-panel{
+            position:relative;
+            width: min(920px, calc(100% - 2rem));
+            max-height: calc(100% - 2rem);
+            overflow:auto;
+            margin: 1rem auto;
+            background: rgba(15,23,42,0.96);
+            border:1px solid rgba(148,163,184,0.55);
+            border-radius: 1.25rem;
+            box-shadow:
+                0 26px 80px rgba(0,0,0,0.75),
+                0 0 0 1px rgba(6,182,212,0.18);
+            padding: 1.25rem 1.25rem 1.1rem;
+        }
+        .case-modal-close{
+            position:absolute;
+            top:0.9rem;right:0.9rem;
+            width: 36px;height:36px;
+            border-radius:999px;
+            border:1px solid rgba(148,163,184,0.55);
+            background: rgba(2,6,23,0.25);
+            color: rgba(226,232,240,0.9);
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+        .case-modal-close:hover{
+            border-color: rgba(6,182,212,0.65);
+            box-shadow: 0 0 0 1px rgba(34,211,238,0.25), 0 0 24px rgba(34,211,238,0.12);
+        }
+        .pill{
+            display:inline-flex;
+            align-items:center;
+            gap:0.4rem;
+            border-radius:999px;
+            padding:0.2rem 0.6rem;
+            font-size:0.72rem;
+            border:1px solid rgba(148,163,184,0.55);
+            color: rgba(226,232,240,0.9);
+            background: rgba(2,6,23,0.22);
+        }
+        .pill-green{border-color: rgba(16,185,129,0.55); color:#34d399; background: rgba(16,185,129,0.08);}
+        .pill-cyan{border-color: rgba(34,211,238,0.55); color:#67e8f9; background: rgba(34,211,238,0.08);}
+
+    
+.modal {
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(14px);
+        }
+.modal-content {
+            background: #020617;
+            border-radius: 1.25rem;
+            border: 1px solid rgba(148,163,184,0.7);
+            box-shadow:
+                0 26px 60px rgba(15,23,42,0.98),
+                0 0 0 1px rgba(15,23,42,1);
+        }
+</style>
+
+
+
+</head>
+<body class="min-h-screen relative">
+    <div id="starfield-container"></div>
+    
+    
+    
+    
+    <div class="layout-shell">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-mark"></div>
+                <div class="ml-3 leading-tight">
+                    <div class="logo-title">LANDA</div>
+                    <div class="logo-subtitle">Case Management</div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
+                <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
+                <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
+                <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-pill">
+                    <div class="user-avatar" id="nav-user-avatar">EX</div>
+                    <div class="flex flex-col leading-tight">
+                        <span class="user-name" id="nav-user-name">Expert User</span>
+                        <span class="user-role" id="nav-user-role">EXPERT ACCESS</span>
+                    </div>
+                </div>
+                <button onclick="logout()" class="nav-logout">Logout</button>
+            </div>
+        </aside>
+        <div class="main-shell">
+<!-- Main Content -->
+    <main class="pt-8 px-6 pb-8">
+        <!-- Page Header -->
+        <div class="page-header mb-8">
+            <div>
+                <div class="page-title text-xs tracking-[0.3em] uppercase text-slate-300">System Dashboard</div>
+                <div class="page-subtitle mt-1 text-sm text-gray-400">Real-time overview of Landa presses, cases and service activity</div>
+            </div>
+            <div class="hidden md:flex items-center space-x-2 text-xs text-gray-500">
+                <span>Home</span>
+                <span>/</span>
+                <span class="text-gray-300">Dashboard</span>
+            </div>
+        </div>
+
+
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="metric-card rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Total Cases</p>
+                        <p class="text-3xl font-bold text-white" id="total-cases">24</p>
+                    </div>
+                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Resolved Cases</p>
+                        <p class="text-3xl font-bold text-green-400" id="resolved-cases">18</p>
+                    </div>
+                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">In Progress</p>
+                        <p class="text-3xl font-bold text-yellow-400" id="in-progress-cases">6</p>
+                    </div>
+                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Avg Rating</p>
+                        <p class="text-3xl font-bold text-blue-400" id="avg-rating">4.7</p>
+                    </div>
+                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="glass-card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold">Cases by Region</h3>
+                    <div class="chart-toggle" data-chart="region">
+                        <button class="chart-btn is-active" data-type="bar">Bars</button>
+                        <button class="chart-btn" data-type="pie">Pie</button>
+                    </div>
+                </div>
+                <div id="chart-region" style="height: 300px;"></div>
+            </div>
+
+            <div class="glass-card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold">Cases by System</h3>
+                    <div class="chart-toggle" data-chart="system">
+                        <button class="chart-btn is-active" data-type="bar">Bars</button>
+                        <button class="chart-btn" data-type="pie">Pie</button>
+                    </div>
+                </div>
+                <div id="chart-system" style="height: 300px;"></div>
+            </div>
+
+            <div class="glass-card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold">Cases by Press</h3>
+                    <div class="chart-toggle" data-chart="press">
+                        <button class="chart-btn is-active" data-type="bar">Bars</button>
+                        <button class="chart-btn" data-type="pie">Pie</button>
+                    </div>
+                </div>
+                <div id="chart-press" style="height: 300px;"></div>
+            </div>
+
+            <div class="glass-card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold">Cases by Part</h3>
+                    <div class="chart-toggle" data-chart="part">
+                        <button class="chart-btn is-active" data-type="bar">Bars</button>
+                        <button class="chart-btn" data-type="pie">Pie</button>
+                    </div>
+                </div>
+                <div id="chart-part" style="height: 300px;"></div>
+            </div>
+        </div>
+
+        <!-- Recent Cases -->
+        <div class="glass-card rounded-xl p-6 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-semibold">Recent Cases</h3>
+                <a href="cases.html" class="btn-primary px-4 py-2 rounded-lg text-sm">View All Cases</a>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-700">
+                            <th class="text-left py-3 px-4 text-gray-400">Case ID</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Machine</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Subject</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Status</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Owner</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-cases-table">
+                        <!-- populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="machine-card rounded-xl p-6 text-center">
+                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-semibold mb-2">Create New Case</h4>
+                <p class="text-gray-400 text-sm mb-4">Document a new technical issue or service request</p>
+                <a href="create-case.html" class="btn-primary px-6 py-2 rounded-lg text-sm inline-block">Create Case</a>
+            </div>
+
+            <div class="machine-card rounded-xl p-6 text-center">
+                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-semibold mb-2">Find Solutions</h4>
+                <p class="text-gray-400 text-sm mb-4">Search troubleshooting guides and known solutions</p>
+                <a href="troubleshooting.html" class="btn-primary px-6 py-2 rounded-lg text-sm inline-block">Search Solutions</a>
+            </div>
+
+            <div class="machine-card rounded-xl p-6 text-center">
+                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-semibold mb-2">View Analytics</h4>
+                <p class="text-gray-400 text-sm mb-4">Analyze performance metrics and trends</p>
+                <button onclick="showAnalytics()" class="btn-primary px-6 py-2 rounded-lg text-sm">View Reports</button>
+            </div>
+        </div>
+    </main>
+        </div>
+    </div>
+
+
+    
+    <!-- Case Modal -->
+    <div id="case-modal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-content rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 id="modal-title" class="text-2xl font-bold text-blue-400"></h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            
+            <div id="modal-content">
+                <!-- Modal content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            ensureAuth();
+            hydrateUserPill();
+            renderDashboard();
+            initializeCharts();
+            animateMetrics();
+            wireCaseModal();
+            wireChartToggles();
+        });
+
+        function ensureAuth(){
+            const user = safeJson(localStorage.getItem('landaUser'));
+            if(!user){
+                window.location.href = 'index.html';
+            }
+        }
+
+        function hydrateUserPill(){
+            const user = safeJson(localStorage.getItem('landaUser')) || {};
+            const nameEl = document.getElementById('nav-user-name');
+            const roleEl = document.getElementById('nav-user-role');
+            const avatarEl = document.getElementById('nav-user-avatar');
+            const displayName = user.username || user.name || 'Expert User';
+            const role = (user.role || user.access || 'EXPERT').toString().toUpperCase();
+            if(nameEl) nameEl.textContent = displayName;
+            if(roleEl) roleEl.textContent = role + ' ACCESS';
+            if(avatarEl) avatarEl.textContent = (displayName.trim()[0] || 'E').toUpperCase() + (displayName.trim()[1] || 'X').toUpperCase();
+        }
+
+        function safeJson(value){
+            try{ return value ? JSON.parse(value) : null; } catch(e){ return null; }
+        }
+
+        function getCases(){
+            // Try multiple keys for backward compatibility
+            const keys = ['landaCases','cases','landa_cases','landaCaseData'];
+            for(const k of keys){
+                const data = safeJson(localStorage.getItem(k));
+                if(Array.isArray(data)) return data;
+            }
+            return [];
+        }
+
+                function normalizeCase(c){
+            const out = { ...c };
+
+            // Core ids
+            out.id = out.id || out.caseId || out.sfCase || out.sfCaseNumber || out.sf_case || out.SF || out.case || '';
+
+            // Press
+            out.pressName = out.pressName || out.press || out.machine || out.press_name || out.machineName || '';
+            out.pressType = out.pressType || out.machineType || out.press_type || '';
+
+            // Keep a generic 'press' for dashboard aggregations
+            out.press = out.press || out.pressName || out.machine || '';
+
+            // System hierarchy
+            out.system = out.system || out.mainSystem || out.systemName || '';
+            out.subSystem = out.subSystem || out.subsystem || out.sub_system || '';
+            out.area = out.area || out.hwSwEc || out.hw_sw_ec || '';
+
+            // Content
+            out.subject = out.subject || out.title || out.issueSubject || '';
+            out.description = out.description || out.issueDescription || out.details || '';
+
+            // Meta
+            out.owner = out.owner || out.caseOwner || out.createdBy || '';
+            out.region = out.region || out.site || out.location || '';
+            out.status = (out.status || 'Resolved').toString();
+            out.date = out.date || out.createdAt || out.created_at || out.updatedAt || out.updated_at || '';
+
+            // Troubleshooting: cases.html expects troubleshootSteps: string[]
+            if(Array.isArray(out.troubleshootSteps)){
+                // ok
+            } else if(Array.isArray(out.troubleshooting)){
+                out.troubleshootSteps = out.troubleshooting.map(stepText).filter(Boolean);
+            } else if(Array.isArray(out.steps)){
+                out.troubleshootSteps = out.steps.map(stepText).filter(Boolean);
+            } else if(typeof out.initialSteps === 'string' && out.initialSteps.trim()){
+                out.troubleshootSteps = out.initialSteps.split(/?
+/).map(s=>s.trim()).filter(Boolean);
+            } else {
+                out.troubleshootSteps = [];
+            }
+
+            // Parts: cases.html expects parts: string[]
+            if(Array.isArray(out.parts)){
+                out.parts = out.parts.map(partText).filter(Boolean);
+            } else if(Array.isArray(out.partsUsed)){
+                out.parts = out.partsUsed.map(partText).filter(Boolean);
+            } else {
+                out.parts = [];
+            }
+
+            // Rating: number
+            out.rating = (typeof out.rating === 'number')
+                ? out.rating
+                : (out.rating != null && out.rating !== '' ? Number(out.rating) : null);
+
+            // Attachments: cases.html expects a number
+            if(typeof out.attachments === 'number'){
+                // ok
+            } else if(Array.isArray(out.attachments)){
+                out.attachments = out.attachments.length;
+            } else if(Array.isArray(out.files)){
+                out.attachments = out.files.length;
+            } else {
+                out.attachments = out.attachments ? 1 : 0;
+            }
+
+            return out;
+        }
+
+        function renderDashboard(){
+            const raw = getCases().map(normalizeCase);
+
+            // Metrics
+            const total = raw.length;
+            const resolved = raw.filter(c => c.status.toLowerCase() === 'resolved').length;
+            const inProgress = raw.filter(c => c.status.toLowerCase().includes('progress')).length;
+            const ratings = raw.map(c => c.rating).filter(v => typeof v === 'number' && !Number.isNaN(v));
+            const avg = ratings.length ? (ratings.reduce((a,b)=>a+b,0) / ratings.length) : 0;
+
+            const totalEl = document.getElementById('total-cases');
+            const resolvedEl = document.getElementById('resolved-cases');
+            const progressEl = document.getElementById('in-progress-cases');
+            const avgEl = document.getElementById('avg-rating');
+
+            if(totalEl) totalEl.textContent = total || 0;
+            if(resolvedEl) resolvedEl.textContent = resolved || 0;
+            if(progressEl) progressEl.textContent = inProgress || 0;
+            if(avgEl) avgEl.textContent = avg ? avg.toFixed(1) : '0.0';
+
+            // Recent cases
+            const tbody = document.getElementById('recent-cases-table');
+            if(!tbody) return;
+
+            const sorted = raw
+                .slice()
+                .sort((a,b)=> (new Date(b.date||0)).getTime() - (new Date(a.date||0)).getTime())
+                .slice(0, 6);
+
+            if(sorted.length === 0){
+                tbody.innerHTML = `
+                    <tr>
+                        <td class="py-6 px-4 text-gray-400" colspan="6">
+                            No cases yet. Create your first case to populate analytics.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = sorted.map((c) => {
+                const status = (c.status || 'Resolved').toString();
+                const isResolved = status.toLowerCase() === 'resolved';
+                const statusDot = isResolved ? 'status-resolved' : 'status-progress';
+                const statusTextClass = isResolved ? 'text-green-400' : 'text-yellow-400';
+                const safeId = escapeHtml(c.id || '—');
+                const safePress = escapeHtml((c.press || '').toString() || '—');
+                const safeSubject = escapeHtml((c.subject || '').toString() || '—');
+                const safeOwner = escapeHtml((c.owner || '').toString() || '—');
+                const safeDate = escapeHtml(formatDate(c.date));
+                const encoded = encodeURIComponent(JSON.stringify(c));
+                return `
+                    <tr class="border-b border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer table-row-hover"
+                        data-case="${encoded}">
+                        <td class="py-3 px-4 font-mono text-blue-400">${safeId}</td>
+                        <td class="py-3 px-4">${safePress}</td>
+                        <td class="py-3 px-4">${safeSubject}</td>
+                        <td class="py-3 px-4">
+                            <span class="status-indicator ${statusDot}"></span>
+                            <span class="${statusTextClass}">${escapeHtml(status)}</span>
+                        </td>
+                        <td class="py-3 px-4">${safeOwner}</td>
+                        <td class="py-3 px-4 text-gray-400">${safeDate}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.querySelectorAll('tr[data-case]').forEach(row => {
+                row.addEventListener('click', () => {
+                    const payload = row.getAttribute('data-case');
+                    if(!payload) return;
+                    try{
+                        const data = JSON.parse(decodeURIComponent(payload));
+                        openCaseDetail(data.id);
+                    }catch(e){}
+                });
+            });
+        }
+
+        function escapeHtml(str){
+            return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+        }
+
+        function formatDate(d){
+            if(!d) return '—';
+            const dt = new Date(d);
+            if(Number.isNaN(dt.getTime())) return String(d);
+            return dt.toISOString().slice(0,10);
+        }
+
+        // ---------- CHARTS ----------
+        const charts = {};
+
+        function initializeCharts(){
+            const cases = getCases().map(normalizeCase);
+
+            const agg = {
+                region: countBy(cases, c => (c.region || 'Unspecified')),
+                system: countBy(cases, c => (c.system || 'Unspecified')),
+                press:  countBy(cases, c => (c.press || 'Unspecified')),
+                part:   countByParts(cases)
+            };
+
+            charts.region = echarts.init(document.getElementById('chart-region'));
+            charts.system = echarts.init(document.getElementById('chart-system'));
+            charts.press  = echarts.init(document.getElementById('chart-press'));
+            charts.part   = echarts.init(document.getElementById('chart-part'));
+
+            // default types
+            setChart('region', 'bar', agg.region);
+            setChart('system', 'bar', agg.system);
+            setChart('press',  'bar', agg.press);
+            setChart('part',   'bar', agg.part);
+
+            window.addEventListener('resize', () => {
+                Object.values(charts).forEach(c => c && c.resize());
+            });
+        }
+
+        function wireChartToggles(){
+            document.querySelectorAll('.chart-toggle').forEach(group => {
+                const key = group.getAttribute('data-chart');
+                group.querySelectorAll('.chart-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        group.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('is-active'));
+                        btn.classList.add('is-active');
+                        refreshSingleChart(key, btn.getAttribute('data-type'));
+                    });
+                });
+            });
+        }
+
+        function refreshSingleChart(key, type){
+            const cases = getCases().map(normalizeCase);
+            let data;
+            if(key === 'region') data = countBy(cases, c => (c.region || 'Unspecified'));
+            if(key === 'system') data = countBy(cases, c => (c.system || 'Unspecified'));
+            if(key === 'press')  data = countBy(cases, c => (c.press || 'Unspecified'));
+            if(key === 'part')   data = countByParts(cases);
+            setChart(key, type, data || {});
+        }
+
+        function countBy(items, fn){
+            const map = {};
+            items.forEach(it => {
+                const k = (fn(it) || 'Unspecified').toString().trim() || 'Unspecified';
+                map[k] = (map[k] || 0) + 1;
+            });
+            return map;
+        }
+
+        function countByParts(cases){
+            const map = {};
+            cases.forEach(c => {
+                const parts = Array.isArray(c.partsUsed) ? c.partsUsed : [];
+                if(parts.length === 0){
+                    map['Unspecified'] = (map['Unspecified'] || 0) + 1;
+                    return;
+                }
+                parts.forEach(p => {
+                    const name = (p.name || p.part || p.partName || p || 'Unspecified').toString().trim() || 'Unspecified';
+                    map[name] = (map[name] || 0) + 1;
+                });
+            });
+            return map;
+        }
+
+        function topN(map, n=8){
+            const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+            const head = entries.slice(0, n);
+            const rest = entries.slice(n);
+            if(rest.length){
+                const other = rest.reduce((sum, [,v])=>sum+v, 0);
+                head.push(['Other', other]);
+            }
+            return head;
+        }
+
+        
+        function navigateFromChart(key, value){
+            const payload = { key, value };
+            try{ localStorage.setItem('landaCasesFilter', JSON.stringify(payload)); }catch(e){}
+            const url = `cases.html?filter=${encodeURIComponent(key)}&value=${encodeURIComponent(value)}`;
+            window.location.href = url;
+        }
+
+function setChart(key, type, map){
+            const chart = charts[key];
+            if(!chart) return;
+
+
+            chart.off && chart.off("click");
+            chart.on && chart.on("click", function(params){
+                const name = params && params.name ? params.name : null;
+                if(!name) return;
+                // map dashboard keys to cases fields
+                const keyMap = { region:"region", system:"system", press:"press", part:"part" };
+                navigateFromChart(keyMap[key] || key, name);
+            });
+
+            const entries = topN(map, 7);
+            const labels = entries.map(e=>e[0]);
+            const values = entries.map(e=>e[1]);
+
+            const tooltip = {
+                backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                borderColor: 'rgba(6, 182, 212, 0.6)',
+                textStyle: { color: '#ffffff' }
+            };
+
+            if(type === 'pie'){
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                textStyle: { fontFamily: 'Inter, system-ui, sans-serif', color: '#e5e7eb' },
+                    tooltip: { trigger: 'item', ...tooltip },
+                    legend: { bottom: 0, textStyle: { color: 'rgba(226,232,240,0.85)' } },
+                    series: [{
+                        type: 'pie',
+                        radius: ['42%', '72%'],
+                        center: ['50%', '52%'],
+                        data: labels.map((l,i)=>({ name:l, value:values[i] })),
+                        label: { color: '#e5e7eb', fontSize: 12 },
+                        labelLine: { lineStyle: { color: 'rgba(148,163,184,0.8)' } }
+                    }]
+                }, true);
+                return;
+            }
+
+            chart.setOption({
+                backgroundColor: 'transparent',
+                textStyle: { fontFamily: 'Inter, system-ui, sans-serif', color: '#e5e7eb' },
+                tooltip: { trigger: 'axis', axisPointer: { type:'shadow' }, ...tooltip },
+                grid: { left: 36, right: 18, top: 22, bottom: 46, containLabel: true },
+                xAxis: {
+                    type: 'category',
+                    data: labels,
+                    axisLine: { lineStyle: { color: 'rgba(148,163,184,0.45)' } },
+                    axisLabel: { color: '#e5e7eb', rotate: labels.some(l=>l.length>8) ? 20 : 0 }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: { lineStyle: { color: 'rgba(148,163,184,0.45)' } },
+                    axisLabel: { color: '#e5e7eb' },
+                    splitLine: { lineStyle: { color: 'rgba(51,65,85,0.55)' } }
+                },
+                series: [{
+                    data: values,
+                    type: 'bar',
+                    barWidth: '58%',
+                    itemStyle: {
+                        borderRadius: [8,8,0,0],
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#2563eb' },
+                            { offset: 1, color: '#06b6d4' }
+                        ])
+                    }
+                }]
+            }, true);
+        }
+
+        // ---------- MODAL ----------
+        // Unified Case Modal (exact format as cases.html)
+        function openCaseDetail(caseId) {
+            const source = (getCases && getCases().length)
+                ? getCases().map(normalizeCase)
+                : (window.landaSystem && Array.isArray(window.landaSystem.cases) ? window.landaSystem.cases : []);
+            const case_ = source.find(c => c.id === caseId);
+
+            if (case_) {
+                document.getElementById('modal-title').textContent = case_.id;
+                document.getElementById('modal-content').innerHTML = createCaseDetailContent(case_);
+                document.getElementById('case-modal').classList.remove('hidden');
+            }
+        }
+
+        function createCaseDetailContent(case_) {
+            const statusColor = case_.status === 'Resolved' ? 'text-green-400' : 
+                               case_.status === 'In Progress' ? 'text-yellow-400' : 'text-red-400';
+
+            return `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-400 mb-1">Machine Type</h4>
+                            <p class="text-white">${case_.pressType} - ${case_.pressName}</p>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-400 mb-1">Status</h4>
+                            <p class="${statusColor} font-semibold">${case_.status}</p>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-400 mb-1">System</h4>
+                            <p class="text-white">${case_.system}</p>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-400 mb-1">Date</h4>
+                            <p class="text-white">${formatDate(case_.date)}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-lg font-semibold mb-2">Description</h4>
+                        <p class="text-gray-300">${escapeHtml(case_.description || '—')}</p>
+                    </div>
+
+                    <div>
+                        <h4 class="text-lg font-semibold mb-2">Troubleshooting Steps</h4>
+                        <div class="space-y-2">
+                            ${(case_.troubleshootSteps || []).map((step, index) => `
+                                <div class="flex items-start space-x-3">
+                                    <span class="flex-shrink-0 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">
+                                        ${index + 1}
+                                    </span>
+                                    <span class="text-gray-300">${escapeHtml(step)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    ${(case_.parts && case_.parts.length > 0) ? `
+                        <div>
+                            <h4 class="text-lg font-semibold mb-2">Parts Used</h4>
+                            <ul class="list-disc list-inside text-gray-300 space-y-1">
+                                ${case_.parts.map(part => `<li>${escapeHtml(part)}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-700">
+                        <div class="flex items-center space-x-4">
+                            <span class="text-sm text-gray-400">Owner: ${escapeHtml(case_.owner || '—')}</span>
+                            <span class="text-sm text-gray-400">Rating: ⭐ ${case_.rating ?? '—'}</span>
+                            <span class="text-sm text-gray-400">Attachments: 📎 ${case_.attachments ?? 0}</span>
+                        </div>
+                        <button onclick="closeModal()" class="btn-primary px-4 py-2 rounded-lg text-sm">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeModal() {
+            document.getElementById('case-modal').classList.add('hidden');
+        }
+
+
+        function wireCaseModal(){
+            const modal = document.getElementById('case-modal');
+            if(!modal) return;
+            modal.querySelectorAll('[data-close="1"]').forEach(el => {
+                el.addEventListener('click', closeModal);
+            });
+            document.addEventListener('keydown', (e) => {
+                if(e.key === 'Escape') closeModal();
+            });
+        }
+
+        function stepText(s){
+            if(typeof s === 'string') return s;
+            if(!s || typeof s !== 'object') return '—';
+            return s.text || s.step || s.description || JSON.stringify(s);
+        }
+
+        function partText(p){
+            if(typeof p === 'string') return p;
+            if(!p || typeof p !== 'object') return '—';
+            const name = p.name || p.part || p.partName || 'Part';
+            const code = p.code || p.partNumber || p.id || '';
+            return code ? `${name} — ${code}` : name;
+        }
+
+        function animateMetrics() {
+            if (typeof anime !== 'undefined') {
+                anime({
+                    targets: '.metric-card',
+                    opacity: [0, 1],
+                    translateY: [30, 0],
+                    duration: 800,
+                    delay: anime.stagger(100),
+                    easing: 'easeOutExpo'
+                });
+
+                anime({
+                    targets: '.glass-card, .machine-card',
+                    opacity: [0, 1],
+                    translateY: [50, 0],
+                    duration: 1000,
+                    delay: anime.stagger(200, {start: 400}),
+                    easing: 'easeOutExpo'
+                });
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('landaUser');
+            window.location.href = 'index.html';
+        }
+
+        function showAnalytics() {
+            alert('Analytics dashboard coming soon! This will show detailed performance reports and trends.');
+        }
+    </script>
+</body>
+</html>
+
