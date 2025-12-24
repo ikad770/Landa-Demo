@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Report Analyzer - Landa Case Management</title>
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-main: #020617;
+            --bg-surface: rgba(15, 23, 42, 0.98);
+            --border-soft: rgba(51, 65, 85, 0.9);
+            --border-strong: rgba(148, 163, 184, 0.7);
+            --accent-blue: #2563eb;
+            --accent-cyan: #06b6d4;
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.16), transparent 55%),
+                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.14), transparent 55%),
+                #020617;
+            color: var(--text-main);
+        }
+
+        .layout-shell {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: rgba(10, 16, 30, 0.98);
+            border-right: 1px solid rgba(15, 23, 42, 0.95);
+            box-shadow:
+                4px 0 24px rgba(15, 23, 42, 0.85),
+                0 0 0 1px rgba(15, 23, 42, 1);
+            padding: 1.25rem 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .logo-mark {
+            height: 32px;
+            border-radius: 0.75rem;
+            background: #020617;
+            width: 32px;
+            position: relative;
+            box-shadow:
+                0 0 0 1px rgba(15,23,42,1),
+                0 0 18px rgba(34, 211, 238, 0.8);
+            overflow: hidden;
+        }
+        .logo-mark::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 30%, #22d3ee, #0f172a);
+            top: 7px;
+            left: 7px;
+            box-shadow: 0 0 18px rgba(34, 211, 238, 0.9);
+        }
+
+        .logo-title {
+            font-family: 'Satoshi', system-ui, sans-serif;
+            font-size: 0.78rem;
+            letter-spacing: 0.26em;
+            text-transform: uppercase;
+        }
+
+        .logo-subtitle {
+            font-size: 0.65rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .sidebar-nav {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .nav-link {
+            display: block;
+            border-radius: 0.6rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.83rem;
+            color: #cbd5f5;
+        }
+
+        .nav-link:hover {
+            background: rgba(15, 23, 42, 0.96);
+            color: #eff6ff;
+        }
+
+        .nav-link-active {
+            background: rgba(37, 99, 235, 0.16);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(37, 99, 235, 0.6);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(30, 41, 59, 0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid var(--border-strong);
+            box-shadow:
+                0 10px 26px rgba(15, 23, 42, 0.98),
+                0 0 0 1px rgba(30, 64, 175, 0.4);
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 20%, var(--accent-cyan), #0f172a);
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 0 0 1px rgba(15, 23, 42, 1),
+                0 0 14px rgba(34, 211, 238, 0.9);
+        }
+
+        .user-name {
+            font-size: 0.8rem;
+        }
+
+        .user-role {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--text-muted);
+        }
+
+        .nav-logout {
+            border-radius: 999px;
+            padding: 0.45rem 0.85rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            border: 1px solid rgba(148, 163, 184, 0.65);
+            color: var(--text-muted);
+        }
+
+        .nav-logout:hover {
+            border-color: rgba(248, 250, 252, 0.95);
+            color: #e5e7eb;
+        }
+
+        .main-shell {
+            flex: 1;
+            min-height: 100vh;
+            padding: 1.75rem 2rem;
+        }
+
+        .glass-card {
+            background: var(--bg-surface);
+            border-radius: 1rem;
+            border: 1px solid var(--border-strong);
+            box-shadow:
+                0 16px 42px rgba(15, 23, 42, 0.98),
+                0 0 0 1px rgba(15, 23, 42, 1);
+        }
+
+        .metric-card{
+            background: rgba(15, 23, 42, 0.98);
+            border-radius: 1rem;
+            border: 1px solid rgba(148,163,184,0.55);
+            box-shadow: 0 18px 48px rgba(0,0,0,0.35), 0 0 0 1px rgba(2,6,23,0.7);
+            padding: 1.1rem 1.15rem;
+        }
+
+        .btn-primary {
+            border-radius: 999px;
+            background-image: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border: 1px solid rgba(191, 219, 254, 0.7);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            font-weight: 600;
+            padding-inline: 1.1rem;
+            padding-block: 0.65rem;
+            box-shadow:
+                0 16px 34px rgba(37, 99, 235, 0.7),
+                0 0 0 1px rgba(15, 23, 42, 0.95);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow:
+                0 20px 44px rgba(37, 99, 235, 0.88),
+                0 0 0 1px rgba(59, 130, 246, 0.96);
+        }
+
+        .btn-ghost{
+            border-radius: 999px;
+            padding: 0.62rem 1rem;
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            border: 1px solid rgba(148, 163, 184, 0.55);
+            background: rgba(2,6,23,0.18);
+            color: rgba(226,232,240,0.92);
+        }
+
+        .btn-ghost:hover{
+            border-color: rgba(34,211,238,0.65);
+            box-shadow: 0 0 0 1px rgba(34,211,238,0.20), 0 0 28px rgba(34,211,238,0.10);
+        }
+
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            gap:0.35rem;
+            border-radius:999px;
+            padding:0.18rem 0.6rem;
+            font-size:0.72rem;
+            border:1px solid rgba(148,163,184,0.55);
+            background: rgba(2,6,23,0.20);
+        }
+        .badge-critical{ border-color: rgba(248,113,113,0.55); color:#fca5a5; background: rgba(248,113,113,0.10); }
+        .badge-warning{ border-color: rgba(251,191,36,0.55); color:#fde68a; background: rgba(251,191,36,0.10); }
+        .badge-ok{ border-color: rgba(52,211,153,0.55); color:#6ee7b7; background: rgba(52,211,153,0.10); }
+
+        .mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        textarea {
+            outline: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative">
+    <div id="starfield-container"></div>
+
+    <div class="layout-shell">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-mark"></div>
+                <div class="ml-3 leading-tight">
+                    <div class="logo-title">LANDA</div>
+                    <div class="logo-subtitle">Case Management</div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
+                <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
+                <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
+                <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
+                <a href="Shift-Report-Analyzer.html" class="nav-link nav-link-active" data-page="shift-report">Shift Report Analyzer</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-pill">
+                    <div class="user-avatar" id="nav-user-avatar">EX</div>
+                    <div class="flex flex-col leading-tight">
+                        <span class="user-name" id="nav-user-name">Expert User</span>
+                        <span class="user-role" id="nav-user-role">EXPERT ACCESS</span>
+                    </div>
+                </div>
+                <button onclick="logout()" class="nav-logout">Logout</button>
+            </div>
+        </aside>
+
+        <div class="main-shell">
+            <div class="flex items-start justify-between gap-6 mb-8">
+                <div>
+                    <div class="text-xs tracking-[0.3em] uppercase text-slate-300 font-semibold" style="font-family:'Satoshi',system-ui,sans-serif;">
+                        Shift Report Analyzer
+                    </div>
+                    <div class="mt-2 text-sm text-slate-400 max-w-2xl">
+                        AI-assisted daily shift report aggregation and risk triage (Outlook ingestion placeholder).
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button class="btn-ghost" onclick="seedDemo()">Load Demo</button>
+                    <button class="btn-primary" onclick="runAnalysis()">Analyze</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-7">
+                <div class="metric-card">
+                    <div class="text-xs text-slate-400 tracking-[0.18em] uppercase">Machines Analyzed</div>
+                    <div class="mt-2 text-3xl font-semibold" id="kpi-machines">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="text-xs text-slate-400 tracking-[0.18em] uppercase">Critical Issues</div>
+                    <div class="mt-2 text-3xl font-semibold text-red-300" id="kpi-critical">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="text-xs text-slate-400 tracking-[0.18em] uppercase">Attention Required</div>
+                    <div class="mt-2 text-3xl font-semibold text-amber-200" id="kpi-warning">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="text-xs text-slate-400 tracking-[0.18em] uppercase">OK Machines</div>
+                    <div class="mt-2 text-3xl font-semibold text-emerald-200" id="kpi-ok">0</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <div class="glass-card p-6 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <div class="text-sm font-semibold">Input (Shift Reports)</div>
+                            <div class="text-xs text-slate-400 mt-1">Paste raw text (one report per machine). Demo available.</div>
+                        </div>
+                        <div class="badge mono" id="reports-count">0 reports</div>
+                    </div>
+
+                    <textarea id="reports-input" class="w-full h-[360px] rounded-xl bg-slate-950/50 border border-slate-700/60 px-4 py-3 text-sm text-slate-200 placeholder-slate-500"
+                        placeholder="Example:
+Machine: S1001000026
+Customer: ZRP Printing Group
+Notes: Blanket memory error (LS 172k)..."></textarea>
+
+                    <div class="mt-4 flex items-center justify-between">
+                        <button class="btn-ghost" onclick="clearReports()">Clear</button>
+                        <div class="text-xs text-slate-500">Stored locally (localStorage) · Outlook connector coming next</div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 lg:col-span-3">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <div class="text-sm font-semibold">Daily Summary</div>
+                            <div class="text-xs text-slate-400 mt-1">Prioritized issues + machine health map</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn-ghost" onclick="exportSummary()">Export</button>
+                        </div>
+                    </div>
+
+                    <div id="summary-alerts" class="space-y-3"></div>
+
+                    <div class="mt-6">
+                        <div class="text-xs tracking-[0.22em] uppercase text-slate-400 mb-3">Machine status</div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-slate-400 border-b border-slate-700/60">
+                                        <th class="text-left py-2 pr-3">Machine</th>
+                                        <th class="text-left py-2 pr-3">Customer</th>
+                                        <th class="text-left py-2 pr-3">Severity</th>
+                                        <th class="text-left py-2 pr-3">Top Signal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="machine-table" class="divide-y divide-slate-800/70"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            ensureAuth();
+            hydrateUserPill();
+            restoreReports();
+            runAnalysis(false);
+            animateIn();
+        });
+
+        function ensureAuth(){
+            const user = safeJson(localStorage.getItem('landaUser'));
+            if(!user){ window.location.href = 'index.html'; }
+        }
+
+        function hydrateUserPill(){
+            const user = safeJson(localStorage.getItem('landaUser')) || {};
+            const nameEl = document.getElementById('nav-user-name');
+            const roleEl = document.getElementById('nav-user-role');
+            const avatarEl = document.getElementById('nav-user-avatar');
+            const displayName = user.username || user.name || 'Expert User';
+            const role = (user.role || user.access || 'EXPERT').toString().toUpperCase();
+            if(nameEl) nameEl.textContent = displayName;
+            if(roleEl) roleEl.textContent = role + ' ACCESS';
+            if(avatarEl) avatarEl.textContent = (displayName.trim()[0] || 'E').toUpperCase() + (displayName.trim()[1] || 'X').toUpperCase();
+        }
+
+        function safeJson(value){
+            try{ return value ? JSON.parse(value) : null; } catch(e){ return null; }
+        }
+
+        function logout(){
+            localStorage.removeItem('landaUser');
+            window.location.href = 'index.html';
+        }
+
+        function restoreReports(){
+            const input = document.getElementById('reports-input');
+            try{
+                const raw = localStorage.getItem('landaShiftReportsRaw');
+                if(raw && input) input.value = raw;
+            }catch(e){}
+            updateReportCount();
+        }
+
+        function persistReports(){
+            const input = document.getElementById('reports-input');
+            if(!input) return;
+            try{ localStorage.setItem('landaShiftReportsRaw', input.value || ''); }catch(e){}
+            updateReportCount();
+        }
+
+        function clearReports(){
+            const input = document.getElementById('reports-input');
+            if(input) input.value = '';
+            persistReports();
+            runAnalysis();
+        }
+
+        function updateReportCount(){
+            const input = document.getElementById('reports-input');
+            const countEl = document.getElementById('reports-count');
+            const blocks = splitReports(input ? input.value : '');
+            if(countEl) countEl.textContent = blocks.length + ' reports';
+        }
+
+        function splitReports(raw){
+            const text = (raw || '').trim();
+            if(!text) return [];
+            // Split by blank lines between reports
+            return text.split(/\n\s*\n+/).map(s => s.trim()).filter(Boolean);
+        }
+
+        function parseReport(block){
+            // Very lightweight parser (placeholder for AI)
+            const get = (label) => {
+                const m = block.match(new RegExp(label + '\\s*:\\s*(.+)', 'i'));
+                return m ? m[1].trim() : '';
+            };
+            const machine = get('Machine') || get('Press') || (block.match(/S\d{10,}/i)?.[0] || block.match(/D\d{10,}/i)?.[0] || '');
+            const customer = get('Customer') || get('Site') || '';
+            const notes = get('Notes') || get('Summary') || block;
+
+            const lower = notes.toLowerCase();
+            let severity = 'ok';
+            if (/(critical|alarm|fault|error|overflow|ink starvation|blanket memory|no production|circulation off)/i.test(lower)) severity = 'critical';
+            else if (/(warning|attention|unstable|needs|issue|starvation|jam|low)/i.test(lower)) severity = 'warning';
+
+            const topSignal = (() => {
+                const lines = notes.split(/\n|\.|\;/).map(s=>s.trim()).filter(Boolean);
+                return lines[0] || '—';
+            })();
+
+            return { machine: machine || 'Unspecified', customer: customer || '—', notes, severity, topSignal };
+        }
+
+        function runAnalysis(shouldPersist=true){
+            if(shouldPersist) persistReports();
+
+            const input = document.getElementById('reports-input');
+            const blocks = splitReports(input ? input.value : '');
+            const reports = blocks.map(parseReport);
+
+            const machines = new Set(reports.map(r => r.machine));
+            const critical = reports.filter(r => r.severity === 'critical').length;
+            const warning = reports.filter(r => r.severity === 'warning').length;
+            const ok = Math.max(0, machines.size - new Set(reports.filter(r => r.severity !== 'ok').map(r=>r.machine)).size);
+
+            setText('kpi-machines', machines.size);
+            setText('kpi-critical', critical);
+            setText('kpi-warning', warning);
+            setText('kpi-ok', ok);
+
+            renderAlerts(reports);
+            renderMachineTable(reports);
+            updateReportCount();
+        }
+
+        function setText(id, value){
+            const el = document.getElementById(id);
+            if(el) el.textContent = String(value);
+        }
+
+        function renderAlerts(reports){
+            const root = document.getElementById('summary-alerts');
+            if(!root) return;
+
+            const bySeverity = (sev) => reports.filter(r => r.severity === sev);
+
+            const blocks = [
+                ...bySeverity('critical').map(r => renderAlert(r, 'critical')),
+                ...bySeverity('warning').map(r => renderAlert(r, 'warning'))
+            ];
+
+            if(blocks.length === 0){
+                root.innerHTML = `
+                    <div class="p-5 rounded-2xl border border-slate-700/60 bg-slate-950/35">
+                        <div class="text-sm font-semibold">No alerts detected</div>
+                        <div class="text-xs text-slate-400 mt-1">Load demo or paste shift reports to generate a daily summary.</div>
+                    </div>`;
+                return;
+            }
+
+            root.innerHTML = blocks.join('');
+        }
+
+        function renderAlert(r, sev){
+            const badge = sev === 'critical' ? 'badge-critical' : 'badge-warning';
+            const label = sev === 'critical' ? 'CRITICAL' : 'ATTENTION';
+            return `
+                <div class="p-5 rounded-2xl border border-slate-700/60 bg-slate-950/35 hover:bg-slate-950/45 transition">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <div class="text-sm font-semibold">
+                                <span class="mono text-cyan-200">${escapeHtml(r.machine)}</span>
+                                <span class="text-slate-400">·</span>
+                                <span class="text-slate-200">${escapeHtml(r.customer)}</span>
+                            </div>
+                            <div class="text-xs text-slate-400 mt-1 line-clamp-2">${escapeHtml(r.topSignal)}</div>
+                        </div>
+                        <span class="badge ${badge} mono">${label}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMachineTable(reports){
+            const tbody = document.getElementById('machine-table');
+            if(!tbody) return;
+
+            const rows = reports
+                .slice()
+                .sort((a,b)=> severityRank(a.severity) - severityRank(b.severity))
+                .map(r => {
+                    const badge = r.severity === 'critical' ? 'badge badge-critical mono' :
+                                  r.severity === 'warning' ? 'badge badge-warning mono' :
+                                  'badge badge-ok mono';
+                    const label = r.severity.toUpperCase();
+                    return `
+                        <tr class="hover:bg-slate-950/35 transition">
+                            <td class="py-3 pr-3 mono text-cyan-200">${escapeHtml(r.machine)}</td>
+                            <td class="py-3 pr-3 text-slate-200">${escapeHtml(r.customer)}</td>
+                            <td class="py-3 pr-3"><span class="${badge}">${label}</span></td>
+                            <td class="py-3 pr-3 text-slate-400">${escapeHtml(r.topSignal)}</td>
+                        </tr>
+                    `;
+                });
+
+            tbody.innerHTML = rows.join('') || `
+                <tr><td class="py-4 text-slate-400" colspan="4">No reports loaded.</td></tr>
+            `;
+        }
+
+        function severityRank(sev){
+            if(sev === 'critical') return 0;
+            if(sev === 'warning') return 1;
+            return 2;
+        }
+
+        function escapeHtml(str){
+            return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+        }
+
+        function seedDemo(){
+            const input = document.getElementById('reports-input');
+            if(!input) return;
+            input.value = [
+`Machine: S1001000026
+Customer: ZRP Printing Group
+Notes: Blanket memory error (LS 172k). Wrong blanket installed → QCS error. Multiple blanket replacements. Action: Review blanket validation & supply process.`,
+
+`Machine: D1001000007
+Customer: BluePrint AG
+Notes: Ink circulation OFF (Yellow). Capping tray overflow. No production during incident. Action: Add circulation check at shift start.`,
+
+`Machine: S1101000023
+Customer: FP Mercure
+Notes: Ink starvation on Black PH #11. Back washes ineffective. Action: Schedule deeper flush + monitor.`,
+
+`Machine: D1101000011
+Customer: Polypack GmbH
+Notes: Paper feed instability (low vacuum). Action: Verify feeder calibration.`,
+
+`Machine: S2101000001
+Customer: Demo Site
+Notes: Completed shift with stable output. No issues reported.`
+
+            ].join("\n\n");
+            persistReports();
+            runAnalysis();
+        }
+
+        function exportSummary(){
+            // Minimal export: copy summary to clipboard as text.
+            const input = document.getElementById('reports-input');
+            const blocks = splitReports(input ? input.value : '');
+            const reports = blocks.map(parseReport);
+
+            const lines = [];
+            lines.push('Shift Report Analyzer Summary');
+            lines.push(new Date().toISOString());
+            lines.push('');
+            reports
+                .slice()
+                .sort((a,b)=> severityRank(a.severity) - severityRank(b.severity))
+                .forEach(r => {
+                    lines.push(`[${r.severity.toUpperCase()}] ${r.machine} · ${r.customer} — ${r.topSignal}`);
+                });
+
+            const text = lines.join('\n');
+            navigator.clipboard?.writeText(text).then(() => {
+                alert('Summary copied to clipboard.');
+            }).catch(() => {
+                alert(text);
+            });
+        }
+
+        function animateIn(){
+            if (typeof anime === 'undefined') return;
+            anime({
+                targets: '.metric-card, .glass-card',
+                opacity: [0, 1],
+                translateY: [18, 0],
+                duration: 780,
+                delay: anime.stagger(90),
+                easing: 'easeOutExpo'
+            });
+        }
+
+        // Persist on input changes (debounced)
+        let _t = null;
+        document.addEventListener('input', (e) => {
+            if(e.target && e.target.id === 'reports-input'){
+                clearTimeout(_t);
+                _t = setTimeout(() => { persistReports(); runAnalysis(false); }, 250);
+            }
+        });
+    </script>
+</body>
+</html>
