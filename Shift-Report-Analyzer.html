@@ -266,7 +266,24 @@
         textarea {
             outline: none;
         }
-    </style>
+    .date-pill{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;border:1px solid rgba(100,116,139,.35);background: rgba(2,6,23,.35);box-shadow: 0 0 0 1px rgba(34,211,238,.08) inset;backdrop-filter: blur(10px);}
+        .date-input{background: transparent;border: none;color: rgba(226,232,240,1);font-size: 12px;outline:none;min-width: 130px;}
+        .table-shell{border:1px solid rgba(100,116,139,.35);background: rgba(2,6,23,.28);border-radius: 20px;overflow:hidden;}
+        .machines-table{width:100%;border-collapse: collapse;}
+        .machines-table th{text-align:left;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color: rgba(148,163,184,1);padding:14px 16px;background: rgba(2,6,23,.45);border-bottom:1px solid rgba(100,116,139,.25);}
+        .machines-table td{padding:14px 16px;border-bottom:1px solid rgba(100,116,139,.18);color: rgba(226,232,240,1);font-size: 13px;}
+        .machines-table tr:hover td{background: rgba(2,6,23,.35);}
+        .status-dot{display:inline-flex;align-items:center;gap:10px;}
+        .dot{width:10px;height:10px;border-radius:999px;box-shadow: 0 0 12px rgba(34,211,238,.15);}
+        .dot.ok{background: rgba(34,197,94,1);box-shadow:0 0 14px rgba(34,197,94,.25);}
+        .dot.warning{background: rgba(245,158,11,1);box-shadow:0 0 14px rgba(245,158,11,.25);}
+        .dot.critical{background: rgba(248,113,113,1);box-shadow:0 0 14px rgba(248,113,113,.25);}
+        .clip{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:12px;border:1px solid rgba(100,116,139,.25);background: rgba(2,6,23,.35);}
+        .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid rgba(100,116,139,.28);background: rgba(2,6,23,.25);color: rgba(226,232,240,1);font-size: 12px;}
+        .chip.active{border-color: rgba(34,211,238,.55);box-shadow: 0 0 0 1px rgba(34,211,238,.15) inset;}
+        .modal-overlay{position:fixed;inset:0;background: rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding: 18px;z-index: 1000;}
+        .modal-card{width: min(920px, 96vw);max-height: 86vh;overflow:auto;border-radius: 22px;border:1px solid rgba(100,116,139,.35);background: rgba(2,6,23,.86);box-shadow: 0 20px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(34,211,238,.08) inset;padding: 18px;}
+</style>
 </head>
 <body class="min-h-screen relative">
     <div id="starfield-container"></div>
@@ -285,7 +302,11 @@
                 <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
                 <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
                 <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
-                <a href="Shift-Report-Analyzer.html" class="nav-link nav-link-active" data-page="shift-report">Shift Report Analyzer</a>
+
+<a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
+<a href="settings.html" class="nav-link" data-page="settings">Settings</a>
+<a href="basics.html" class="nav-link" data-page="basics">Basics</a>
+
             </nav>
             <div class="sidebar-footer">
                 <div class="user-pill">
@@ -310,9 +331,22 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <button class="btn-ghost" onclick="seedDemo()">Load Demo</button>
-                    <button class="btn-primary" onclick="runAnalysis()">Analyze</button>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <div class="flex items-center gap-2">
+                        <div class="date-pill">
+                            <span class="mono text-[11px] text-slate-400">FROM</span>
+                            <input id="date-from" type="date" class="date-input" />
+                        </div>
+                        <div class="date-pill">
+                            <span class="mono text-[11px] text-slate-400">TO</span>
+                            <input id="date-to" type="date" class="date-input" />
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 justify-end">
+                        <button class="btn-ghost" onclick="seedDemo()">Load Demo</button>
+                        <button class="btn-ghost" onclick="exportSummary()">Export</button>
+                        <button class="btn-primary" onclick="runAnalysis()">Analyze</button>
+                    </div>
                 </div>
             </div>
 
@@ -395,12 +429,23 @@ Notes: Blanket memory error (LS 172k)..."></textarea>
     <script src="main.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            setDefaultDates();
             ensureAuth();
             hydrateUserPill();
             restoreReports();
             runAnalysis(false);
             animateIn();
         });
+
+        
+        function setDefaultDates(){
+            const from = document.getElementById('date-from');
+            const to = document.getElementById('date-to');
+            const today = new Date();
+            const iso = today.toISOString().slice(0,10);
+            if(from && !from.value) from.value = iso;
+            if(to && !to.value) to.value = iso;
+        }
 
         function ensureAuth(){
             const user = safeJson(localStorage.getItem('landaUser'));
@@ -471,6 +516,10 @@ Notes: Blanket memory error (LS 172k)..."></textarea>
                 const m = block.match(new RegExp(label + '\\s*:\\s*(.+)', 'i'));
                 return m ? m[1].trim() : '';
             };
+            // Optional images/attachments indicator (future: Outlook attachments)
+            const imgMatch = block.match(/(?:Images|Attachments)\s*:\s*(\d+)/i);
+            const images = imgMatch ? parseInt(imgMatch[1], 10) : (/(image|photo|screenshot|תמונה)/i.test(block) ? 1 : 0);
+
             const machine = get('Machine') || get('Press') || (block.match(/S\d{10,}/i)?.[0] || block.match(/D\d{10,}/i)?.[0] || '');
             const customer = get('Customer') || get('Site') || '';
             const notes = get('Notes') || get('Summary') || block;
@@ -487,6 +536,8 @@ Notes: Blanket memory error (LS 172k)..."></textarea>
 
             return { machine: machine || 'Unspecified', customer: customer || '—', notes, severity, topSignal };
         }
+
+        let __machineRows = []; let __activeFilter = 'all';
 
         function runAnalysis(shouldPersist=true){
             if(shouldPersist) persistReports();
@@ -532,10 +583,12 @@ Notes: Blanket memory error (LS 172k)..."></textarea>
                         <div class="text-sm font-semibold">No alerts detected</div>
                         <div class="text-xs text-slate-400 mt-1">Load demo or paste shift reports to generate a daily summary.</div>
                     </div>`;
+                renderMachineTable([]);
                 return;
             }
 
             root.innerHTML = blocks.join('');
+            renderMachineTable(reports);
         }
 
         function renderAlert(r, sev){
@@ -624,6 +677,120 @@ Notes: Completed shift with stable output. No issues reported.`
             runAnalysis();
         }
 
+        
+        function setFilter(key){
+            __activeFilter = key;
+            ['all','critical','warning','ok','attachments'].forEach(k => {
+                const el = document.getElementById('filter-' + k);
+                if(!el) return;
+                if(k === key) el.classList.add('active'); else el.classList.remove('active');
+            });
+            renderMachineTable(__machineRows);
+        }
+
+        function renderMachineTable(reports){
+            const byMachine = {};
+            (reports || []).forEach(r => {
+                if(!r.machine) return;
+                if(!byMachine[r.machine]){
+                    byMachine[r.machine] = { machine:r.machine, customer:r.customer, severity:'ok', topSignal:'—', images:0, repeat:false, notes:r.notes || '' };
+                }
+                const row = byMachine[r.machine];
+                const sevRank = s => (s==='critical'?3:(s==='warning'?2:1));
+                if(sevRank(r.severity) > sevRank(row.severity)){
+                    row.severity = r.severity;
+                    row.topSignal = r.topSignal || row.topSignal;
+                    row.notes = r.notes || row.notes;
+                    row.customer = r.customer || row.customer;
+                }
+                row.images = Math.max(row.images || 0, r.images || 0);
+                const rep = (r.notes || '').toLowerCase();
+                if(rep.includes('again') || rep.includes('repeat') || rep.includes('שוב')){
+                    row.repeat = true;
+                }
+            });
+
+            __machineRows = Object.values(byMachine);
+            const body = document.getElementById('machines-table-body');
+            if(!body) return;
+
+            let rows = __machineRows.slice();
+            if(__activeFilter === 'critical') rows = rows.filter(r => r.severity === 'critical');
+            if(__activeFilter === 'warning') rows = rows.filter(r => r.severity === 'warning');
+            if(__activeFilter === 'ok') rows = rows.filter(r => r.severity === 'ok');
+            if(__activeFilter === 'attachments') rows = rows.filter(r => (r.images || 0) > 0);
+
+            if(rows.length === 0){
+                body.innerHTML = `<tr><td colspan="5" class="text-slate-400">No machines match the current filter.</td></tr>`;
+                return;
+            }
+
+            const sevRankSort = s => (s==='critical'?0:(s==='warning'?1:2));
+            rows.sort((a,b)=> sevRankSort(a.severity)-sevRankSort(b.severity) || a.machine.localeCompare(b.machine));
+
+            body.innerHTML = rows.map(r => {
+                const dot = r.severity === 'critical' ? 'critical' : (r.severity === 'warning' ? 'warning' : 'ok');
+                const status = r.severity === 'critical' ? 'Critical' : (r.severity === 'warning' ? 'Attention' : 'OK');
+                const img = (r.images || 0) > 0 ? `<span class="clip" title="Has images">📎</span>` : `<span class="clip" title="No images">—</span>`;
+                const rep = r.repeat ? `<span class="badge badge-warning mono">REPEAT</span>` : `<span class="text-slate-500">—</span>`;
+                return `
+                    <tr style="cursor:pointer" onclick="openMachineModal('${escapeHtml(r.machine)}')">
+                        <td class="mono text-cyan-200">${escapeHtml(r.machine)}</td>
+                        <td><span class="status-dot"><span class="dot ${dot}"></span>${status}</span></td>
+                        <td class="text-slate-300">${escapeHtml(r.topSignal || '—')}</td>
+                        <td>${img}</td>
+                        <td>${rep}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openMachineModal(machine){
+            const row = (__machineRows || []).find(r => r.machine === machine);
+            if(!row) return;
+            const modal = document.getElementById('machine-modal');
+            if(!modal) return;
+
+            setText('modal-title', machine);
+            setText('modal-subtitle', (row.severity || 'ok').toUpperCase() + (row.customer ? (' · ' + row.customer) : ''));
+            const b = document.getElementById('modal-body');
+            if(b) b.textContent = row.notes || '';
+
+            const imgWrap = document.getElementById('modal-images');
+            const note = document.getElementById('modal-images-note');
+            const count = row.images || 0;
+            if(note) note.textContent = count ? `${count} image(s) attached (placeholder)` : 'No images';
+
+            if(imgWrap){
+                if(!count){
+                    imgWrap.innerHTML = `<div class="text-xs text-slate-500">No images for this machine in the selected date range.</div>`;
+                }else{
+                    imgWrap.innerHTML = new Array(Math.min(count,6)).fill(0).map((_,i)=>`
+                        <div class="p-4 rounded-2xl border border-slate-700/50 bg-slate-950/35 text-xs text-slate-400">
+                            Image ${i+1}<div class="mt-2 text-[11px] text-slate-500">Will render actual attachment</div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            modal.classList.remove('hidden');
+            document.addEventListener('keydown', escCloseModal);
+        }
+
+        function closeMachineModal(){
+            const modal = document.getElementById('machine-modal');
+            if(modal) modal.classList.add('hidden');
+            document.removeEventListener('keydown', escCloseModal);
+        }
+
+        function escCloseModal(e){
+            if(e.key === 'Escape') closeMachineModal();
+        }
+
+        function modalBackdropClose(e){
+            if(e.target && e.target.id === 'machine-modal') closeMachineModal();
+        }
+
         function exportSummary(){
             // Minimal export: copy summary to clipboard as text.
             const input = document.getElementById('reports-input');
@@ -670,5 +837,32 @@ Notes: Completed shift with stable output. No issues reported.`
             }
         });
     </script>
-</body>
+
+        <!-- Machine Details Modal -->
+        <div id="machine-modal" class="modal-overlay hidden" onclick="modalBackdropClose(event)">
+            <div class="modal-card" role="dialog" aria-modal="true">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="text-sm font-semibold" id="modal-title">Machine</div>
+                        <div class="text-xs text-slate-400 mt-1" id="modal-subtitle">Details</div>
+                    </div>
+                    <button class="btn-ghost" onclick="closeMachineModal()">Close</button>
+                </div>
+
+                <div class="mt-4">
+                    <div class="text-xs tracking-[0.2em] uppercase text-slate-400">Report Body</div>
+                    <div class="mt-2 p-4 rounded-2xl border border-slate-700/50 bg-slate-950/35 text-sm whitespace-pre-wrap" id="modal-body"></div>
+                </div>
+
+                <div class="mt-4">
+                    <div class="flex items-center justify-between">
+                        <div class="text-xs tracking-[0.2em] uppercase text-slate-400">Images</div>
+                        <div class="text-xs text-slate-500" id="modal-images-note">No images</div>
+                    </div>
+                    <div class="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-3" id="modal-images"></div>
+                </div>
+            </div>
+        </div>
+        </body>
+        
 </html>
