@@ -498,3 +498,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+
+// ================================
+// Sidebar Active Page Indicator
+// Safe additive logic – no existing code modified
+// ================================
+document.addEventListener('DOMContentLoaded', () => {
+    const currentPage = window.location.pathname.split('/').pop();
+
+    const pageMap = {
+        'dashboard': 'dashboard.html',
+        'cases': 'cases.html',
+        'create-case': 'create-case.html',
+        'troubleshooting': 'troubleshooting.html',
+        'shift-report': 'Shift-Report-Analyzer.html'
+    };
+
+    document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+        item.classList.remove('active');
+        const key = item.dataset.page;
+        if (pageMap[key] === currentPage) {
+            item.classList.add('active');
+        }
+    });
+});
