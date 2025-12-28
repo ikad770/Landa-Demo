@@ -500,11 +500,30 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
 // ================================
-// Sidebar Active Page Indicator
-// Safe additive logic – no existing code modified
+// GLOBAL Sidebar Active Indicator (Self-contained)
+// Injects required CSS + handles mixed data-page placement
 // ================================
 document.addEventListener('DOMContentLoaded', () => {
+    // Inject CSS once
+    if (!document.getElementById('sidebar-active-style')) {
+        const style = document.createElement('style');
+        style.id = 'sidebar-active-style';
+        style.textContent = `
+            .sidebar li.active {
+                background: linear-gradient(90deg, rgba(34,211,238,0.18), rgba(34,211,238,0.04));
+                border-left: 3px solid #22d3ee;
+            }
+            .sidebar li.active span,
+            .sidebar li.active a {
+                color: #e5faff;
+                font-weight: 600;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
     const currentPage = window.location.pathname.split('/').pop();
 
     const pageMap = {
@@ -512,14 +531,19 @@ document.addEventListener('DOMContentLoaded', () => {
         'cases': 'cases.html',
         'create-case': 'create-case.html',
         'troubleshooting': 'troubleshooting.html',
-        'shift-report': 'Shift-Report-Analyzer.html'
+        'shift-report': 'Shift-Report-Analyzer.html',
+        'settings': 'settings.html',
+        'basics': 'basics.html'
     };
 
-    document.querySelectorAll('.nav-item[data-page]').forEach(item => {
-        item.classList.remove('active');
-        const key = item.dataset.page;
+    document.querySelectorAll('[data-page]').forEach(el => {
+        const li = el.closest('li');
+        if (!li) return;
+
+        li.classList.remove('active');
+        const key = el.dataset.page;
         if (pageMap[key] === currentPage) {
-            item.classList.add('active');
+            li.classList.add('active');
         }
     });
 });
