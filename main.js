@@ -532,19 +532,19 @@ document.addEventListener('DOMContentLoaded', () => {
         'cases': 'cases.html',
         'create-case': 'create-case.html',
         'troubleshooting': 'troubleshooting.html',
-        'shift-report': 'Shift-Report-Analyzer.html',
-        'settings': 'settings.html',
-        'basics': 'basics.html'
+        'shift-report': 'Shift-Report-Analyzer.html'
     };
 
     document.querySelectorAll('[data-page]').forEach(el => {
         const li = el.closest('li');
-        if (!li) return;
-
-        li.classList.remove('active');
         const key = el.dataset.page;
+
+        if (li) li.classList.remove('active');
+        el.classList.remove('nav-link-active');
+
         if (pageMap[key] === currentPage) {
-            li.classList.add('active');
+            if (li) li.classList.add('active');
+            el.classList.add('nav-link-active');
         }
     });
 });
