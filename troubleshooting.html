@@ -335,7 +335,7 @@
                 <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
             
                 <a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
-</nav>
+            </nav>
             <div class="sidebar-footer">
                 <div class="user-pill">
                     <div class="user-avatar" id="nav-user-avatar">EX</div>
@@ -693,19 +693,6 @@
         }
 
         function searchSolutions() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            
-            if (!searchTerm) {
-                filteredSolutions = [...allSolutions];
-            } else {
-                filteredSolutions = allSolutions.filter(solution => 
-                    solution.title.toLowerCase().includes(searchTerm) ||
-                    solution.description.toLowerCase().includes(searchTerm) ||
-                    solution.category.toLowerCase().includes(searchTerm) ||
-                    solution.machine.toLowerCase().includes(searchTerm)
-                );
-            }
-            
             applyFilters();
         }
 
@@ -732,9 +719,17 @@
             const categoryFilter = document.getElementById('category-filter').value;
             const difficultyFilter = document.getElementById('difficulty-filter').value;
             const ratingFilter = parseFloat(document.getElementById('rating-filter').value) || 0;
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
             
             filteredSolutions = allSolutions.filter(solution => {
-                return (!machineFilter || solution.machine === machineFilter) &&
+                const matchesSearch = !searchTerm ||
+                    solution.title.toLowerCase().includes(searchTerm) ||
+                    solution.description.toLowerCase().includes(searchTerm) ||
+                    solution.category.toLowerCase().includes(searchTerm) ||
+                    solution.machine.toLowerCase().includes(searchTerm);
+
+                return matchesSearch &&
+                       (!machineFilter || solution.machine === machineFilter) &&
                        (!categoryFilter || solution.category === categoryFilter) &&
                        (!difficultyFilter || solution.difficulty === difficultyFilter) &&
                        (!ratingFilter || solution.rating >= ratingFilter);
