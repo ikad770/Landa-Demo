@@ -404,6 +404,72 @@
                 0 26px 60px rgba(15,23,42,0.98),
                 0 0 0 1px rgba(15,23,42,1);
         }
+
+
+.case-detail-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+.case-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+@media (min-width: 768px) {
+            .case-detail-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+.case-detail-block {
+            border: 1px solid rgba(71, 85, 105, 0.65);
+            border-radius: 0.9rem;
+            background: rgba(15, 23, 42, 0.62);
+            padding: 0.85rem 0.95rem;
+        }
+.case-detail-heading {
+            font-size: 0.72rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 0.35rem;
+        }
+.case-detail-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+.case-detail-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+            border: 1px solid rgba(71, 85, 105, 0.45);
+            border-radius: 0.8rem;
+            background: rgba(2, 6, 23, 0.45);
+            padding: 0.6rem 0.7rem;
+        }
+.case-detail-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.85rem;
+            padding-top: 0.95rem;
+            border-top: 1px solid rgba(71, 85, 105, 0.8);
+        }
+.case-detail-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+        }
+.case-detail-pill {
+            border-radius: 999px;
+            border: 1px solid rgba(100, 116, 139, 0.65);
+            background: rgba(15, 23, 42, 0.7);
+            padding: 0.22rem 0.62rem;
+            font-size: 0.74rem;
+            color: #cbd5e1;
+        }
 </style>
 
 
@@ -431,8 +497,6 @@
                 <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
 
 <a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
-<a href="settings.html" class="nav-link" data-page="settings">Settings</a>
-<a href="basics.html" class="nav-link" data-page="basics">Basics</a>
 
             </nav>
             <div class="sidebar-footer">
@@ -639,7 +703,7 @@
     
     <!-- Case Modal -->
     <div id="case-modal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="modal-content rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="modal-content rounded-2xl p-5 md:p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-6">
                 <h3 id="modal-title" class="text-2xl font-bold text-blue-400"></h3>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
@@ -1082,6 +1146,7 @@ function setChart(key, type, map){
 
             const steps = Array.isArray(case_.troubleshooting) ? case_.troubleshooting :
                           Array.isArray(case_.troubleshootSteps) ? case_.troubleshootSteps : [];
+            const normalizedSteps = steps.length ? steps : ['No troubleshooting steps recorded yet.'];
             const parts = Array.isArray(case_.partsUsed) ? case_.partsUsed :
                           Array.isArray(case_.parts) ? case_.parts : [];
             const owner = case_.owner || '—';
@@ -1090,59 +1155,59 @@ function setChart(key, type, map){
                                      (case_.attachments ?? 0);
 
             return `
-                <div class="space-y-6">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-400 mb-1">Machine Type</h4>
+                <div class="case-detail-shell">
+                    <div class="case-detail-grid">
+                        <div class="case-detail-block">
+                            <h4 class="case-detail-heading">Machine Type</h4>
                             <p class="text-white">${escapeHtml(pressType)} - ${escapeHtml(pressName)}</p>
                         </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-400 mb-1">Status</h4>
+                        <div class="case-detail-block">
+                            <h4 class="case-detail-heading">Status</h4>
                             <p class="${statusColor} font-semibold">${escapeHtml(status)}</p>
                         </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-400 mb-1">System</h4>
+                        <div class="case-detail-block">
+                            <h4 class="case-detail-heading">System</h4>
                             <p class="text-white">${escapeHtml(system)}</p>
                         </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-400 mb-1">Date</h4>
+                        <div class="case-detail-block">
+                            <h4 class="case-detail-heading">Date</h4>
                             <p class="text-white">${escapeHtml(date)}</p>
                         </div>
                     </div>
 
-                    <div>
-                        <h4 class="text-lg font-semibold mb-2">Description</h4>
-                        <p class="text-gray-300">${escapeHtml(description)}</p>
+                    <div class="case-detail-block">
+                        <h4 class="case-detail-heading">Description</h4>
+                        <p class="text-gray-300 leading-relaxed">${escapeHtml(description)}</p>
                     </div>
 
-                    <div>
-                        <h4 class="text-lg font-semibold mb-2">Troubleshooting Steps</h4>
-                        <div class="space-y-2">
-                            ${(steps.length ? steps : ['—']).map((step, index) => `
-                                <div class="flex items-start space-x-3">
+                    <div class="case-detail-block">
+                        <h4 class="case-detail-heading">Troubleshooting Steps</h4>
+                        <div class="case-detail-steps">
+                            ${normalizedSteps.map((step, index) => `
+                                <div class="case-detail-step">
                                     <span class="flex-shrink-0 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">
                                         ${index + 1}
                                     </span>
-                                    <span class="text-gray-300">${escapeHtml(stepText(step))}</span>
+                                    <span class="text-gray-300 leading-relaxed">${escapeHtml(stepText(step))}</span>
                                 </div>
                             `).join('')}
                         </div>
                     </div>
 
                     ${(parts.length > 0) ? `
-                        <div>
-                            <h4 class="text-lg font-semibold mb-2">Parts Used</h4>
-                            <ul class="list-disc list-inside text-gray-300 space-y-1">
+                        <div class="case-detail-block">
+                            <h4 class="case-detail-heading">Parts Used</h4>
+                            <ul class="list-disc list-inside text-gray-300 space-y-1.5">
                                 ${parts.map(part => `<li>${escapeHtml(partText(part))}</li>`).join('')}
                             </ul>
                         </div>
                     ` : ''}
 
-                    <div class="flex items-center justify-between pt-4 border-t border-gray-700">
-                        <div class="flex items-center space-x-4">
-                            <span class="text-sm text-gray-400">Owner: ${escapeHtml(owner)}</span>
-                            <span class="text-sm text-gray-400">Rating: ⭐ ${escapeHtml(rating)}</span>
-                            <span class="text-sm text-gray-400">Attachments: 📎 ${escapeHtml(attachmentsCount)}</span>
+                    <div class="case-detail-footer">
+                        <div class="case-detail-meta">
+                            <span class="case-detail-pill">Owner: ${escapeHtml(owner)}</span>
+                            <span class="case-detail-pill">Rating: ⭐ ${escapeHtml(rating)}</span>
+                            <span class="case-detail-pill">Attachments: 📎 ${escapeHtml(attachmentsCount)}</span>
                         </div>
                         <button onclick="closeModal()" class="btn-primary px-4 py-2 rounded-lg text-sm">
                             Close
