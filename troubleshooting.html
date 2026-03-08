@@ -308,6 +308,92 @@
         .table-row-hover:hover {
             background: rgba(15, 23, 42, 0.94);
         }
+
+        .modal {
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(14px);
+        }
+
+        .modal-content {
+            background: #020617;
+            border-radius: 1.25rem;
+            border: 1px solid rgba(148,163,184,0.7);
+            box-shadow:
+                0 26px 60px rgba(15,23,42,0.98),
+                0 0 0 1px rgba(15,23,42,1);
+        }
+
+        .solution-detail-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .solution-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        @media (min-width: 768px) {
+            .solution-detail-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        .solution-detail-block {
+            border: 1px solid rgba(71, 85, 105, 0.65);
+            border-radius: 0.9rem;
+            background: rgba(15, 23, 42, 0.62);
+            padding: 0.85rem 0.95rem;
+        }
+
+        .solution-detail-heading {
+            font-size: 0.72rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 0.35rem;
+        }
+
+        .solution-detail-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .solution-detail-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+            border: 1px solid rgba(71, 85, 105, 0.45);
+            border-radius: 0.8rem;
+            background: rgba(2, 6, 23, 0.45);
+            padding: 0.6rem 0.7rem;
+        }
+
+        .solution-safety-box {
+            border: 1px solid rgba(239, 68, 68, 0.55);
+            border-radius: 0.9rem;
+            background: rgba(127, 29, 29, 0.2);
+            padding: 0.9rem 0.95rem;
+        }
+
+        .solution-detail-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.85rem;
+            padding-top: 0.95rem;
+            border-top: 1px solid rgba(71, 85, 105, 0.8);
+        }
+
+        .solution-detail-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+        }
     </style>
 
 
@@ -477,7 +563,7 @@
 
     <!-- Solution Detail Modal -->
     <div id="solution-modal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="modal-content rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="modal-content rounded-2xl p-5 md:p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-6">
                 <h3 id="modal-title" class="text-2xl font-bold text-blue-400"></h3>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
@@ -498,6 +584,7 @@
             loadSolutions();
             bindFilterEvents();
             animatePageLoad();
+            wireSolutionModal();
         });
 
         function loadSolutions() {
@@ -755,7 +842,26 @@
                 document.getElementById('modal-title').textContent = solution.title;
                 document.getElementById('modal-content').innerHTML = createSolutionDetailContent(solution);
                 document.getElementById('solution-modal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
             }
+        }
+
+        function wireSolutionModal() {
+            const modal = document.getElementById('solution-modal');
+            if (!modal) return;
+
+            modal.addEventListener('click', (e) => {
+                const content = modal.querySelector('.modal-content');
+                if (content && !content.contains(e.target)) {
+                    closeModal();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
         }
 
         function createSolutionDetailContent(solution) {
@@ -764,71 +870,74 @@
                 'Medium': 'text-yellow-400',
                 'Hard': 'text-red-400'
             };
+
+            const steps = Array.isArray(solution.steps) && solution.steps.length
+                ? solution.steps
+                : ['No troubleshooting steps recorded yet.'];
+            const tools = Array.isArray(solution.tools) ? solution.tools : [];
             
             return `
-                <div class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                            <strong class="text-gray-400">Machine:</strong>
-                            <span class="text-white ml-2">${solution.machine}</span>
+                <div class="solution-detail-shell">
+                    <div class="solution-detail-grid text-sm">
+                        <div class="solution-detail-block">
+                            <h4 class="solution-detail-heading">Machine</h4>
+                            <p class="text-white">${solution.machine}</p>
                         </div>
-                        <div>
-                            <strong class="text-gray-400">Category:</strong>
-                            <span class="text-white ml-2">${solution.category}</span>
+                        <div class="solution-detail-block">
+                            <h4 class="solution-detail-heading">Category</h4>
+                            <p class="text-white">${solution.category}</p>
                         </div>
-                        <div>
-                            <strong class="text-gray-400">Time:</strong>
-                            <span class="text-white ml-2">${solution.time}</span>
+                        <div class="solution-detail-block">
+                            <h4 class="solution-detail-heading">Time</h4>
+                            <p class="text-white">${solution.time}</p>
                         </div>
-                        <div>
-                            <strong class="text-gray-400">Difficulty:</strong>
-                            <span class="${difficultyColor[solution.difficulty]} ml-2 font-semibold">${solution.difficulty}</span>
-                        </div>
-                        <div>
-                            <strong class="text-gray-400">Rating:</strong>
-                            <span class="rating-stars ml-2">⭐ ${solution.rating}</span>
+                        <div class="solution-detail-block">
+                            <h4 class="solution-detail-heading">Difficulty · Rating</h4>
+                            <p>
+                                <span class="${difficultyColor[solution.difficulty]} font-semibold">${solution.difficulty}</span>
+                                <span class="text-slate-400 mx-2">•</span>
+                                <span class="rating-stars">⭐ ${solution.rating}</span>
+                            </p>
                         </div>
                     </div>
                     
-                    <div>
-                        <h4 class="text-lg font-semibold mb-2">Description</h4>
-                        <p class="text-gray-300">${solution.description}</p>
+                    <div class="solution-detail-block">
+                        <h4 class="solution-detail-heading">Description</h4>
+                        <p class="text-gray-300 leading-relaxed">${solution.description}</p>
                     </div>
                     
-                    <div>
-                        <h4 class="text-lg font-semibold mb-4">Step-by-Step Solution</h4>
-                        <div class="space-y-3">
-                            ${solution.steps.map((step, index) => `
-                                <div class="step-guide">
-                                    <div class="flex items-start space-x-3">
-                                        <span class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-sm font-semibold">
-                                            ${index + 1}
-                                        </span>
-                                        <span class="text-gray-300">${step}</span>
-                                    </div>
+                    <div class="solution-detail-block">
+                        <h4 class="solution-detail-heading">Step-by-Step Solution</h4>
+                        <div class="solution-detail-steps">
+                            ${steps.map((step, index) => `
+                                <div class="solution-detail-step">
+                                    <span class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-sm font-semibold">
+                                        ${index + 1}
+                                    </span>
+                                    <span class="text-gray-300 leading-relaxed">${step}</span>
                                 </div>
                             `).join('')}
                         </div>
                     </div>
                     
-                    ${solution.tools.length > 0 ? `
-                        <div>
-                            <h4 class="text-lg font-semibold mb-2">Tools & Materials Needed</h4>
-                            <ul class="list-disc list-inside text-gray-300 space-y-1">
-                                ${solution.tools.map(tool => `<li>${tool}</li>`).join('')}
+                    ${tools.length > 0 ? `
+                        <div class="solution-detail-block">
+                            <h4 class="solution-detail-heading">Tools & Materials Needed</h4>
+                            <ul class="list-disc list-inside text-gray-300 space-y-1.5">
+                                ${tools.map(tool => `<li>${tool}</li>`).join('')}
                             </ul>
                         </div>
                     ` : ''}
                     
                     ${solution.safety ? `
-                        <div class="bg-red-900 bg-opacity-30 border border-red-600 rounded-lg p-4">
+                        <div class="solution-safety-box">
                             <h4 class="text-red-400 font-semibold mb-2">⚠️ Safety Notice</h4>
-                            <p class="text-red-200">${solution.safety}</p>
+                            <p class="text-red-200 leading-relaxed">${solution.safety}</p>
                         </div>
                     ` : ''}
                     
-                    <div class="flex items-center justify-between pt-4 border-t border-gray-700">
-                        <div class="flex items-center space-x-4">
+                    <div class="solution-detail-footer">
+                        <div class="solution-detail-actions">
                             <button onclick="rateSolution('${solution.id}', 'helpful')" class="btn-primary px-4 py-2 rounded-lg text-sm">
                                 👍 Helpful
                             </button>
@@ -836,7 +945,7 @@
                                 👎 Not Helpful
                             </button>
                         </div>
-                        <button onclick="closeModal()" class="btn-secondary px-4 py-2 rounded-lg text-sm">
+                        <button onclick="closeModal()" class="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 transition-colors text-sm">
                             Close
                         </button>
                     </div>
@@ -846,6 +955,7 @@
 
         function closeModal() {
             document.getElementById('solution-modal').classList.add('hidden');
+            document.body.style.overflow = '';
         }
 
         function rateSolution(solutionId, rating) {
