@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Landa Cases - Case Management System</title>
+    <title>Landa Cases - Resolved Case Library</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
@@ -51,10 +51,20 @@
         body {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background:
-                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.16), transparent 55%),
-                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.14), transparent 55%),
+                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.18), transparent 52%),
+                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.16), transparent 48%),
+                radial-gradient(circle at 50% 100%, rgba(14, 165, 233, 0.08), transparent 42%),
                 #020617;
             color: var(--text-main);
+        }
+
+        body::before {
+            content:'';
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            background: linear-gradient(180deg, rgba(2,6,23,0.16), rgba(2,6,23,0.55));
+            z-index:-1;
         }
 
         .layout-shell {
@@ -398,7 +408,18 @@
             color: #cbd5e1;
         }
 
-    </style>
+    
+        .page-hero { position:relative; overflow:hidden; border-radius:1.4rem; border:1px solid rgba(56,189,248,0.22); background: linear-gradient(135deg, rgba(8,15,34,0.96), rgba(15,23,42,0.88)); box-shadow: 0 28px 80px rgba(2,6,23,0.68), inset 0 0 0 1px rgba(96,165,250,0.06); }
+        .page-hero::after { content:''; position:absolute; inset:auto -10% -35% 40%; height:260px; background: radial-gradient(circle, rgba(34,211,238,0.20), transparent 62%); pointer-events:none; }
+        .filter-input, .search-input { background: rgba(2,6,23,0.52); border: 1px solid rgba(71,85,105,0.9); }
+        .filter-input:focus, .search-input:focus { border-color: rgba(34,211,238,0.8); box-shadow: 0 0 0 1px rgba(34,211,238,0.35), 0 0 20px rgba(34,211,238,0.12); }
+        .case-card { position:relative; overflow:hidden; backdrop-filter: blur(16px); }
+        .case-card::before { content:''; position:absolute; inset:0 0 auto 0; height:3px; background: linear-gradient(90deg, rgba(34,211,238,0.95), rgba(59,130,246,0)); }
+        .metric-pill{display:inline-flex;align-items:center;gap:0.4rem;padding:0.28rem 0.68rem;border-radius:999px;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;border:1px solid rgba(71,85,105,0.8);background:rgba(2,6,23,0.42);color:#cbd5e1;}
+        .metric-pill.critical{color:#fecaca;border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.12);} 
+        .metric-pill.elevated{color:#fde68a;border-color:rgba(245,158,11,0.32);background:rgba(245,158,11,0.12);} 
+        .metric-pill.stable{color:#a7f3d0;border-color:rgba(16,185,129,0.32);background:rgba(16,185,129,0.12);} 
+</style>
 
 
 
@@ -415,13 +436,13 @@
                 <div class="logo-mark"></div>
                 <div class="ml-3 leading-tight">
                     <div class="logo-title">LANDA</div>
-                    <div class="logo-subtitle">Case Management</div>
+                    <div class="logo-subtitle">Resolved Case Intelligence</div>
                 </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
                 <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
-                <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
+                <a href="create-case.html" class="nav-link" data-page="create-case">Publish Case</a>
                 <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
             
                 <a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
@@ -440,69 +461,52 @@
         <div class="main-shell">
 <!-- Main Content -->
     <main class="pt-20 px-6 pb-8">
-        <!-- Header Section -->
-        <div class="flex items-center justify-between mb-8">
-            <div>
-                <h2 class="section-title text-3xl font-bold mb-2">Case Management</h2>
-                <p class="text-gray-400">View, filter, and manage all technical cases</p>
+        <section class="page-hero p-6 md:p-8 mb-8">
+            <div class="flex items-start justify-between gap-6 flex-col lg:flex-row">
+                <div>
+                    <div class="section-title text-3xl font-bold mb-3">Resolved Case Library</div>
+                    <p class="text-slate-300 max-w-3xl">Search archived press incidents, compare similar symptoms, and review the actions that resolved each issue. This page is built for reuse, not live ticket tracking.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="metric-pill stable">Published knowledge</span>
+                        <span class="metric-pill elevated">Ranked usefulness</span>
+                        <span class="metric-pill critical">Field criticality visible</span>
+                    </div>
+                </div>
+                <a href="create-case.html" class="btn-primary px-6 py-3 rounded-lg font-semibold">+ Publish Resolved Case</a>
             </div>
-            <a href="create-case.html" class="btn-primary px-6 py-3 rounded-lg font-semibold">
-                + Create New Case
-            </a>
-        </div>
+        </section>
 
-        <!-- Filters Section -->
         <div class="glass-card rounded-xl p-6 mb-8">
-            <h3 class="text-lg font-semibold mb-4">Filter Cases</h3>
+            <h3 class="text-lg font-semibold mb-4">Filter archived knowledge</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Search</label>
-                    <input 
-                        type="text" 
-                        id="search-input"
-                        placeholder="Search cases..."
-                        class="filter-input w-full px-4 py-2 rounded-lg text-white placeholder-gray-500 focus:outline-none"
-                    >
+                    <input type="text" id="search-input" placeholder="Search symptoms, systems, parts, owners, or press names..." class="filter-input w-full px-4 py-2 rounded-lg text-white placeholder-gray-500 focus:outline-none">
                 </div>
-                
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Press Type</label>
                     <select id="press-type-filter" class="filter-input w-full px-4 py-2 rounded-lg text-white focus:outline-none">
-                        <option value="">All Types</option>
-                        <option value="Simplex">Simplex</option>
-                        <option value="Duplex">Duplex</option>
+                        <option value="">All Types</option><option value="Simplex">Simplex</option><option value="Duplex">Duplex</option>
                     </select>
                 </div>
-
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Knowledge State</label>
                     <select id="status-filter" class="filter-input w-full px-4 py-2 rounded-lg text-white focus:outline-none">
-                        <option value="">All Status</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Open">Open</option>
+                        <option value="">All States</option><option value="Published">Published</option>
                     </select>
                 </div>
-
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">System</label>
                     <select id="system-filter" class="filter-input w-full px-4 py-2 rounded-lg text-white focus:outline-none">
-                        <option value="">All Systems</option>
-                        <option value="Printing">Printing</option>
-                        <option value="Paper Handling">Paper Handling</option>
-                        <option value="Drying">Drying</option>
-                        <option value="Quality Control">Quality Control</option>
-                        <option value="Control">Control</option>
+                        <option value="">All Systems</option><option value="Printing">Printing</option><option value="Paper Handling">Paper Handling</option><option value="Drying">Drying</option><option value="Quality Control">Quality Control</option><option value="Control">Control</option>
                     </select>
                 </div>
             </div>
-            
             <div class="flex items-center space-x-4 mt-4">
                 <button onclick="applyFilters()" class="btn-primary px-6 py-2 rounded-lg">Apply Filters</button>
                 <button onclick="clearFilters()" class="px-6 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 transition-colors">Clear All</button>
             </div>
         </div>
-
         <!-- Cases Grid -->
         <div id="cases-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Case cards will be populated by JavaScript -->
@@ -535,278 +539,124 @@
 
     <script src="main.js"></script>
     <script>
+        const store = window.LandaCaseStore;
         let currentFilters = {};
         let displayedCases = 6;
         const casesPerLoad = 6;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Apply navigation filter from dashboard charts (if present)
+            ensureAuth();
+            hydrateUserPill();
             applyExternalFilter();
             loadCases();
             bindFilterEvents();
             animatePageLoad();
         });
 
+        function ensureAuth(){
+            const user = safeJson(localStorage.getItem('landaUser'));
+            if(!user){ window.location.href = 'index.html'; }
+        }
+
+        function hydrateUserPill(){
+            const user = safeJson(localStorage.getItem('landaUser')) || {};
+            const nameEl = document.getElementById('nav-user-name');
+            const roleEl = document.getElementById('nav-user-role');
+            const avatarEl = document.getElementById('nav-user-avatar');
+            const displayName = user.username || user.name || 'Expert User';
+            const role = (user.role || user.access || 'EXPERT').toString().toUpperCase();
+            if(nameEl) nameEl.textContent = displayName;
+            if(roleEl) roleEl.textContent = role + ' ACCESS';
+            if(avatarEl) avatarEl.textContent = (displayName.trim()[0] || 'E').toUpperCase() + (displayName.trim()[1] || 'X').toUpperCase();
+        }
+
+        function safeJson(value){
+            try{ return value ? JSON.parse(value) : null; } catch(e){ return null; }
+        }
+
+        function escapeHtml(str){
+            return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+        }
+
         function loadCases() {
             const casesGrid = document.getElementById('cases-grid');
-            const filteredCases = window.landaSystem ? 
-                window.landaSystem.filterCases(currentFilters) : 
-                getSampleCases();
-            
+            const filteredCases = store.filterCases(currentFilters);
             const casesToShow = filteredCases.slice(0, displayedCases);
-            
             casesGrid.innerHTML = casesToShow.map(case_ => createCaseCard(case_)).join('');
-            
-            // Update load more button
             const loadMoreBtn = document.getElementById('load-more-btn');
-            if (displayedCases >= filteredCases.length) {
-                loadMoreBtn.style.display = 'none';
-            } else {
-                loadMoreBtn.style.display = 'inline-block';
-            }
+            loadMoreBtn.style.display = displayedCases >= filteredCases.length ? 'none' : 'inline-block';
         }
 
         function createCaseCard(case_) {
-            const statusClass = case_.status.toLowerCase().replace(' ', '-');
-            const statusColor = case_.status === 'Resolved' ? 'text-green-400' : 
-                               case_.status === 'In Progress' ? 'text-yellow-400' : 'text-red-400';
-            
+            const criticalityClass = case_.criticality === 'Critical' ? 'critical' : (case_.criticality === 'Elevated' ? 'elevated' : 'stable');
             return `
-                <div class="case-card rounded-xl p-6" onclick="openCaseDetail('${case_.id}')">
+                <div class="case-card rounded-xl p-6" onclick="openCaseDetail('${case_.caseId}')">
                     <div class="flex items-center justify-between mb-4">
-                        <span class="font-mono text-blue-400 font-semibold">${case_.id}</span>
-                        <span class="text-xs text-gray-400">${case_.date}</span>
+                        <span class="font-mono text-blue-400 font-semibold">${escapeHtml(case_.caseId)}</span>
+                        <span class="text-xs text-gray-400">${escapeHtml(case_.publishedAt)}</span>
                     </div>
-                    
-                    <h4 class="text-lg font-semibold mb-2 text-white">${case_.subject}</h4>
-                    
+                    <h4 class="text-lg font-semibold mb-2 text-white">${escapeHtml(case_.title)}</h4>
                     <div class="flex items-center space-x-4 mb-3 text-sm text-gray-400">
-                        <span>${case_.pressType} - ${case_.pressName}</span>
+                        <span>${escapeHtml(case_.machineLabel)}</span>
                         <span>•</span>
-                        <span>${case_.system}</span>
+                        <span>${escapeHtml(case_.system)}</span>
                     </div>
-                    
-                    <p class="text-gray-300 text-sm mb-4 line-clamp-2">${case_.description}</p>
-                    
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <span class="status-indicator status-${statusClass}"></span>
-                            <span class="${statusColor} text-sm font-medium">${case_.status}</span>
-                        </div>
-                        <div class="flex items-center text-sm text-gray-400">
-                            <span class="mr-2">⭐ ${case_.rating}</span>
-                            <span>📎 ${case_.attachments}</span>
-                        </div>
+                    <p class="text-gray-300 text-sm mb-4 line-clamp-2">${escapeHtml(case_.description)}</p>
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <span class="metric-pill ${criticalityClass}">${escapeHtml(case_.criticality)}</span>
+                        <span class="text-sm text-gray-400">⭐ ${escapeHtml(case_.usefulnessScore)} · ${escapeHtml(case_.region)}</span>
                     </div>
-                    
-                    <div class="mt-3 pt-3 border-t border-gray-700">
-                        <span class="text-xs text-gray-500">Owner: ${case_.owner}</span>
+                    <div class="mt-3 pt-3 border-t border-gray-700 text-xs text-gray-500">
+                        Knowledge State: ${escapeHtml(case_.status)} · Most Helpful: ${escapeHtml(case_.mostHelpfulAction || '—')}
                     </div>
                 </div>
             `;
         }
 
-        function getSampleCases() {
-            return [
-                {
-                    id: 'SF-2024-001',
-                    pressType: 'Simplex',
-                    pressName: 'S1',
-                    system: 'Printing',
-                    subject: 'Ink Flow Interruption',
-                    description: 'Intermittent ink flow causing print quality issues on S1 press. Occurs during high-speed operations.',
-                    status: 'Resolved',
-                    rating: 4.8,
-                    attachments: 2,
-                    date: '2024-12-01',
-                    owner: 'Yossi Cohen',
-                    troubleshootSteps: [
-                        'Checked ink pump pressure - Normal',
-                        'Cleaned ink filters - Minor debris found',
-                        'Verified ink viscosity - Within spec',
-                        'Replaced ink supply hose - Issue resolved'
-                    ],
-                    parts: ['Ink Supply Hose - Part #IS-001']
-                },
-                {
-                    id: 'SF-2024-002',
-                    pressType: 'Duplex',
-                    pressName: 'D3',
-                    system: 'Paper Handling',
-                    subject: 'Paper Jams in Feeder Section',
-                    description: 'Frequent paper jams occurring in the feeder section of D3 press, particularly with coated stock.',
-                    status: 'Resolved',
-                    rating: 4.6,
-                    attachments: 3,
-                    date: '2024-12-02',
-                    owner: 'Sarah Levy',
-                    troubleshootSteps: [
-                        'Adjusted feed roller pressure',
-                        'Cleaned feed rollers with alcohol',
-                        'Replaced worn feed roller - Part #FR-003',
-                        'Calibrated paper thickness sensor'
-                    ],
-                    parts: ['Feed Roller Assembly - Part #FR-003']
-                },
-                {
-                    id: 'SF-2024-003',
-                    pressType: 'Simplex',
-                    pressName: 'S2',
-                    system: 'Control',
-                    subject: 'Print Registration Error',
-                    description: 'Software issue causing print registration to drift during long print runs on S2 press.',
-                    status: 'Resolved',
-                    rating: 4.9,
-                    attachments: 1,
-                    date: '2024-12-03',
-                    owner: 'David Gold',
-                    troubleshootSteps: [
-                        'Restarted print control software',
-                        'Updated software to version 3.2.1',
-                        'Recalibrated registration sensors',
-                        'Adjusted timing belt tension'
-                    ],
-                    parts: []
-                },
-                {
-                    id: 'SF-2024-004',
-                    pressType: 'Duplex',
-                    pressName: 'D4',
-                    system: 'Quality Control',
-                    subject: 'Color Consistency Issues',
-                    description: 'Color variation between front and back sides on D4 duplex press, particularly noticeable in blue tones.',
-                    status: 'In Progress',
-                    rating: 4.3,
-                    attachments: 4,
-                    date: '2024-12-04',
-                    owner: 'Maya Stern',
-                    troubleshootSteps: [
-                        'Ran color calibration routine',
-                        'Cleaned color sensors thoroughly',
-                        'Updated color profile for coated stock',
-                        'Adjusted ink key settings digitally'
-                    ],
-                    parts: []
-                },
-                {
-                    id: 'SF-2024-005',
-                    pressType: 'Simplex',
-                    pressName: 'S3',
-                    system: 'Drying',
-                    subject: 'UV Lamp Not Curing Properly',
-                    description: 'UV lamps on S3 not providing sufficient curing power, causing smearing and poor adhesion.',
-                    status: 'Resolved',
-                    rating: 4.7,
-                    attachments: 2,
-                    date: '2024-12-05',
-                    owner: 'Yossi Cohen',
-                    troubleshootSteps: [
-                        'Checked UV lamp intensity - Low',
-                        'Cleaned UV lamp reflectors',
-                        'Replaced UV lamp bulbs - Both units',
-                        'Adjusted lamp power settings'
-                    ],
-                    parts: ['UV Lamp Bulb Set - Part #UV-002']
-                },
-                {
-                    id: 'SF-2024-006',
-                    pressType: 'Duplex',
-                    pressName: 'D5',
-                    system: 'Printing',
-                    subject: 'Ink Density Variations',
-                    description: 'Inconsistent ink density across the print width on D5 press, affecting color uniformity.',
-                    status: 'In Progress',
-                    rating: 4.2,
-                    attachments: 3,
-                    date: '2024-12-06',
-                    owner: 'Alex Rodriguez',
-                    troubleshootSteps: [
-                        'Calibrated ink density sensors',
-                        'Cleaned ink delivery nozzles',
-                        'Adjusted ink pressure regulators'
-                    ],
-                    parts: []
-                }
-            ];
-        }
-
         function bindFilterEvents() {
-            document.getElementById('search-input').addEventListener('input', debounce(applyFilters, 300));
+            document.getElementById('search-input').addEventListener('input', debounce(applyFilters, 250));
             document.getElementById('press-type-filter').addEventListener('change', applyFilters);
             document.getElementById('status-filter').addEventListener('change', applyFilters);
             document.getElementById('system-filter').addEventListener('change', applyFilters);
         }
 
-        
         function applyExternalFilter(){
-            let filterKey = null;
-            let filterValue = null;
-
-            try{
-                const qs = new URLSearchParams(window.location.search);
-                if(qs.has('filter') && qs.has('value')){
-                    filterKey = qs.get('filter');
-                    filterValue = qs.get('value');
-                }
-            }catch(e){}
-
-            if(!filterKey){
-                try{
-                    const raw = localStorage.getItem('landaCasesFilter');
-                    if(raw){
-                        const obj = JSON.parse(raw);
-                        if(obj && obj.key && obj.value){
-                            filterKey = obj.key;
-                            filterValue = obj.value;
-                        }
-                    }
-                }catch(e){}
-            }
-
-            if(!filterKey || !filterValue) return;
-
-            // Map dashboard keys to our filter model
-            // system -> system select, press -> pressName, part -> parts, region -> region
-            if(filterKey === 'system'){
-                const el = document.getElementById('system-filter');
-                if(el){ el.value = filterValue; }
-                currentFilters.system = filterValue;
-            } else if(filterKey === 'press'){
-                currentFilters.pressName = filterValue;
-                // Optional UX: mirror into search box so user sees what's happening
-                const s = document.getElementById('search-input');
-                if(s){ s.value = filterValue; }
-                currentFilters.search = filterValue;
-            } else if(filterKey === 'part'){
-                currentFilters.part = filterValue;
-                const s = document.getElementById('search-input');
-                if(s){ s.value = filterValue; }
-                currentFilters.search = filterValue;
-            } else if(filterKey === 'region'){
-                currentFilters.region = filterValue;
-                const s = document.getElementById('search-input');
-                if(s){ s.value = filterValue; }
-                currentFilters.search = filterValue;
+            const qs = new URLSearchParams(window.location.search);
+            let external = null;
+            if(qs.has('filter') && qs.has('value')) {
+                external = { key: qs.get('filter'), value: qs.get('value') };
             } else {
-                // fallback: push into search
-                const s = document.getElementById('search-input');
-                if(s){ s.value = filterValue; }
-                currentFilters.search = filterValue;
+                external = store.loadDashboardFilter();
             }
-
-            displayedCases = 6;
-            try{ localStorage.removeItem('landaCasesFilter'); }catch(e){}
+            if(!external?.key || !external?.value) return;
+            if(external.key === 'system') {
+                document.getElementById('system-filter').value = external.value;
+                currentFilters.system = external.value;
+            } else if(external.key === 'press') {
+                document.getElementById('search-input').value = external.value;
+                currentFilters.search = external.value;
+            } else if(external.key === 'part') {
+                document.getElementById('search-input').value = external.value;
+                currentFilters.part = external.value;
+                currentFilters.search = external.value;
+            } else if(external.key === 'region') {
+                document.getElementById('search-input').value = external.value;
+                currentFilters.region = external.value;
+                currentFilters.search = external.value;
+            }
+            store.clearDashboardFilter();
         }
 
-function applyFilters() {
+        function applyFilters() {
             currentFilters = {
                 search: document.getElementById('search-input').value,
                 pressType: document.getElementById('press-type-filter').value,
                 status: document.getElementById('status-filter').value,
-                system: document.getElementById('system-filter').value
+                system: document.getElementById('system-filter').value,
+                region: currentFilters.region,
+                part: currentFilters.part
             };
-            
-            displayedCases = 6; // Reset pagination
+            displayedCases = 6;
             loadCases();
         }
 
@@ -815,7 +665,6 @@ function applyFilters() {
             document.getElementById('press-type-filter').value = '';
             document.getElementById('status-filter').value = '';
             document.getElementById('system-filter').value = '';
-            
             currentFilters = {};
             displayedCases = 6;
             loadCases();
@@ -827,126 +676,48 @@ function applyFilters() {
         }
 
         function openCaseDetail(caseId) {
-            const case_ = window.landaSystem ? 
-                window.landaSystem.cases.find(c => c.id === caseId) :
-                getSampleCases().find(c => c.id === caseId);
-            
-            if (case_) {
-                document.getElementById('modal-title').textContent = case_.id;
-                document.getElementById('modal-content').innerHTML = createCaseDetailContent(case_);
-                document.getElementById('case-modal').classList.remove('hidden');
-            }
+            const case_ = store.getCaseById(caseId);
+            if (!case_) return;
+            document.getElementById('modal-title').textContent = case_.caseId;
+            document.getElementById('modal-content').innerHTML = createCaseDetailContent(case_);
+            document.getElementById('case-modal').classList.remove('hidden');
         }
 
         function createCaseDetailContent(case_) {
-            const statusColor = case_.status === 'Resolved' ? 'text-green-400' : 
-                               case_.status === 'In Progress' ? 'text-yellow-400' : 'text-red-400';
-
-            const steps = Array.isArray(case_.troubleshootSteps) && case_.troubleshootSteps.length
-                ? case_.troubleshootSteps
-                : ['No troubleshooting steps recorded yet.'];
-            const parts = Array.isArray(case_.parts) ? case_.parts : [];
-            const rating = (case_.rating ?? '—');
-            const attachments = (case_.attachments ?? 0);
-            
             return `
                 <div class="case-detail-shell">
                     <div class="case-detail-grid">
-                        <div class="case-detail-block">
-                            <h4 class="case-detail-heading">Machine Type</h4>
-                            <p class="text-white">${case_.pressType} - ${case_.pressName}</p>
-                        </div>
-                        <div class="case-detail-block">
-                            <h4 class="case-detail-heading">Status</h4>
-                            <p class="${statusColor} font-semibold">${case_.status}</p>
-                        </div>
-                        <div class="case-detail-block">
-                            <h4 class="case-detail-heading">System</h4>
-                            <p class="text-white">${case_.system}</p>
-                        </div>
-                        <div class="case-detail-block">
-                            <h4 class="case-detail-heading">Date</h4>
-                            <p class="text-white">${case_.date}</p>
-                        </div>
+                        <div class="case-detail-block"><h4 class="case-detail-heading">Press</h4><p class="text-white">${escapeHtml(case_.machineLabel)}</p></div>
+                        <div class="case-detail-block"><h4 class="case-detail-heading">Knowledge State</h4><p class="text-emerald-300 font-semibold">${escapeHtml(case_.status)}</p></div>
+                        <div class="case-detail-block"><h4 class="case-detail-heading">System</h4><p class="text-white">${escapeHtml(case_.system)} · ${escapeHtml(case_.subSystem)}</p></div>
+                        <div class="case-detail-block"><h4 class="case-detail-heading">Region</h4><p class="text-white">${escapeHtml(case_.region)}</p></div>
                     </div>
-                    
-                    <div class="case-detail-block">
-                        <h4 class="case-detail-heading">Description</h4>
-                        <p class="text-gray-300 leading-relaxed">${case_.description}</p>
-                    </div>
-                    
-                    <div class="case-detail-block">
-                        <h4 class="case-detail-heading">Troubleshooting Steps</h4>
-                        <div class="case-detail-steps">
-                            ${steps.map((step, index) => `
-                                <div class="case-detail-step">
-                                    <span class="flex-shrink-0 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">
-                                        ${index + 1}
-                                    </span>
-                                    <span class="text-gray-300 leading-relaxed">${step}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    
-                    ${parts.length > 0 ? `
-                        <div class="case-detail-block">
-                            <h4 class="case-detail-heading">Parts Used</h4>
-                            <ul class="list-disc list-inside text-gray-300 space-y-1.5">
-                                ${parts.map(part => `<li>${part}</li>`).join('')}
-                            </ul>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="case-detail-footer">
-                        <div class="case-detail-meta">
-                            <span class="case-detail-pill">Owner: ${case_.owner}</span>
-                            <span class="case-detail-pill">Rating: ⭐ ${rating}</span>
-                            <span class="case-detail-pill">Attachments: 📎 ${attachments}</span>
-                        </div>
-                        <button onclick="closeModal()" class="btn-primary px-4 py-2 rounded-lg text-sm">
-                            Close
-                        </button>
-                    </div>
+                    <div class="case-detail-block"><h4 class="case-detail-heading">Issue Description</h4><p class="text-gray-300 leading-relaxed">${escapeHtml(case_.description || '—')}</p></div>
+                    <div class="case-detail-block"><h4 class="case-detail-heading">Symptoms</h4><ul class="list-disc list-inside text-gray-300 space-y-1.5">${case_.symptoms.map(item => `<li>${escapeHtml(item)}</li>`).join('') || '<li>—</li>'}</ul></div>
+                    <div class="case-detail-block"><h4 class="case-detail-heading">Resolution Steps</h4><div class="case-detail-steps">${case_.resolutionSteps.map((step, index) => `<div class="case-detail-step"><span class="flex-shrink-0 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">${index + 1}</span><span class="text-gray-300 leading-relaxed">${escapeHtml(step.text)} <span class="text-slate-500">(${step.usefulness}/5 usefulness)</span></span></div>`).join('')}</div></div>
+                    ${case_.parts.length ? `<div class="case-detail-block"><h4 class="case-detail-heading">Parts Used</h4><ul class="list-disc list-inside text-gray-300 space-y-1.5">${case_.parts.map(part => `<li>${escapeHtml(part)}</li>`).join('')}</ul></div>` : ''}
+                    <div class="case-detail-footer"><div class="case-detail-meta"><span class="case-detail-pill">Criticality: ${escapeHtml(case_.criticality)}</span><span class="case-detail-pill">Most Helpful Action: ${escapeHtml(case_.mostHelpfulAction || '—')}</span><span class="case-detail-pill">Usefulness: ⭐ ${escapeHtml(case_.usefulnessScore)}</span><span class="case-detail-pill">Tags: ${escapeHtml(case_.tags.join(', ') || '—')}</span></div><button onclick="closeModal()" class="btn-primary px-4 py-2 rounded-lg text-sm">Close</button></div>
                 </div>
             `;
         }
 
-        function closeModal() {
-            document.getElementById('case-modal').classList.add('hidden');
-        }
+        function closeModal() { document.getElementById('case-modal').classList.add('hidden'); }
 
         function animatePageLoad() {
             if (typeof anime !== 'undefined') {
-                anime({
-                    targets: '.glass-card, .case-card',
-                    opacity: [0, 1],
-                    translateY: [30, 0],
-                    duration: 800,
-                    delay: anime.stagger(100),
-                    easing: 'easeOutExpo'
-                });
+                anime({ targets: '.glass-card, .case-card', opacity: [0, 1], translateY: [30, 0], duration: 800, delay: anime.stagger(100), easing: 'easeOutExpo' });
             }
         }
 
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
                 clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
+                timeout = setTimeout(() => func(...args), wait);
             };
         }
 
-        function logout() {
-            localStorage.removeItem('landaUser');
-            window.location.href = 'index.html';
-        }
-
-        // Load more functionality
+        function logout() { localStorage.removeItem('landaUser'); window.location.href = 'index.html'; }
         document.getElementById('load-more-btn').addEventListener('click', loadMoreCases);
     </script>
 </body>

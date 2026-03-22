@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Landa Solutions - Troubleshooting Guide</title>
+    <title>Landa Solutions - Resolved Case Knowledge Base</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
@@ -411,13 +411,13 @@
                 <div class="logo-mark"></div>
                 <div class="ml-3 leading-tight">
                     <div class="logo-title">LANDA</div>
-                    <div class="logo-subtitle">Case Management</div>
+                    <div class="logo-subtitle">Resolved Case Intelligence</div>
                 </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
                 <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
-                <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
+                <a href="create-case.html" class="nav-link" data-page="create-case">Publish Case</a>
                 <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
             
                 <a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
@@ -440,7 +440,7 @@
         <div class="page-header mb-8">
             <div>
                 <div class="page-title text-xs tracking-[0.3em] uppercase text-slate-300">Solutions</div>
-                <div class="page-subtitle mt-1 text-sm text-gray-400">Knowledge base and troubleshooting flows for Landa presses</div>
+                <div class="page-subtitle mt-1 text-sm text-gray-400">Search reusable solutions distilled from resolved field cases and ranked by practical usefulness</div>
             </div>
             <div class="hidden md:flex items-center space-x-2 text-xs text-gray-500">
                 <span>Home</span>
@@ -453,7 +453,7 @@
         <!-- Search Section -->
         <div class="glass-card rounded-xl p-8 mb-8">
             <div class="max-w-2xl mx-auto">
-                <h3 class="text-xl font-semibold mb-4 text-center">Describe Your Issue</h3>
+                <h3 class="text-xl font-semibold mb-4 text-center">Search Similar Resolved Cases</h3>
                 <div class="relative">
                     <input 
                         type="text" 
@@ -482,7 +482,7 @@
 
         <!-- Filter Options -->
         <div class="glass-card rounded-xl p-6 mb-8">
-            <h3 class="text-lg font-semibold mb-4">Filter Solutions</h3>
+            <h3 class="text-lg font-semibold mb-4">Refine Knowledge Results</h3>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Machine Type</label>
@@ -549,7 +549,7 @@
             <p class="text-gray-400 mb-6">Can't find a solution? Contact our expert support team</p>
             <div class="flex justify-center space-x-4">
                 <a href="create-case.html" class="btn-primary px-8 py-3 rounded-lg font-semibold">
-                    Create Support Case
+                    Publish Resolved Case
                 </a>
                 <button onclick="showContactInfo()" class="px-8 py-3 rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 transition-colors">
                     Contact Support
@@ -577,228 +577,103 @@
 
     <script src="main.js"></script>
     <script>
+        const store = window.LandaCaseStore;
         let allSolutions = [];
         let filteredSolutions = [];
 
         document.addEventListener('DOMContentLoaded', () => {
+            ensureAuth();
+            hydrateUserPill();
             loadSolutions();
             bindFilterEvents();
             animatePageLoad();
             wireSolutionModal();
         });
 
-        function loadSolutions() {
-            allSolutions = [
-                {
-                    id: 'SOL-001',
-                    title: 'Fix Paper Jams in Feeder Section',
-                    machine: 'D3',
-                    category: 'Paper Handling',
-                    difficulty: 'Easy',
-                    rating: 4.8,
-                    time: '15 min',
-                    description: 'Resolve frequent paper jams in the feeder section, especially with coated stock.',
-                    steps: [
-                        'Stop the press and ensure all safety protocols are followed',
-                        'Check feed roller pressure and adjust if necessary',
-                        'Clean feed rollers with isopropyl alcohol and lint-free cloth',
-                        'Inspect feed roller for wear - replace if worn (Part #FR-003)',
-                        'Calibrate paper thickness sensor using calibration routine',
-                        'Test with sample sheets before resuming production'
-                    ],
-                    tools: ['Isopropyl alcohol', 'Lint-free cloth', 'Feed roller assembly (if needed)'],
-                    safety: 'Always follow lockout/tagout procedures when working on machinery'
-                },
-                {
-                    id: 'SOL-002',
-                    title: 'Resolve Ink Flow Interruption',
-                    machine: 'S1',
-                    category: 'Printing',
-                    difficulty: 'Medium',
-                    rating: 4.6,
-                    time: '30 min',
-                    description: 'Fix intermittent ink flow issues causing print quality problems during high-speed operations.',
-                    steps: [
-                        'Check ink pump pressure gauge - should read 2.5-3.0 bar',
-                        'Inspect and clean ink filters - look for debris or clogs',
-                        'Verify ink viscosity using viscosity meter - should be 18-22 seconds',
-                        'Check ink supply hose for kinks or damage',
-                        'Replace ink supply hose if damaged (Part #IS-001)',
-                        'Prime ink system and run test print'
-                    ],
-                    tools: ['Pressure gauge', 'Viscosity meter', 'Ink supply hose (if needed)'],
-                    safety: 'Wear protective gloves when handling ink'
-                },
-                {
-                    id: 'SOL-003',
-                    title: 'Fix Color Consistency Issues',
-                    machine: 'D4',
-                    category: 'Quality Control',
-                    difficulty: 'Hard',
-                    rating: 4.3,
-                    time: '45 min',
-                    description: 'Resolve color variation between front and back sides on duplex press.',
-                    steps: [
-                        'Run built-in color calibration routine from control panel',
-                        'Clean all color sensors with sensor cleaning solution',
-                        'Update color profile for specific paper stock being used',
-                        'Adjust ink key settings digitally for each color station',
-                        'Perform color matching test with Pantone reference',
-                        'Fine-tune registration if needed'
-                    ],
-                    tools: ['Sensor cleaning solution', 'Pantone color guide', 'Color measurement device'],
-                    safety: 'Ensure proper ventilation when using cleaning solvents'
-                },
-                {
-                    id: 'SOL-004',
-                    title: 'UV Lamp Curing Problems',
-                    machine: 'S3',
-                    category: 'Drying',
-                    difficulty: 'Medium',
-                    rating: 4.7,
-                    time: '25 min',
-                    description: 'Fix UV lamps not providing sufficient curing power, causing smearing and poor adhesion.',
-                    steps: [
-                        'Check UV lamp intensity using UV meter - should be >80%',
-                        'Clean UV lamp reflectors with appropriate cleaner',
-                        'Inspect lamp bulbs for darkening or damage',
-                        'Replace UV lamp bulbs if intensity is low (Part #UV-002)',
-                        'Adjust lamp power settings in control software',
-                        'Run curing test with test strips'
-                    ],
-                    tools: ['UV meter', 'UV lamp bulbs', 'Cleaning solution'],
-                    safety: 'Never look directly at UV lamps - use UV-protective eyewear'
-                },
-                {
-                    id: 'SOL-005',
-                    title: 'Print Registration Drift',
-                    machine: 'S2',
-                    category: 'Control',
-                    difficulty: 'Medium',
-                    rating: 4.9,
-                    time: '20 min',
-                    description: 'Fix software issue causing print registration to drift during long print runs.',
-                    steps: [
-                        'Save current job and restart print control software',
-                        'Check for software updates - install if available',
-                        'Recalibrate registration sensors using calibration tool',
-                        'Check timing belt tension and adjust if loose',
-                        'Run registration test pattern',
-                        'Verify registration stability over extended run'
-                    ],
-                    tools: ['Calibration tool', 'Torque wrench', 'Registration test pattern'],
-                    safety: 'Ensure software is properly backed up before updates'
-                },
-                {
-                    id: 'SOL-006',
-                    title: 'Ink Density Variations',
-                    machine: 'D5',
-                    category: 'Printing',
-                    difficulty: 'Hard',
-                    rating: 4.2,
-                    time: '35 min',
-                    description: 'Resolve inconsistent ink density across print width affecting color uniformity.',
-                    steps: [
-                        'Calibrate all ink density sensors using standard calibration',
-                        'Clean ink delivery nozzles with cleaning solution',
-                        'Check and adjust ink pressure regulators for each station',
-                        'Verify ink temperature is within specification',
-                        'Run density uniformity test across full print width',
-                        'Adjust individual ink zone settings as needed'
-                    ],
-                    tools: ['Calibration standard', 'Cleaning solution', 'Density measurement tool'],
-                    safety: 'Work in well-ventilated area when using solvents'
-                }
-            ];
+        function ensureAuth(){
+            const user = safeJson(localStorage.getItem('landaUser'));
+            if(!user){ window.location.href = 'index.html'; }
+        }
 
+        function hydrateUserPill(){
+            const user = safeJson(localStorage.getItem('landaUser')) || {};
+            const nameEl = document.getElementById('nav-user-name');
+            const roleEl = document.getElementById('nav-user-role');
+            const avatarEl = document.getElementById('nav-user-avatar');
+            const displayName = user.username || user.name || 'Expert User';
+            const role = (user.role || user.access || 'EXPERT').toString().toUpperCase();
+            if(nameEl) nameEl.textContent = displayName;
+            if(roleEl) roleEl.textContent = role + ' ACCESS';
+            if(avatarEl) avatarEl.textContent = (displayName.trim()[0] || 'E').toUpperCase() + (displayName.trim()[1] || 'X').toUpperCase();
+        }
+
+        function safeJson(value){
+            try{ return value ? JSON.parse(value) : null; } catch(e){ return null; }
+        }
+
+        function loadSolutions() {
+            allSolutions = store.getSolutionRecords();
             filteredSolutions = [...allSolutions];
+            hydrateSolutionFilters(allSolutions);
             displaySolutions();
+        }
+
+        function hydrateSolutionFilters(solutions){
+            const machineSelect = document.getElementById('machine-filter');
+            const categorySelect = document.getElementById('category-filter');
+            const machines = [...new Set(solutions.map(item => item.machine).filter(Boolean))].sort();
+            const categories = [...new Set(solutions.map(item => item.category).filter(Boolean))].sort();
+            if(machineSelect) machineSelect.innerHTML = '<option value="">All Machines</option>' + machines.map(item => `<option value="${item}">${item}</option>`).join('');
+            if(categorySelect) categorySelect.innerHTML = '<option value="">All Categories</option>' + categories.map(item => `<option value="${item}">${item}</option>`).join('');
         }
 
         function displaySolutions() {
             const grid = document.getElementById('solutions-grid');
             const noResults = document.getElementById('no-results');
-            
             if (filteredSolutions.length === 0) {
                 grid.innerHTML = '';
                 noResults.classList.remove('hidden');
                 return;
             }
-            
             noResults.classList.add('hidden');
-            
             grid.innerHTML = filteredSolutions.map(solution => createSolutionCard(solution)).join('');
-            
             if (typeof anime !== 'undefined') {
-                anime({
-                    targets: '.solution-card',
-                    opacity: [0, 1],
-                    translateY: [30, 0],
-                    duration: 600,
-                    delay: anime.stagger(100),
-                    easing: 'easeOutExpo'
-                });
+                anime({ targets: '.solution-card', opacity: [0, 1], translateY: [30, 0], duration: 600, delay: anime.stagger(100), easing: 'easeOutExpo' });
             }
         }
 
         function createSolutionCard(solution) {
-            const difficultyColor = {
-                'Easy': 'difficulty-easy',
-                'Medium': 'difficulty-medium',
-                'Hard': 'difficulty-hard'
-            };
-            
+            const difficultyColor = { Easy: 'difficulty-easy', Medium: 'difficulty-medium', Hard: 'difficulty-hard' };
             return `
                 <div class="solution-card rounded-xl p-6" onclick="openSolutionDetail('${solution.id}')">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs bg-blue-600 text-white px-2 py-1 rounded">${solution.id}</span>
                         <span class="text-xs text-gray-400">${solution.time}</span>
                     </div>
-                    
                     <h4 class="text-lg font-semibold mb-2 text-white">${solution.title}</h4>
-                    
                     <div class="flex items-center space-x-3 mb-3 text-sm text-gray-400">
-                        <span>Machine: ${solution.machine}</span>
+                        <span>Press: ${solution.machine}</span>
                         <span>•</span>
                         <span>${solution.category}</span>
                     </div>
-                    
                     <p class="text-gray-300 text-sm mb-4 line-clamp-2">${solution.description}</p>
-                    
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xs ${difficultyColor[solution.difficulty]} font-semibold">
-                                ${solution.difficulty}
-                            </span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="rating-stars text-sm">⭐ ${solution.rating}</span>
-                        </div>
+                        <span class="text-xs ${difficultyColor[solution.difficulty]} font-semibold">${solution.difficulty}</span>
+                        <span class="rating-stars text-sm">⭐ ${solution.rating}</span>
                     </div>
                 </div>
             `;
         }
 
-        function searchSolutions() {
-            applyFilters();
-        }
-
-        function quickSearch(term) {
-            document.getElementById('search-input').value = term;
-            searchSolutions();
-        }
+        function searchSolutions() { applyFilters(); }
+        function quickSearch(term) { document.getElementById('search-input').value = term; searchSolutions(); }
 
         function bindFilterEvents() {
             document.getElementById('machine-filter').addEventListener('change', applyFilters);
             document.getElementById('category-filter').addEventListener('change', applyFilters);
             document.getElementById('difficulty-filter').addEventListener('change', applyFilters);
             document.getElementById('rating-filter').addEventListener('change', applyFilters);
-            
-            document.getElementById('search-input').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    searchSolutions();
-                }
-            });
+            document.getElementById('search-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') searchSolutions(); });
         }
 
         function applyFilters() {
@@ -807,21 +682,14 @@
             const difficultyFilter = document.getElementById('difficulty-filter').value;
             const ratingFilter = parseFloat(document.getElementById('rating-filter').value) || 0;
             const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
-            
             filteredSolutions = allSolutions.filter(solution => {
-                const matchesSearch = !searchTerm ||
-                    solution.title.toLowerCase().includes(searchTerm) ||
-                    solution.description.toLowerCase().includes(searchTerm) ||
-                    solution.category.toLowerCase().includes(searchTerm) ||
-                    solution.machine.toLowerCase().includes(searchTerm);
-
-                return matchesSearch &&
+                const haystack = [solution.title, solution.description, solution.category, solution.machine, ...(solution.tags || []), ...(solution.symptoms || [])].join(' ').toLowerCase();
+                return (!searchTerm || haystack.includes(searchTerm)) &&
                        (!machineFilter || solution.machine === machineFilter) &&
                        (!categoryFilter || solution.category === categoryFilter) &&
                        (!difficultyFilter || solution.difficulty === difficultyFilter) &&
                        (!ratingFilter || solution.rating >= ratingFilter);
             });
-            
             displaySolutions();
         }
 
@@ -831,172 +699,55 @@
             document.getElementById('category-filter').value = '';
             document.getElementById('difficulty-filter').value = '';
             document.getElementById('rating-filter').value = '';
-            
             filteredSolutions = [...allSolutions];
             displaySolutions();
         }
 
         function openSolutionDetail(solutionId) {
             const solution = allSolutions.find(s => s.id === solutionId);
-            if (solution) {
-                document.getElementById('modal-title').textContent = solution.title;
-                document.getElementById('modal-content').innerHTML = createSolutionDetailContent(solution);
-                document.getElementById('solution-modal').classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-            }
+            if (!solution) return;
+            document.getElementById('modal-title').textContent = solution.title;
+            document.getElementById('modal-content').innerHTML = createSolutionDetailContent(solution);
+            document.getElementById('solution-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         }
 
         function wireSolutionModal() {
             const modal = document.getElementById('solution-modal');
             if (!modal) return;
-
             modal.addEventListener('click', (e) => {
                 const content = modal.querySelector('.modal-content');
-                if (content && !content.contains(e.target)) {
-                    closeModal();
-                }
+                if (content && !content.contains(e.target)) closeModal();
             });
-
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-                    closeModal();
-                }
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
             });
         }
 
         function createSolutionDetailContent(solution) {
-            const difficultyColor = {
-                'Easy': 'text-green-400',
-                'Medium': 'text-yellow-400',
-                'Hard': 'text-red-400'
-            };
-
-            const steps = Array.isArray(solution.steps) && solution.steps.length
-                ? solution.steps
-                : ['No troubleshooting steps recorded yet.'];
-            const tools = Array.isArray(solution.tools) ? solution.tools : [];
-            
+            const difficultyColor = { Easy: 'text-green-400', Medium: 'text-yellow-400', Hard: 'text-red-400' };
             return `
                 <div class="solution-detail-shell">
                     <div class="solution-detail-grid text-sm">
-                        <div class="solution-detail-block">
-                            <h4 class="solution-detail-heading">Machine</h4>
-                            <p class="text-white">${solution.machine}</p>
-                        </div>
-                        <div class="solution-detail-block">
-                            <h4 class="solution-detail-heading">Category</h4>
-                            <p class="text-white">${solution.category}</p>
-                        </div>
-                        <div class="solution-detail-block">
-                            <h4 class="solution-detail-heading">Time</h4>
-                            <p class="text-white">${solution.time}</p>
-                        </div>
-                        <div class="solution-detail-block">
-                            <h4 class="solution-detail-heading">Difficulty · Rating</h4>
-                            <p>
-                                <span class="${difficultyColor[solution.difficulty]} font-semibold">${solution.difficulty}</span>
-                                <span class="text-slate-400 mx-2">•</span>
-                                <span class="rating-stars">⭐ ${solution.rating}</span>
-                            </p>
-                        </div>
+                        <div class="solution-detail-block"><h4 class="solution-detail-heading">Press</h4><p class="text-white">${solution.machine}</p></div>
+                        <div class="solution-detail-block"><h4 class="solution-detail-heading">System</h4><p class="text-white">${solution.category}</p></div>
+                        <div class="solution-detail-block"><h4 class="solution-detail-heading">Time to Resolution</h4><p class="text-white">${solution.time}</p></div>
+                        <div class="solution-detail-block"><h4 class="solution-detail-heading">Difficulty · Rating</h4><p><span class="${difficultyColor[solution.difficulty]} font-semibold">${solution.difficulty}</span><span class="text-slate-400 mx-2">•</span><span class="rating-stars">⭐ ${solution.rating}</span></p></div>
                     </div>
-                    
-                    <div class="solution-detail-block">
-                        <h4 class="solution-detail-heading">Description</h4>
-                        <p class="text-gray-300 leading-relaxed">${solution.description}</p>
-                    </div>
-                    
-                    <div class="solution-detail-block">
-                        <h4 class="solution-detail-heading">Step-by-Step Solution</h4>
-                        <div class="solution-detail-steps">
-                            ${steps.map((step, index) => `
-                                <div class="solution-detail-step">
-                                    <span class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-sm font-semibold">
-                                        ${index + 1}
-                                    </span>
-                                    <span class="text-gray-300 leading-relaxed">${step}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    
-                    ${tools.length > 0 ? `
-                        <div class="solution-detail-block">
-                            <h4 class="solution-detail-heading">Tools & Materials Needed</h4>
-                            <ul class="list-disc list-inside text-gray-300 space-y-1.5">
-                                ${tools.map(tool => `<li>${tool}</li>`).join('')}
-                            </ul>
-                        </div>
-                    ` : ''}
-                    
-                    ${solution.safety ? `
-                        <div class="solution-safety-box">
-                            <h4 class="text-red-400 font-semibold mb-2">⚠️ Safety Notice</h4>
-                            <p class="text-red-200 leading-relaxed">${solution.safety}</p>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="solution-detail-footer">
-                        <div class="solution-detail-actions">
-                            <button onclick="rateSolution('${solution.id}', 'helpful')" class="btn-primary px-4 py-2 rounded-lg text-sm">
-                                👍 Helpful
-                            </button>
-                            <button onclick="rateSolution('${solution.id}', 'not-helpful')" class="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 transition-colors text-sm">
-                                👎 Not Helpful
-                            </button>
-                        </div>
-                        <button onclick="closeModal()" class="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 transition-colors text-sm">
-                            Close
-                        </button>
-                    </div>
+                    <div class="solution-detail-block"><h4 class="solution-detail-heading">Description</h4><p class="text-gray-300 leading-relaxed">${solution.description}</p></div>
+                    <div class="solution-detail-block"><h4 class="solution-detail-heading">Resolution Steps</h4><div class="solution-detail-steps">${solution.steps.map((step, index) => `<div class="solution-detail-step"><span class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-sm font-semibold">${index + 1}</span><span class="text-gray-300 leading-relaxed">${step}</span></div>`).join('')}</div></div>
+                    ${solution.tools.length ? `<div class="solution-detail-block"><h4 class="solution-detail-heading">Parts / Tools Referenced</h4><ul class="list-disc list-inside text-gray-300 space-y-1.5">${solution.tools.map(tool => `<li>${tool}</li>`).join('')}</ul></div>` : ''}
+                    <div class="solution-detail-footer"><div class="solution-detail-actions"><button onclick="rateSolution('${solution.id}', 'helpful')" class="btn-primary px-4 py-2 rounded-lg text-sm">👍 Helpful</button><button onclick="rateSolution('${solution.id}', 'not-helpful')" class="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 transition-colors text-sm">👎 Not Helpful</button></div><button onclick="closeModal()" class="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 transition-colors text-sm">Close</button></div>
                 </div>
             `;
         }
 
-        function closeModal() {
-            document.getElementById('solution-modal').classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-
-        function rateSolution(solutionId, rating) {
-            showNotification(`Thank you for your feedback! Your rating has been recorded.`, 'success');
-            // In a real app, this would send the rating to the server
-        }
-
-        function showContactInfo() {
-            alert('Landa Support Team:\n\nPhone: +1-800-LANDA-1\nEmail: support@landa.com\nHours: 24/7 Technical Support');
-        }
-
-        function animatePageLoad() {
-            if (typeof anime !== 'undefined') {
-                anime({
-                    targets: '.glass-card',
-                    opacity: [0, 1],
-                    translateY: [30, 0],
-                    duration: 800,
-                    delay: anime.stagger(200),
-                    easing: 'easeOutExpo'
-                });
-            }
-        }
-
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 p-4 rounded-lg text-white z-50 ${
-                type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-blue-500'
-            }`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-        function logout() {
-            localStorage.removeItem('landaUser');
-            window.location.href = 'index.html';
-        }
+        function closeModal() { document.getElementById('solution-modal').classList.add('hidden'); document.body.style.overflow = ''; }
+        function rateSolution() { showNotification('Thank you. Your usefulness feedback has been recorded for this resolution.', 'success'); }
+        function showContactInfo() { alert('Landa Knowledge Team\n\nPhone: +1-800-LANDA-1\nEmail: support@landa.com\nHours: 24/7 Technical Support'); }
+        function animatePageLoad() { if (typeof anime !== 'undefined') { anime({ targets: '.glass-card', opacity: [0, 1], translateY: [30, 0], duration: 800, delay: anime.stagger(200), easing: 'easeOutExpo' }); } }
+        function showNotification(message) { alert(message); }
+        function logout(){ localStorage.removeItem('landaUser'); window.location.href = 'index.html'; }
     </script>
 </body>
 </html>

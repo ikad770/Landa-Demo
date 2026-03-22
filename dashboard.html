@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Landa Dashboard - Case Management System</title>
+    <title>Landa Dashboard - Resolved Case Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
@@ -52,10 +52,20 @@
         body {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background:
-                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.16), transparent 55%),
-                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.14), transparent 55%),
+                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.18), transparent 52%),
+                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.16), transparent 48%),
+                radial-gradient(circle at 50% 100%, rgba(14, 165, 233, 0.08), transparent 42%),
                 #020617;
             color: var(--text-main);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(180deg, rgba(2,6,23,0.18), rgba(2,6,23,0.58));
+            z-index: -1;
         }
 
         .layout-shell {
@@ -470,6 +480,49 @@
             font-size: 0.74rem;
             color: #cbd5e1;
         }
+
+        .hero-panel {
+            position: relative;
+            overflow: hidden;
+            padding: 1.5rem;
+            border-radius: 1.4rem;
+            background: linear-gradient(135deg, rgba(8,15,34,0.96), rgba(15,23,42,0.88));
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            box-shadow: 0 28px 80px rgba(2,6,23,0.7), inset 0 0 0 1px rgba(96,165,250,0.08);
+        }
+        .hero-panel::after {
+            content: '';
+            position: absolute;
+            inset: auto -10% -35% 40%;
+            height: 280px;
+            background: radial-gradient(circle, rgba(34,211,238,0.24), transparent 62%);
+            pointer-events: none;
+        }
+        .hero-grid {
+            display:grid;
+            grid-template-columns: minmax(0,1.6fr) minmax(320px,1fr);
+            gap: 1.25rem;
+        }
+        .metric-card { position: relative; overflow:hidden; }
+        .metric-card::before {
+            content:''; position:absolute; inset:0 0 auto 0; height:3px;
+            background: linear-gradient(90deg, rgba(34,211,238,0.95), rgba(59,130,246,0));
+        }
+        .intel-strip { display:grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap:0.9rem; }
+        .intel-pill {
+            border-radius: 1rem; border:1px solid rgba(71,85,105,0.75); background: rgba(2,6,23,0.42);
+            padding: 0.9rem 1rem; box-shadow: inset 0 0 0 1px rgba(34,211,238,0.04);
+        }
+        .severity-chip { display:inline-flex; align-items:center; gap:0.4rem; padding:0.25rem 0.65rem; border-radius:999px; font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; }
+        .severity-critical { color:#fecaca; background:rgba(239,68,68,0.14); border:1px solid rgba(239,68,68,0.35); }
+        .severity-elevated { color:#fde68a; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.32); }
+        .severity-stable { color:#a7f3d0; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.32); }
+        .insight-list { display:flex; flex-direction:column; gap:0.75rem; }
+        .insight-item { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:0.85rem 0.95rem; border-radius:1rem; border:1px solid rgba(71,85,105,0.6); background: rgba(2,6,23,0.36); }
+        .chart-card-header p { font-size:0.78rem; color:var(--text-muted); margin-top:0.2rem; }
+        @media (max-width: 1100px){ .hero-grid{grid-template-columns:1fr;} .intel-strip{grid-template-columns:repeat(2,minmax(0,1fr));} }
+        @media (max-width: 640px){ .intel-strip{grid-template-columns:1fr;} }
+
 </style>
 
 
@@ -487,13 +540,13 @@
                 <div class="logo-mark"></div>
                 <div class="ml-3 leading-tight">
                     <div class="logo-title">LANDA</div>
-                    <div class="logo-subtitle">Case Management</div>
+                    <div class="logo-subtitle">Resolved Case Intelligence</div>
                 </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
                 <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
-                <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
+                <a href="create-case.html" class="nav-link" data-page="create-case">Publish Case</a>
                 <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
 
 <a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
@@ -513,11 +566,10 @@
         <div class="main-shell">
 <!-- Main Content -->
     <main class="pt-8 px-6 pb-8">
-        <!-- Page Header -->
         <div class="page-header mb-8">
             <div>
-                <div class="page-title text-xs tracking-[0.3em] uppercase text-slate-300">System Dashboard</div>
-                <div class="page-subtitle mt-1 text-sm text-gray-400">Real-time overview of Landa presses, cases and service activity</div>
+                <div class="page-title text-xs tracking-[0.3em] uppercase text-slate-300">Knowledge Intelligence Dashboard</div>
+                <div class="page-subtitle mt-1 text-sm text-gray-400">Premium field intelligence for resolved press cases, recurring failure patterns, and cross-team knowledge transfer.</div>
             </div>
             <div class="hidden md:flex items-center space-x-2 text-xs text-gray-500">
                 <span>Home</span>
@@ -526,174 +578,80 @@
             </div>
         </div>
 
+        <section class="hero-panel mb-8">
+            <div class="hero-grid">
+                <div>
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="severity-chip severity-critical">Criticality monitored</span>
+                        <span class="severity-chip severity-elevated">Knowledge library live</span>
+                    </div>
+                    <h1 class="text-3xl lg:text-4xl font-semibold text-white max-w-3xl">Resolved-case operational intelligence for supervisors, service leads, and responsible teams.</h1>
+                    <p class="mt-4 text-slate-300 max-w-2xl leading-relaxed">This panel shows where archived issues concentrate, which systems generate the most learning value, and which patterns deserve immediate field attention even after closure.</p>
+                    <div class="intel-strip mt-6">
+                        <div class="intel-pill"><div class="text-xs uppercase tracking-[0.22em] text-slate-400">Knowledge coverage</div><div class="mt-2 text-2xl font-semibold text-white" id="total-cases">0</div><div class="text-sm text-slate-400 mt-1">Published cases</div></div>
+                        <div class="intel-pill"><div class="text-xs uppercase tracking-[0.22em] text-slate-400">High criticality</div><div class="mt-2 text-2xl font-semibold text-red-300" id="critical-cases">0</div><div class="text-sm text-slate-400 mt-1">Cases needing fast recognition</div></div>
+                        <div class="intel-pill"><div class="text-xs uppercase tracking-[0.22em] text-slate-400">Knowledge score</div><div class="mt-2 text-2xl font-semibold text-cyan-300" id="avg-rating">0.0</div><div class="text-sm text-slate-400 mt-1">Average usefulness</div></div>
+                        <div class="intel-pill"><div class="text-xs uppercase tracking-[0.22em] text-slate-400">Library state</div><div class="mt-2 text-2xl font-semibold text-emerald-300" id="published-cases">0</div><div class="text-sm text-slate-400 mt-1">Published and searchable</div></div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-5">
+                    <div class="text-xs uppercase tracking-[0.24em] text-slate-400">Field focus</div>
+                    <h3 class="text-xl font-semibold mt-2">Top knowledge signals</h3>
+                    <p class="text-sm text-slate-400 mt-2">Immediate scan for managers reviewing what the field is repeatedly solving.</p>
+                    <div id="focus-insights" class="insight-list mt-5"></div>
+                </div>
+            </div>
+        </section>
 
-        <!-- Key Metrics -->
+        <div class="mb-3"><div class="section-title">Key Indicators</div><p class="section-subtitle mt-2">A quick read of library size, field criticality, and reuse value.</p></div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="metric-card rounded-xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400 text-sm">Total Cases</p>
-                        <p class="text-3xl font-bold text-white" id="total-cases">24</p>
-                    </div>
-                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="metric-card rounded-xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400 text-sm">Resolved Cases</p>
-                        <p class="text-3xl font-bold text-green-400" id="resolved-cases">18</p>
-                    </div>
-                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="metric-card rounded-xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400 text-sm">In Progress</p>
-                        <p class="text-3xl font-bold text-yellow-400" id="in-progress-cases">6</p>
-                    </div>
-                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="metric-card rounded-xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400 text-sm">Avg Rating</p>
-                        <p class="text-3xl font-bold text-blue-400" id="avg-rating">4.7</p>
-                    </div>
-                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
+            <div class="metric-card rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-gray-400 text-sm">Cases by System</p><p class="text-3xl font-bold text-white" id="top-system-value">—</p><p class="text-sm text-slate-400 mt-2" id="top-system-label">Highest case concentration</p></div><div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center text-cyan-300">Σ</div></div></div>
+            <div class="metric-card rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-gray-400 text-sm">Cases by Region</p><p class="text-3xl font-bold text-white" id="top-region-value">—</p><p class="text-sm text-slate-400 mt-2" id="top-region-label">Most active region</p></div><div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center text-blue-300">◎</div></div></div>
+            <div class="metric-card rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-gray-400 text-sm">Cases by Part</p><p class="text-3xl font-bold text-white" id="top-part-value">—</p><p class="text-sm text-slate-400 mt-2" id="top-part-label">Most referenced component</p></div><div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center text-amber-200">◈</div></div></div>
+            <div class="metric-card rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-gray-400 text-sm">Cases by Press</p><p class="text-3xl font-bold text-white" id="top-press-value">—</p><p class="text-sm text-slate-400 mt-2" id="top-press-label">Most documented press</p></div><div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center text-emerald-200">▣</div></div></div>
         </div>
 
-        
-        <!-- Charts Section -->
+        <div class="mb-3"><div class="section-title">Distribution Views</div><p class="section-subtitle mt-2">Each chart answers a simple question: where are resolved cases concentrating, by system, region, press, or part.</p></div>
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div class="glass-card rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold">Cases by Region</h3>
-                    <div class="chart-toggle" data-chart="region">
-                        <button class="chart-btn is-active" data-type="bar">Bars</button>
-                        <button class="chart-btn" data-type="pie">Pie</button>
-                    </div>
-                </div>
-                <div id="chart-region" class="chart-viewport" style="height: 300px;"></div>
-            </div>
-
-            <div class="glass-card rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold">Cases by System</h3>
-                    <div class="chart-toggle" data-chart="system">
-                        <button class="chart-btn is-active" data-type="bar">Bars</button>
-                        <button class="chart-btn" data-type="pie">Pie</button>
-                    </div>
-                </div>
-                <div id="chart-system" class="chart-viewport" style="height: 300px;"></div>
-            </div>
-
-            <div class="glass-card rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold">Cases by Press</h3>
-                    <div class="chart-toggle" data-chart="press">
-                        <button class="chart-btn is-active" data-type="bar">Bars</button>
-                        <button class="chart-btn" data-type="pie">Pie</button>
-                    </div>
-                </div>
-                <div id="chart-press" class="chart-viewport" style="height: 300px;"></div>
-            </div>
-
-            <div class="glass-card rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold">Cases by Part</h3>
-                    <div class="chart-toggle" data-chart="part">
-                        <button class="chart-btn is-active" data-type="bar">Bars</button>
-                        <button class="chart-btn" data-type="pie">Pie</button>
-                    </div>
-                </div>
-                <div id="chart-part" class="chart-viewport" style="height: 300px;"></div>
-            </div>
+            <div class="glass-card rounded-xl p-6"><div class="flex items-center justify-between mb-4"><div class="chart-card-header"><h3 class="text-xl font-semibold">Cases by Region</h3><p>Regional concentration of resolved field knowledge.</p></div><div class="chart-toggle" data-chart="region"><button class="chart-btn is-active" data-type="bar">Bars</button><button class="chart-btn" data-type="pie">Pie</button></div></div><div id="chart-region" class="chart-viewport" style="height: 320px;"></div></div>
+            <div class="glass-card rounded-xl p-6"><div class="flex items-center justify-between mb-4"><div class="chart-card-header"><h3 class="text-xl font-semibold">Cases by System</h3><p>Where recurring solutions cluster across subsystems.</p></div><div class="chart-toggle" data-chart="system"><button class="chart-btn is-active" data-type="bar">Bars</button><button class="chart-btn" data-type="pie">Pie</button></div></div><div id="chart-system" class="chart-viewport" style="height: 320px;"></div></div>
+            <div class="glass-card rounded-xl p-6"><div class="flex items-center justify-between mb-4"><div class="chart-card-header"><h3 class="text-xl font-semibold">Cases by Press</h3><p>Press models with the highest knowledge density.</p></div><div class="chart-toggle" data-chart="press"><button class="chart-btn is-active" data-type="bar">Bars</button><button class="chart-btn" data-type="pie">Pie</button></div></div><div id="chart-press" class="chart-viewport" style="height: 320px;"></div></div>
+            <div class="glass-card rounded-xl p-6"><div class="flex items-center justify-between mb-4"><div class="chart-card-header"><h3 class="text-xl font-semibold">Cases by Part</h3><p>Components most often cited in verified resolutions.</p></div><div class="chart-toggle" data-chart="part"><button class="chart-btn is-active" data-type="bar">Bars</button><button class="chart-btn" data-type="pie">Pie</button></div></div><div id="chart-part" class="chart-viewport" style="height: 320px;"></div></div>
         </div>
 
-        <!-- Recent Cases -->
+        <div class="mb-3"><div class="section-title">Latest Published Cases</div><p class="section-subtitle mt-2">Recent knowledge entries ready for review and reuse.</p></div>
+
         <div class="glass-card rounded-xl p-6 mb-8">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-semibold">Recent Cases</h3>
-                <a href="cases.html" class="btn-primary px-4 py-2 rounded-lg text-sm">View All Cases</a>
+                <div>
+                    <h3 class="text-xl font-semibold">Latest published case intelligence</h3>
+                    <p class="text-sm text-slate-400 mt-1">Recent archived cases with criticality context for quick management review.</p>
+                </div>
+                <a href="cases.html" class="btn-primary px-4 py-2 rounded-lg text-sm">Open Library</a>
             </div>
-            
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-gray-700">
                             <th class="text-left py-3 px-4 text-gray-400">Case ID</th>
-                            <th class="text-left py-3 px-4 text-gray-400">Machine</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Press</th>
                             <th class="text-left py-3 px-4 text-gray-400">Subject</th>
-                            <th class="text-left py-3 px-4 text-gray-400">Status</th>
-                            <th class="text-left py-3 px-4 text-gray-400">Owner</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Criticality</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Knowledge State</th>
                             <th class="text-left py-3 px-4 text-gray-400">Date</th>
                         </tr>
                     </thead>
-                    <tbody id="recent-cases-table">
-                        <!-- populated by JS -->
-                    </tbody>
+                    <tbody id="recent-cases-table"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Quick Actions -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="machine-card rounded-xl p-6 text-center">
-                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                </div>
-                <h4 class="text-lg font-semibold mb-2">Create New Case</h4>
-                <p class="text-gray-400 text-sm mb-4">Document a new technical issue or service request</p>
-                <a href="create-case.html" class="btn-primary px-6 py-2 rounded-lg text-sm inline-block">Create Case</a>
-            </div>
-
-            <div class="machine-card rounded-xl p-6 text-center">
-                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </div>
-                <h4 class="text-lg font-semibold mb-2">Find Solutions</h4>
-                <p class="text-gray-400 text-sm mb-4">Search troubleshooting guides and known solutions</p>
-                <a href="troubleshooting.html" class="btn-primary px-6 py-2 rounded-lg text-sm inline-block">Search Solutions</a>
-            </div>
-
-            <div class="machine-card rounded-xl p-6 text-center">
-                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                </div>
-                <h4 class="text-lg font-semibold mb-2">View Analytics</h4>
-                <p class="text-gray-400 text-sm mb-4">Analyze performance metrics and trends</p>
-                <button onclick="showAnalytics()" class="btn-primary px-6 py-2 rounded-lg text-sm">View Reports</button>
-            </div>
+            <div class="machine-card rounded-xl p-6 text-center"><div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></div><h4 class="text-lg font-semibold mb-2">Publish resolved case</h4><p class="text-gray-400 text-sm mb-4">Capture the final fix, affected parts, and reusable knowledge for the next team.</p><a href="create-case.html" class="btn-primary px-6 py-2 rounded-lg text-sm inline-block">Publish Case</a></div>
+            <div class="machine-card rounded-xl p-6 text-center"><div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div><h4 class="text-lg font-semibold mb-2">Find similar resolutions</h4><p class="text-gray-400 text-sm mb-4">Search the library for comparable symptoms, actions, and proven fixes.</p><a href="troubleshooting.html" class="btn-primary px-6 py-2 rounded-lg text-sm inline-block">Search Library</a></div>
+            <div class="machine-card rounded-xl p-6 text-center"><div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div><h4 class="text-lg font-semibold mb-2">Review trends</h4><p class="text-gray-400 text-sm mb-4">Monitor concentration, criticality, and repeat patterns across the knowledge base.</p><button onclick="showAnalytics()" class="btn-primary px-6 py-2 rounded-lg text-sm">View Reports</button></div>
         </div>
     </main>
         </div>
@@ -717,6 +675,9 @@
 
     <script src="main.js"></script>
     <script>
+        const store = window.LandaCaseStore;
+        const charts = {};
+
         document.addEventListener('DOMContentLoaded', () => {
             ensureAuth();
             hydrateUserPill();
@@ -729,9 +690,7 @@
 
         function ensureAuth(){
             const user = safeJson(localStorage.getItem('landaUser'));
-            if(!user){
-                window.location.href = 'index.html';
-            }
+            if(!user){ window.location.href = 'index.html'; }
         }
 
         function hydrateUserPill(){
@@ -750,480 +709,225 @@
             try{ return value ? JSON.parse(value) : null; } catch(e){ return null; }
         }
 
-        function getCases(){
-            // Try multiple keys for backward compatibility
-            const keys = ['landaCases','cases','landa_cases','landaCaseData'];
-            for(const k of keys){
-                const data = safeJson(localStorage.getItem(k));
-                if(Array.isArray(data)) return data;
-            }
-            return [];
-        }
-
-        function normalizeCase(c){
-            const out = { ...c };
-            // Normalize common fields used across pages
-            out.id = out.id || out.caseId || out.sfCase || out.sfCaseNumber || out.sf_case || out.SF || '';
-            out.press = out.press || out.machine || out.pressName || out.press_name || '';
-            out.pressType = out.pressType || out.machineType || out.press_type || '';
-            out.system = out.system || out.mainSystem || out.systemName || '';
-            out.subSystem = out.subSystem || out.subsystem || out.sub_system || '';
-            out.area = out.area || out.hwSwEc || out.hw_sw_ec || '';
-            out.subject = out.subject || out.title || out.issueSubject || '';
-            out.description = out.description || out.issueDescription || out.details || '';
-            out.owner = out.owner || out.caseOwner || out.createdBy || '';
-            out.region = out.region || out.site || out.location || '';
-            out.status = (out.status || 'Resolved').toString();
-            out.date = out.date || out.createdAt || out.created_at || out.updatedAt || out.updated_at || '';
-            out.partsUsed = out.partsUsed || out.parts || [];
-            out.troubleshooting = out.troubleshooting || out.steps || out.troubleshootingSteps || [];
-            out.rating = typeof out.rating === 'number' ? out.rating : (out.rating ? Number(out.rating) : null);
-            out.attachments = out.attachments || out.files || [];
-            return out;
-        }
-
-        function renderDashboard(){
-            const raw = getCases().map(normalizeCase);
-
-            // Metrics
-            const total = raw.length;
-            const resolved = raw.filter(c => c.status.toLowerCase() === 'resolved').length;
-            const inProgress = raw.filter(c => c.status.toLowerCase().includes('progress')).length;
-            const ratings = raw.map(c => c.rating).filter(v => typeof v === 'number' && !Number.isNaN(v));
-            const avg = ratings.length ? (ratings.reduce((a,b)=>a+b,0) / ratings.length) : 0;
-
-            const totalEl = document.getElementById('total-cases');
-            const resolvedEl = document.getElementById('resolved-cases');
-            const progressEl = document.getElementById('in-progress-cases');
-            const avgEl = document.getElementById('avg-rating');
-
-            if(totalEl) totalEl.textContent = total || 0;
-            if(resolvedEl) resolvedEl.textContent = resolved || 0;
-            if(progressEl) progressEl.textContent = inProgress || 0;
-            if(avgEl) avgEl.textContent = avg ? avg.toFixed(1) : '0.0';
-
-            // Recent cases
-            const tbody = document.getElementById('recent-cases-table');
-            if(!tbody) return;
-
-            const sorted = raw
-                .slice()
-                .sort((a,b)=> (new Date(b.date||0)).getTime() - (new Date(a.date||0)).getTime())
-                .slice(0, 6);
-
-            if(sorted.length === 0){
-                tbody.innerHTML = `
-                    <tr>
-                        <td class="py-6 px-4 text-gray-400" colspan="6">
-                            No cases yet. Create your first case to populate analytics.
-                        </td>
-                    </tr>`;
-                return;
-            }
-
-            tbody.innerHTML = sorted.map((c) => {
-                const status = (c.status || 'Resolved').toString();
-                const isResolved = status.toLowerCase() === 'resolved';
-                const statusDot = isResolved ? 'status-resolved' : 'status-progress';
-                const statusTextClass = isResolved ? 'text-green-400' : 'text-yellow-400';
-                const safeId = escapeHtml(c.id || '—');
-                const safePress = escapeHtml((c.press || '').toString() || '—');
-                const safeSubject = escapeHtml((c.subject || '').toString() || '—');
-                const safeOwner = escapeHtml((c.owner || '').toString() || '—');
-                const safeDate = escapeHtml(formatDate(c.date));
-                const encoded = encodeURIComponent(JSON.stringify(c));
-                return `
-                    <tr class="border-b border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer table-row-hover"
-                        data-case="${encoded}">
-                        <td class="py-3 px-4 font-mono text-blue-400">${safeId}</td>
-                        <td class="py-3 px-4">${safePress}</td>
-                        <td class="py-3 px-4">${safeSubject}</td>
-                        <td class="py-3 px-4">
-                            <span class="status-indicator ${statusDot}"></span>
-                            <span class="${statusTextClass}">${escapeHtml(status)}</span>
-                        </td>
-                        <td class="py-3 px-4">${safeOwner}</td>
-                        <td class="py-3 px-4 text-gray-400">${safeDate}</td>
-                    </tr>
-                `;
-            }).join('');
-
-            tbody.querySelectorAll('tr[data-case]').forEach(row => {
-                row.addEventListener('click', () => {
-                    const payload = row.getAttribute('data-case');
-                    if(!payload) return;
-                    try{
-                        const data = JSON.parse(decodeURIComponent(payload));
-                        openCaseDetail(data.id);
-                    }catch(e){}
-                });
-            });
-        }
-
         function escapeHtml(str){
             return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
         }
 
-        function formatDate(d){
-            if(!d) return '—';
-            const dt = new Date(d);
-            if(Number.isNaN(dt.getTime())) return String(d);
-            return dt.toISOString().slice(0,10);
+        function formatDate(value){
+            if(!value) return '—';
+            const date = new Date(value);
+            if(Number.isNaN(date.getTime())) return String(value);
+            return date.toISOString().slice(0,10);
         }
 
-        // ---------- CHARTS ----------
-        const charts = {};
+        function topEntry(map, fallbackLabel){
+            const entries = Object.entries(map || {}).sort((a,b)=>b[1]-a[1]);
+            if(!entries.length) return { name: 'No data', count: 0, label: fallbackLabel };
+            return { name: entries[0][0], count: entries[0][1], label: fallbackLabel };
+        }
+
+        function severityClass(level){
+            if(level === 'Critical') return 'severity-critical';
+            if(level === 'Elevated') return 'severity-elevated';
+            return 'severity-stable';
+        }
+
+        function renderDashboard(){
+            const cases = store.getCases();
+            const stats = store.getStats(cases);
+            const aggregates = store.getDashboardAggregates(cases);
+
+            setText('total-cases', stats.total);
+            setText('published-cases', stats.published);
+            setText('critical-cases', stats.critical);
+            setText('avg-rating', stats.avgUsefulness);
+
+            const topSystem = topEntry(aggregates.bySystem, 'System with the most archived cases');
+            const topRegion = topEntry(aggregates.byRegion, 'Region contributing the most published learning');
+            const topPart = topEntry(aggregates.byPart, 'Part most often mentioned in the library');
+            const topPress = topEntry(aggregates.byPress, 'Press with the most published cases');
+
+            setText('top-system-value', topSystem.name);
+            setText('top-system-label', `${topSystem.count} case${topSystem.count === 1 ? '' : 's'} · ${topSystem.label}`);
+            setText('top-region-value', topRegion.name);
+            setText('top-region-label', `${topRegion.count} case${topRegion.count === 1 ? '' : 's'} · ${topRegion.label}`);
+            setText('top-part-value', topPart.name);
+            setText('top-part-label', `${topPart.count} reference${topPart.count === 1 ? '' : 's'} · ${topPart.label}`);
+            setText('top-press-value', topPress.name);
+            setText('top-press-label', `${topPress.count} case${topPress.count === 1 ? '' : 's'} · ${topPress.label}`);
+
+            renderFocusInsights(cases, aggregates);
+            renderRecentCases(cases);
+        }
+
+        function setText(id, value){
+            const el = document.getElementById(id);
+            if(el) el.textContent = String(value);
+        }
+
+        function renderFocusInsights(cases, aggregates){
+            const root = document.getElementById('focus-insights');
+            if(!root) return;
+            const topSystem = topEntry(aggregates.bySystem, 'Highest concentration of resolved knowledge');
+            const topRegion = topEntry(aggregates.byRegion, 'Region generating the most reusable learning');
+            const critical = cases.filter(item => item.criticality === 'Critical').length;
+            const elevated = cases.filter(item => item.criticality === 'Elevated').length;
+            root.innerHTML = [
+                { label: 'System hotspot', title: topSystem.name, text: `${topSystem.count} cases · ${topSystem.label}`, cls: 'severity-critical' },
+                { label: 'Regional focus', title: topRegion.name, text: `${topRegion.count} cases · ${topRegion.label}`, cls: 'severity-elevated' },
+                { label: 'Criticality mix', title: `${critical} critical / ${elevated} elevated`, text: 'A clear split of what needs fastest recognition in the field.', cls: 'severity-stable' }
+            ].map(item => `<div class="insight-item"><div><div class="text-sm text-slate-400 uppercase tracking-[0.18em] mb-2">${item.label}</div><div class="text-lg text-white font-semibold">${item.title}</div><div class="text-sm text-slate-400 mt-1">${item.text}</div></div><span class="severity-chip ${item.cls}">${item.label}</span></div>`).join('');
+        }
+
+        function renderRecentCases(cases){
+            const tbody = document.getElementById('recent-cases-table');
+            if(!tbody) return;
+            const recent = cases.slice().sort((a,b)=> new Date(b.publishedAt) - new Date(a.publishedAt)).slice(0,6);
+            if(!recent.length){
+                tbody.innerHTML = '<tr><td class="py-6 px-4 text-gray-400" colspan="6">No published cases yet. Add a resolved case to populate the dashboard.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = recent.map(item => `
+                <tr class="border-b border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer table-row-hover" data-case-id="${escapeHtml(item.caseId)}">
+                    <td class="py-3 px-4 font-mono text-blue-400">${escapeHtml(item.caseId)}</td>
+                    <td class="py-3 px-4">${escapeHtml(item.machineLabel)}</td>
+                    <td class="py-3 px-4">${escapeHtml(item.title)}</td>
+                    <td class="py-3 px-4"><span class="severity-chip ${severityClass(item.criticality)}">${escapeHtml(item.criticality)}</span></td>
+                    <td class="py-3 px-4">${escapeHtml(item.status)}</td>
+                    <td class="py-3 px-4 text-gray-400">${escapeHtml(formatDate(item.publishedAt))}</td>
+                </tr>
+            `).join('');
+            tbody.querySelectorAll('[data-case-id]').forEach(row => row.addEventListener('click', () => openCaseDetail(row.dataset.caseId)));
+        }
 
         function initializeCharts(){
-            const cases = getCases().map(normalizeCase);
-
-            const agg = {
-                region: countBy(cases, c => (c.region || 'Unspecified')),
-                system: countBy(cases, c => (c.system || 'Unspecified')),
-                press:  countBy(cases, c => (c.press || 'Unspecified')),
-                part:   countByParts(cases)
-            };
-
+            const cases = store.getCases();
+            const aggregates = store.getDashboardAggregates(cases);
             charts.region = echarts.init(document.getElementById('chart-region'));
             charts.system = echarts.init(document.getElementById('chart-system'));
-            charts.press  = echarts.init(document.getElementById('chart-press'));
-            charts.part   = echarts.init(document.getElementById('chart-part'));
-
-            // default types
-            setChart('region', 'bar', agg.region);
-            setChart('system', 'bar', agg.system);
-            setChart('press',  'bar', agg.press);
-            setChart('part',   'bar', agg.part);
-
-            window.addEventListener('resize', () => {
-                Object.values(charts).forEach(c => c && c.resize());
-            });
+            charts.press = echarts.init(document.getElementById('chart-press'));
+            charts.part = echarts.init(document.getElementById('chart-part'));
+            setChart('region', 'bar', aggregates.byRegion);
+            setChart('system', 'bar', aggregates.bySystem);
+            setChart('press', 'bar', aggregates.byPress);
+            setChart('part', 'bar', aggregates.byPart);
+            window.addEventListener('resize', () => Object.values(charts).forEach(chart => chart && chart.resize()));
         }
 
         function wireChartToggles(){
             document.querySelectorAll('.chart-toggle').forEach(group => {
                 const key = group.getAttribute('data-chart');
-                group.querySelectorAll('.chart-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        group.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('is-active'));
-                        btn.classList.add('is-active');
-                        refreshSingleChart(key, btn.getAttribute('data-type'));
+                group.querySelectorAll('.chart-btn').forEach(button => {
+                    button.addEventListener('click', () => {
+                        group.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('is-active'));
+                        button.classList.add('is-active');
+                        const aggregates = store.getDashboardAggregates(store.getCases());
+                        const map = key === 'region' ? aggregates.byRegion : key === 'system' ? aggregates.bySystem : key === 'press' ? aggregates.byPress : aggregates.byPart;
+                        setChart(key, button.getAttribute('data-type'), map);
                     });
                 });
             });
         }
 
-        function refreshSingleChart(key, type){
-            const cases = getCases().map(normalizeCase);
-            let data;
-            if(key === 'region') data = countBy(cases, c => (c.region || 'Unspecified'));
-            if(key === 'system') data = countBy(cases, c => (c.system || 'Unspecified'));
-            if(key === 'press')  data = countBy(cases, c => (c.press || 'Unspecified'));
-            if(key === 'part')   data = countByParts(cases);
-            setChart(key, type, data || {});
-        }
-
-        function countBy(items, fn){
-            const map = {};
-            items.forEach(it => {
-                const k = (fn(it) || 'Unspecified').toString().trim() || 'Unspecified';
-                map[k] = (map[k] || 0) + 1;
-            });
-            return map;
-        }
-
-        function countByParts(cases){
-            const map = {};
-            cases.forEach(c => {
-                const parts = Array.isArray(c.partsUsed) ? c.partsUsed : [];
-                if(parts.length === 0){
-                    map['Unspecified'] = (map['Unspecified'] || 0) + 1;
-                    return;
-                }
-                parts.forEach(p => {
-                    const name = (p.name || p.part || p.partName || p || 'Unspecified').toString().trim() || 'Unspecified';
-                    map[name] = (map[name] || 0) + 1;
-                });
-            });
-            return map;
-        }
-
-        function topN(map, n=8){
-            const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
-            const head = entries.slice(0, n);
-            const rest = entries.slice(n);
+        function topN(map, limit = 7){
+            const entries = Object.entries(map || {}).sort((a,b)=>b[1]-a[1]);
+            const head = entries.slice(0, limit);
+            const rest = entries.slice(limit);
             if(rest.length){
-                const other = rest.reduce((sum, [,v])=>sum+v, 0);
-                head.push(['Other', other]);
+                head.push(['Other', rest.reduce((sum, [, value]) => sum + value, 0)]);
             }
             return head;
         }
 
-        
-        function navigateFromChart(key, value){
-            const payload = { key, value };
-            try{ localStorage.setItem('landaCasesFilter', JSON.stringify(payload)); }catch(e){}
-            const url = `cases.html?filter=${encodeURIComponent(key)}&value=${encodeURIComponent(value)}`;
-            window.location.href = url;
-        }
-
-function setChart(key, type, map){
+        function setChart(key, type, map){
             const chart = charts[key];
             if(!chart) return;
-
-
-            chart.off && chart.off("click");
-            chart.on && chart.on("click", function(params){
-                const name = params && params.name ? params.name : null;
-                if(!name) return;
-                // map dashboard keys to cases fields
-                const keyMap = { region:"region", system:"system", press:"press", part:"part" };
-                navigateFromChart(keyMap[key] || key, name);
-            });
-
             const entries = topN(map, 7);
-            const labels = entries.map(e=>e[0]);
-            const values = entries.map(e=>e[1]);
-
-            const tooltip = {
-                backgroundColor: 'rgba(15, 23, 42, 0.92)',
-                borderColor: 'rgba(6, 182, 212, 0.6)',
-                textStyle: { color: '#ffffff' }
-            };
-
+            const labels = entries.map(entry => entry[0]);
+            const values = entries.map(entry => entry[1]);
+            chart.off('click');
+            chart.on('click', params => navigateFromChart(key, params?.name));
+            const tooltip = { backgroundColor: 'rgba(15, 23, 42, 0.92)', borderColor: 'rgba(6, 182, 212, 0.6)', textStyle: { color: '#ffffff' } };
             if(type === 'pie'){
                 chart.setOption({
-                backgroundColor: 'transparent',
-                animation: true,
-                animationDuration: 900,
-                animationEasing: 'cubicOut',
-                textStyle: { fontFamily: 'Inter, system-ui, sans-serif', color: '#e5e7eb' },
+                    backgroundColor: 'transparent',
+                    textStyle: { color: '#e5e7eb', fontFamily: 'Inter, system-ui, sans-serif' },
                     tooltip: { trigger: 'item', ...tooltip },
                     legend: { bottom: 0, textStyle: { color: 'rgba(226,232,240,0.85)' } },
-                    series: [{
-                        type: 'pie',
-                        itemStyle:{ borderColor:'rgba(2,6,23,0.65)', borderWidth:2, shadowBlur:18, shadowColor:'rgba(34,211,238,0.18)' },
-                        emphasis:{ scale:true, scaleSize:8 },
-                        radius: ['42%', '72%'],
-                        center: ['50%', '52%'],
-                        data: labels.map((l,i)=>({ name:l, value:values[i] })),
-                        label: { color: '#e5e7eb', fontSize: 12 },
-                        labelLine: { lineStyle: { color: 'rgba(148,163,184,0.8)' } }
-                    }]
+                    series: [{ type: 'pie', radius: ['42%', '72%'], center: ['50%', '48%'], itemStyle:{ borderColor:'rgba(2,6,23,0.65)', borderWidth:2, shadowBlur:18, shadowColor:'rgba(34,211,238,0.18)' }, data: labels.map((label, index) => ({ name: label, value: values[index] })), label: { color: '#e5e7eb' } }]
                 }, true);
                 return;
             }
-
             chart.setOption({
                 backgroundColor: 'transparent',
-                animation: true,
-                animationDuration: 900,
-                animationEasing: 'cubicOut',
-                textStyle: { fontFamily: 'Inter, system-ui, sans-serif', color: '#e5e7eb' },
+                textStyle: { color: '#e5e7eb', fontFamily: 'Inter, system-ui, sans-serif' },
                 tooltip: { trigger: 'axis', axisPointer: { type:'shadow', shadowStyle:{ color:'rgba(34,211,238,0.06)' } }, ...tooltip },
                 grid: { left: 40, right: 22, top: 26, bottom: 52, containLabel: true },
-                xAxis: {
-                    type: 'category',
-                    data: labels,
-                    axisLine: { lineStyle: { color: 'rgba(148,163,184,0.45)' } },
-                    axisLabel: { color: 'rgba(226,232,240,0.86)', fontWeight: 500, rotate: labels.some(l=>l.length>10) ? 24 : 0 }
-                },
-                yAxis: {
-                    type: 'value',
-                    axisLine: { lineStyle: { color: 'rgba(148,163,184,0.45)' } },
-                    axisLabel: { color: '#e5e7eb' },
-                    splitLine: { lineStyle: { color: 'rgba(148,163,184,0.12)' } }
-                },
-                series: [{
-                    data: values,
-                    type: 'bar',
-                    barWidth: '58%',
-                    itemStyle: {
-                        borderRadius: [10,10,0,0],
-                        shadowBlur: 18,
-                        shadowColor: 'rgba(34,211,238,0.22)',
-                        shadowOffsetY: 6,
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: 'rgba(34,211,238,0.95)' },
-                            { offset: 0.45, color: 'rgba(59,130,246,0.85)' },
-                            { offset: 1, color: 'rgba(2,132,199,0.20)' }
-                        ])
-                    },
-                    emphasis: {
-                        itemStyle: {
-                            shadowBlur: 26,
-                            shadowColor: 'rgba(34,211,238,0.35)',
-                            borderColor: 'rgba(34,211,238,0.55)',
-                            borderWidth: 1
-                        }
-                    }
-                }]
+                xAxis: { type: 'category', data: labels, axisLine: { lineStyle: { color: 'rgba(148,163,184,0.45)' } }, axisLabel: { color: 'rgba(226,232,240,0.86)', rotate: labels.some(label => label.length > 10) ? 20 : 0 } },
+                yAxis: { type: 'value', axisLabel: { color: '#e5e7eb' }, splitLine: { lineStyle: { color: 'rgba(148,163,184,0.12)' } } },
+                series: [{ type: 'bar', data: values, barWidth: '58%', itemStyle: { borderRadius: [10,10,0,0], shadowBlur: 18, shadowColor: 'rgba(34,211,238,0.22)', color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(34,211,238,0.95)' }, { offset: 0.45, color: 'rgba(59,130,246,0.85)' }, { offset: 1, color: 'rgba(2,132,199,0.20)' }]) } }]
             }, true);
         }
 
-        // ---------- MODAL ----------
+        function navigateFromChart(key, value){
+            if(!value) return;
+            const mapKey = key === 'region' ? 'region' : key === 'system' ? 'system' : key === 'press' ? 'press' : 'part';
+            store.saveDashboardFilter({ key: mapKey, value });
+            window.location.href = `cases.html?filter=${encodeURIComponent(mapKey)}&value=${encodeURIComponent(value)}`;
+        }
+
         function wireCaseModal(){
             const modal = document.getElementById('case-modal');
             if(!modal) return;
-
-            // Close on ESC
-            document.addEventListener('keydown', (e) => {
-                if(e.key === 'Escape') closeModal();
+            document.addEventListener('keydown', event => {
+                if(event.key === 'Escape') closeModal();
             });
-
-            // Close when clicking outside modal content
-            modal.addEventListener('click', (e) => {
+            modal.addEventListener('click', event => {
                 const content = modal.querySelector('.modal-content');
-                if(content && !content.contains(e.target)) closeModal();
+                if(content && !content.contains(event.target)) closeModal();
             });
         }
 
-        function stepText(s){
-            if(typeof s === 'string') return s;
-            if(!s || typeof s !== 'object') return '—';
-            return s.text || s.step || s.description || JSON.stringify(s);
-        }
-
-        function partText(p){
-            if(typeof p === 'string') return p;
-            if(!p || typeof p !== 'object') return '—';
-            const name = p.name || p.part || p.partName || 'Part';
-            const code = p.code || p.partNumber || p.id || '';
-            return code ? `${name} — ${code}` : name;
-        }
+        function partText(part){ return String(part || '—'); }
+        function stepText(step){ return typeof step === 'string' ? step : (step?.text || step?.step || '—'); }
 
         function animateMetrics() {
             if (typeof anime !== 'undefined') {
-                anime({
-                    targets: '.metric-card',
-                    opacity: [0, 1],
-                    translateY: [30, 0],
-                    duration: 800,
-                    delay: anime.stagger(100),
-                    easing: 'easeOutExpo'
-                });
-
-                anime({
-                    targets: '.glass-card, .machine-card',
-                    opacity: [0, 1],
-                    translateY: [50, 0],
-                    duration: 1000,
-                    delay: anime.stagger(200, {start: 400}),
-                    easing: 'easeOutExpo'
-                });
+                anime({ targets: '.metric-card', opacity: [0, 1], translateY: [30, 0], duration: 800, delay: anime.stagger(100), easing: 'easeOutExpo' });
+                anime({ targets: '.glass-card, .machine-card', opacity: [0, 1], translateY: [50, 0], duration: 1000, delay: anime.stagger(200, {start: 400}), easing: 'easeOutExpo' });
             }
         }
 
-        function logout() {
-            localStorage.removeItem('landaUser');
-            window.location.href = 'index.html';
-        }
+        function logout() { localStorage.removeItem('landaUser'); window.location.href = 'index.html'; }
+        function showAnalytics() { alert('Trend reporting will expand here as more resolved cases are published to the knowledge base.'); }
 
-        function showAnalytics() {
-            alert('Analytics dashboard coming soon! This will show detailed performance reports and trends.');
-        }
-
-        // ---------- CASE MODAL (same layout as cases.html) ----------
         function openCaseDetail(caseId) {
-            const case_ = (getCases ? getCases().map(normalizeCase) : []).find(c => c.id === caseId);
-            if (case_) {
-                document.getElementById('modal-title').textContent = case_.id;
-                document.getElementById('modal-content').innerHTML = createCaseDetailContent(case_);
-                document.getElementById('case-modal').classList.remove('hidden');
-            }
+            const item = store.getCaseById(caseId);
+            if (!item) return;
+            document.getElementById('modal-title').textContent = item.caseId;
+            document.getElementById('modal-content').innerHTML = createCaseDetailContent(item);
+            document.getElementById('case-modal').classList.remove('hidden');
         }
 
-        function createCaseDetailContent(case_) {
-            const status = (case_.status || 'Resolved').toString();
-            const statusColor = status === 'Resolved' ? 'text-green-400' : 
-                               status === 'In Progress' ? 'text-yellow-400' : 'text-red-400';
-
-            const pressName = case_.pressName || case_.press || '—';
-            const pressType = case_.pressType || '—';
-            const system = case_.system || '—';
-            const date = case_.date || '—';
-            const description = case_.description || '—';
-
-            const steps = Array.isArray(case_.troubleshooting) ? case_.troubleshooting :
-                          Array.isArray(case_.troubleshootSteps) ? case_.troubleshootSteps : [];
-            const normalizedSteps = steps.length ? steps : ['No troubleshooting steps recorded yet.'];
-            const parts = Array.isArray(case_.partsUsed) ? case_.partsUsed :
-                          Array.isArray(case_.parts) ? case_.parts : [];
-            const owner = case_.owner || '—';
-            const rating = (case_.rating ?? '—');
-            const attachmentsCount = Array.isArray(case_.attachments) ? case_.attachments.length :
-                                     (case_.attachments ?? 0);
-
+        function createCaseDetailContent(item) {
             return `
                 <div class="case-detail-shell">
                     <div class="case-detail-grid">
-                        <div class="case-detail-block">
-                            <h4 class="case-detail-heading">Machine Type</h4>
-                            <p class="text-white">${escapeHtml(pressType)} - ${escapeHtml(pressName)}</p>
-                        </div>
-                        <div class="case-detail-block">
-                            <h4 class="case-detail-heading">Status</h4>
-                            <p class="${statusColor} font-semibold">${escapeHtml(status)}</p>
-                        </div>
-                        <div class="case-detail-block">
-                            <h4 class="case-detail-heading">System</h4>
-                            <p class="text-white">${escapeHtml(system)}</p>
-                        </div>
-                        <div class="case-detail-block">
-                            <h4 class="case-detail-heading">Date</h4>
-                            <p class="text-white">${escapeHtml(date)}</p>
-                        </div>
+                        <div class="case-detail-block"><h4 class="case-detail-heading">Press</h4><p class="text-white">${escapeHtml(item.machineLabel)}</p></div>
+                        <div class="case-detail-block"><h4 class="case-detail-heading">Knowledge State</h4><p class="text-emerald-300 font-semibold">${escapeHtml(item.status)}</p></div>
+                        <div class="case-detail-block"><h4 class="case-detail-heading">Region</h4><p class="text-white">${escapeHtml(item.region)}</p></div>
+                        <div class="case-detail-block"><h4 class="case-detail-heading">Published</h4><p class="text-white">${escapeHtml(formatDate(item.publishedAt))}</p></div>
                     </div>
-
-                    <div class="case-detail-block">
-                        <h4 class="case-detail-heading">Description</h4>
-                        <p class="text-gray-300 leading-relaxed">${escapeHtml(description)}</p>
-                    </div>
-
-                    <div class="case-detail-block">
-                        <h4 class="case-detail-heading">Troubleshooting Steps</h4>
-                        <div class="case-detail-steps">
-                            ${normalizedSteps.map((step, index) => `
-                                <div class="case-detail-step">
-                                    <span class="flex-shrink-0 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">
-                                        ${index + 1}
-                                    </span>
-                                    <span class="text-gray-300 leading-relaxed">${escapeHtml(stepText(step))}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-
-                    ${(parts.length > 0) ? `
-                        <div class="case-detail-block">
-                            <h4 class="case-detail-heading">Parts Used</h4>
-                            <ul class="list-disc list-inside text-gray-300 space-y-1.5">
-                                ${parts.map(part => `<li>${escapeHtml(partText(part))}</li>`).join('')}
-                            </ul>
-                        </div>
-                    ` : ''}
-
-                    <div class="case-detail-footer">
-                        <div class="case-detail-meta">
-                            <span class="case-detail-pill">Owner: ${escapeHtml(owner)}</span>
-                            <span class="case-detail-pill">Rating: ⭐ ${escapeHtml(rating)}</span>
-                            <span class="case-detail-pill">Attachments: 📎 ${escapeHtml(attachmentsCount)}</span>
-                        </div>
-                        <button onclick="closeModal()" class="btn-primary px-4 py-2 rounded-lg text-sm">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            `;
+                    <div class="case-detail-block"><h4 class="case-detail-heading">Issue Description</h4><p class="text-gray-300 leading-relaxed">${escapeHtml(item.description || '—')}</p></div>
+                    <div class="case-detail-block"><h4 class="case-detail-heading">Symptoms</h4><ul class="list-disc list-inside text-gray-300 space-y-1.5">${item.symptoms.map(symptom => `<li>${escapeHtml(symptom)}</li>`).join('') || '<li>—</li>'}</ul></div>
+                    <div class="case-detail-block"><h4 class="case-detail-heading">Resolution Steps</h4><div class="case-detail-steps">${item.resolutionSteps.map((step, index) => `<div class="case-detail-step"><span class="flex-shrink-0 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">${index + 1}</span><span class="text-gray-300 leading-relaxed">${escapeHtml(stepText(step))} <span class="text-slate-500">(${step.usefulness}/5 usefulness)</span></span></div>`).join('')}</div></div>
+                    ${item.parts.length ? `<div class="case-detail-block"><h4 class="case-detail-heading">Parts Used</h4><ul class="list-disc list-inside text-gray-300 space-y-1.5">${item.parts.map(part => `<li>${escapeHtml(partText(part))}</li>`).join('')}</ul></div>` : ''}
+                    <div class="case-detail-footer"><div class="case-detail-meta"><span class="case-detail-pill">Criticality: ${escapeHtml(item.criticality)}</span><span class="case-detail-pill">Most Helpful Action: ${escapeHtml(item.mostHelpfulAction || '—')}</span><span class="case-detail-pill">Usefulness: ⭐ ${escapeHtml(item.usefulnessScore)}</span><span class="case-detail-pill">Author: ${escapeHtml(item.author)}</span></div><button onclick="closeModal()" class="btn-primary px-4 py-2 rounded-lg text-sm">Close</button></div>
+                </div>`;
         }
 
-        function closeModal() {
-            document.getElementById('case-modal').classList.add('hidden');
-        }
-
-        // Backward compat alias (some older code used this name)
+        function closeModal() { document.getElementById('case-modal').classList.add('hidden'); }
         function closeCaseModal(){ closeModal(); }
-
     </script>
 </body>
 </html>

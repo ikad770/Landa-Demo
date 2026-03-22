@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create Case – Landa CRS</title>
+<title>Publish Resolved Case – Landa CRS</title>
 
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -143,13 +143,13 @@
             <div class="logo-mark"></div>
             <div class="ml-3 leading-tight">
                 <div class="logo-title">LANDA</div>
-                <div class="logo-subtitle">Case Management</div>
+                <div class="logo-subtitle">Resolved Case Intelligence</div>
             </div>
         </div>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
             <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
-            <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
+            <a href="create-case.html" class="nav-link" data-page="create-case">Publish Case</a>
             <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
             <a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
         </nav>
@@ -168,23 +168,22 @@
     <main class="main-shell">
         <div class="page-header">
             <div>
-                <h1 class="page-title">Create New Case</h1>
-                <p class="page-subtitle">Capture machine, system, and troubleshooting context for the case timeline.</p>
+                <h1 class="page-title">Publish Resolved Case</h1>
+                <p class="page-subtitle">Document the issue, the verified resolution, and the knowledge that should help the next team solve it faster.</p>
             </div>
-            <a href="cases.html" class="btn-primary">View Cases</a>
+            <a href="cases.html" class="btn-primary">Browse Library</a>
         </div>
 
         <div class="glass-card p-6 lg:p-8">
             <form id="case-form" class="space-y-6">
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
-                    <div class="sub-card p-4">
-                        <h2 class="section-title mb-4">Machine Details</h2>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+                    <div class="sub-card p-4 xl:col-span-1">
+                        <h2 class="section-title mb-4">Case Identity</h2>
                         <div class="space-y-4">
                             <div>
-                                <label class="form-label" for="sf-case">SF Case Number</label>
-                                <input id="sf-case" class="form-input" placeholder="SF-2024-XXX">
+                                <label class="form-label" for="sf-case">Case ID</label>
+                                <input id="sf-case" class="form-input" placeholder="SF-2026-001">
                             </div>
-
                             <div>
                                 <label class="form-label">Press Type</label>
                                 <div class="flex gap-3 flex-wrap">
@@ -192,25 +191,37 @@
                                     <label class="radio-chip"><input type="radio" name="pressType" value="Duplex"> Duplex</label>
                                 </div>
                             </div>
-
                             <div>
                                 <label class="form-label" for="press-name">Press Name</label>
-                                <input id="press-name" class="form-input" placeholder="S1 / D3">
+                                <input id="press-name" class="form-input" placeholder="S1 / D3" required>
                             </div>
-
                             <div>
-                                <label class="form-label" for="case-owner">Case Owner</label>
-                                <input id="case-owner" class="form-input" placeholder="Owner name">
+                                <label class="form-label" for="region">Region</label>
+                                <select id="region" class="form-select" required>
+                                    <option value="">Select region</option>
+                                    <option>EMEA</option>
+                                    <option>North America</option>
+                                    <option>Latin America</option>
+                                    <option>APAC</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" for="case-owner">Author / Publisher</label>
+                                <input id="case-owner" class="form-input" placeholder="Knowledge owner name" required>
+                            </div>
+                            <div>
+                                <label class="form-label" for="publish-date">Publish Date</label>
+                                <input id="publish-date" type="date" class="form-input">
                             </div>
                         </div>
                     </div>
 
-                    <div class="sub-card p-4">
+                    <div class="sub-card p-4 xl:col-span-1">
                         <h2 class="section-title mb-4">System Mapping</h2>
                         <div class="space-y-4">
                             <div>
                                 <label class="form-label" for="system">System</label>
-                                <input id="system" class="form-input" placeholder="Printing / Paper Handling / Control">
+                                <input id="system" class="form-input" placeholder="Printing / Paper Handling / Control" required>
                             </div>
                             <div>
                                 <label class="form-label" for="sub-system">Sub System</label>
@@ -220,30 +231,82 @@
                                 <label class="form-label" for="area">Area (HW / SW / EC)</label>
                                 <input id="area" class="form-input" placeholder="HW / SW / EC">
                             </div>
+                            <div>
+                                <label class="form-label" for="criticality">Field Criticality</label>
+                                <select id="criticality" class="form-select">
+                                    <option value="Critical">Critical</option>
+                                    <option value="Elevated" selected>Elevated</option>
+                                    <option value="Stable">Stable</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" for="time-to-resolution">Time to Resolution</label>
+                                <input id="time-to-resolution" class="form-input" placeholder="25 min / 2 hours / 1 shift">
+                            </div>
+                            <div>
+                                <label class="form-label" for="usefulness-score">Knowledge Usefulness Score</label>
+                                <select id="usefulness-score" class="form-select">
+                                    <option value="5">5.0 - Extremely useful</option>
+                                    <option value="4.5" selected>4.5 - Very useful</option>
+                                    <option value="4">4.0 - Useful</option>
+                                    <option value="3.5">3.5 - Moderate</option>
+                                    <option value="3">3.0 - Limited</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sub-card p-4 xl:col-span-1">
+                        <h2 class="section-title mb-4">Knowledge Metadata</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="form-label" for="tags">Tags / Keywords</label>
+                                <input id="tags" class="form-input" placeholder="ink, feeder, registration">
+                            </div>
+                            <div>
+                                <label class="form-label" for="parts">Affected Parts</label>
+                                <textarea id="parts" class="form-textarea" placeholder="One part per line"></textarea>
+                            </div>
+                            <div>
+                                <label class="form-label" for="attachments">Attachment Names</label>
+                                <textarea id="attachments" class="form-textarea" placeholder="Optional: one filename per line"></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="sub-card p-4">
-                    <h2 class="section-title mb-4">Issue Narrative</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="form-label" for="subject">Subject</label>
-                            <input id="subject" class="form-input" placeholder="Short issue summary">
+                    <h2 class="section-title mb-4">Resolved Case Narrative</h2>
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="form-label" for="subject">Case Title</label>
+                                <input id="subject" class="form-input" placeholder="Short title used in the library and dashboard" required>
+                            </div>
+                            <div>
+                                <label class="form-label" for="issue-description">Issue Description</label>
+                                <textarea id="issue-description" class="form-textarea" placeholder="Describe the production impact, context, and what the team observed before resolution." required></textarea>
+                            </div>
+                            <div>
+                                <label class="form-label" for="symptoms">Symptoms</label>
+                                <textarea id="symptoms" class="form-textarea" placeholder="One symptom per line" required></textarea>
+                            </div>
                         </div>
-                        <div>
-                            <label class="form-label" for="issue-description">Issue Description</label>
-                            <textarea id="issue-description" class="form-textarea" placeholder="Describe symptoms, impact, and when issue occurs."></textarea>
-                        </div>
-                        <div>
-                            <label class="form-label" for="initial-steps">Initial Troubleshooting</label>
-                            <textarea id="initial-steps" class="form-textarea" placeholder="List actions already attempted (one per line)."></textarea>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="form-label" for="initial-steps">Resolution Steps (ordered most useful to least useful)</label>
+                                <textarea id="initial-steps" class="form-textarea" placeholder="Write one verified action per line. The first line is treated as the most helpful action." required></textarea>
+                            </div>
+                            <div>
+                                <label class="form-label" for="most-helpful-action">Most Helpful Action</label>
+                                <input id="most-helpful-action" class="form-input" placeholder="Optional override for the single most helpful action">
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3 pt-2">
-                    <button class="btn-primary" type="submit">Create Case</button>
+                    <button class="btn-primary" type="submit">Publish Case</button>
                     <a href="dashboard.html" class="text-sm text-slate-400 hover:text-slate-200">Cancel and return to dashboard</a>
                 </div>
             </form>
@@ -256,6 +319,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   ensureAuth();
   hydrateUserPill();
+  const publishDate = document.getElementById('publish-date');
+  if (publishDate && !publishDate.value) publishDate.value = new Date().toISOString().slice(0, 10);
 });
 
 function ensureAuth(){
@@ -284,32 +349,43 @@ function logout(){
   window.location.href = 'index.html';
 }
 
+function splitLines(value){
+  return String(value || '').split(/\r?\n|,/).map(item => item.trim()).filter(Boolean);
+}
+
 document.getElementById('case-form').addEventListener('submit', function(e){
   e.preventDefault();
 
-  const caseData = {
-    id: document.getElementById('sf-case').value || `SF-${Date.now()}`,
-    owner: document.getElementById('case-owner').value,
+  const resolutionSteps = splitLines(document.getElementById('initial-steps').value).map((text, index) => ({
+    text,
+    usefulness: Math.max(5 - index, 1)
+  }));
+
+  const payload = {
+    caseId: document.getElementById('sf-case').value || `SF-${new Date().toISOString().slice(0,10).replace(/-/g, '')}-${Math.floor(Math.random()*900 + 100)}`,
+    title: document.getElementById('subject').value,
     pressType: document.querySelector('input[name="pressType"]:checked')?.value || '',
     pressName: document.getElementById('press-name').value,
+    region: document.getElementById('region').value,
     system: document.getElementById('system').value,
     subSystem: document.getElementById('sub-system').value,
     area: document.getElementById('area').value,
-    subject: document.getElementById('subject').value,
+    criticality: document.getElementById('criticality').value,
     description: document.getElementById('issue-description').value,
-    initialSteps: document.getElementById('initial-steps').value,
-    status: 'In Progress',
-    date: new Date().toISOString(),
-    rating: null,
-    parts: [],
-    attachments: []
+    symptoms: splitLines(document.getElementById('symptoms').value),
+    resolutionSteps,
+    mostHelpfulAction: document.getElementById('most-helpful-action').value || resolutionSteps[0]?.text || '',
+    parts: splitLines(document.getElementById('parts').value),
+    attachments: splitLines(document.getElementById('attachments').value),
+    author: document.getElementById('case-owner').value,
+    publishedAt: document.getElementById('publish-date').value,
+    tags: splitLines(document.getElementById('tags').value),
+    usefulnessScore: Number(document.getElementById('usefulness-score').value || 4.5),
+    timeToResolution: document.getElementById('time-to-resolution').value
   };
 
-  const cases = JSON.parse(localStorage.getItem('landaCases')) || [];
-  cases.unshift(caseData);
-  localStorage.setItem('landaCases', JSON.stringify(cases));
-
-  window.location.href = 'dashboard.html';
+  window.LandaCaseStore.createCase(payload);
+  window.location.href = 'cases.html';
 });
 </script>
 
