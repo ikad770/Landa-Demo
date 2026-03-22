@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Publish Resolved Case – Landa CRS</title>
+<title>Create Case – Landa CRS</title>
 
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -143,13 +143,13 @@
             <div class="logo-mark"></div>
             <div class="ml-3 leading-tight">
                 <div class="logo-title">LANDA</div>
-                <div class="logo-subtitle">Resolved Case Intelligence</div>
+                <div class="logo-subtitle">Case Management</div>
             </div>
         </div>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
             <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
-            <a href="create-case.html" class="nav-link" data-page="create-case">Publish Case</a>
+            <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
             <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
             <a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
         </nav>
@@ -168,10 +168,10 @@
     <main class="main-shell">
         <div class="page-header">
             <div>
-                <h1 class="page-title">Publish Resolved Case</h1>
-                <p class="page-subtitle">Document the issue, the verified resolution, and the knowledge that should help the next team solve it faster.</p>
+                <h1 class="page-title">Create New Case</h1>
+                <p class="page-subtitle">Capture machine, system, troubleshooting context, and the verified resolution in one consistent case record.</p>
             </div>
-            <a href="cases.html" class="btn-primary">Browse Library</a>
+            <a href="cases.html" class="btn-primary">View Cases</a>
         </div>
 
         <div class="glass-card p-6 lg:p-8">
@@ -207,7 +207,7 @@
                             </div>
                             <div>
                                 <label class="form-label" for="case-owner">Author / Publisher</label>
-                                <input id="case-owner" class="form-input" placeholder="Knowledge owner name" required>
+                                <input id="case-owner" class="form-input" placeholder="Case owner name" required>
                             </div>
                             <div>
                                 <label class="form-label" for="publish-date">Publish Date</label>
@@ -257,7 +257,7 @@
                     </div>
 
                     <div class="sub-card p-4 xl:col-span-1">
-                        <h2 class="section-title mb-4">Knowledge Metadata</h2>
+                        <h2 class="section-title mb-4">Case Metadata</h2>
                         <div class="space-y-4">
                             <div>
                                 <label class="form-label" for="tags">Tags / Keywords</label>
@@ -276,7 +276,7 @@
                 </div>
 
                 <div class="sub-card p-4">
-                    <h2 class="section-title mb-4">Resolved Case Narrative</h2>
+                    <h2 class="section-title mb-4">Issue & Resolution Narrative</h2>
                     <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
                         <div class="space-y-4">
                             <div>
@@ -306,7 +306,7 @@
                 </div>
 
                 <div class="flex items-center gap-3 pt-2">
-                    <button class="btn-primary" type="submit">Publish Case</button>
+                    <button class="btn-primary" type="submit">Create Case</button>
                     <a href="dashboard.html" class="text-sm text-slate-400 hover:text-slate-200">Cancel and return to dashboard</a>
                 </div>
             </form>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Landa Cases - Resolved Case Library</title>
+    <title>Landa Cases - Case Management System</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
@@ -436,13 +436,13 @@
                 <div class="logo-mark"></div>
                 <div class="ml-3 leading-tight">
                     <div class="logo-title">LANDA</div>
-                    <div class="logo-subtitle">Resolved Case Intelligence</div>
+                    <div class="logo-subtitle">Case Management</div>
                 </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
                 <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
-                <a href="create-case.html" class="nav-link" data-page="create-case">Publish Case</a>
+                <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
                 <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
             
                 <a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
@@ -464,15 +464,15 @@
         <section class="page-hero p-6 md:p-8 mb-8">
             <div class="flex items-start justify-between gap-6 flex-col lg:flex-row">
                 <div>
-                    <div class="section-title text-3xl font-bold mb-3">Resolved Case Library</div>
+                    <div class="section-title text-3xl font-bold mb-3">Case Management</div>
                     <p class="text-slate-300 max-w-3xl">Search archived press incidents, compare similar symptoms, and review the actions that resolved each issue. This page is built for reuse, not live ticket tracking.</p>
                     <div class="flex flex-wrap gap-2 mt-4">
-                        <span class="metric-pill stable">Published knowledge</span>
+                        <span class="metric-pill stable">Shared case history</span>
                         <span class="metric-pill elevated">Ranked usefulness</span>
                         <span class="metric-pill critical">Field criticality visible</span>
                     </div>
                 </div>
-                <a href="create-case.html" class="btn-primary px-6 py-3 rounded-lg font-semibold">+ Publish Resolved Case</a>
+                <a href="create-case.html" class="btn-primary px-6 py-3 rounded-lg font-semibold">+ Create New Case</a>
             </div>
         </section>
 
@@ -490,9 +490,9 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Knowledge State</label>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Case Status</label>
                     <select id="status-filter" class="filter-input w-full px-4 py-2 rounded-lg text-white focus:outline-none">
-                        <option value="">All States</option><option value="Published">Published</option>
+                        <option value="">All Status</option><option value="Published">Published</option><option value="Resolved">Resolved</option><option value="In Progress">In Progress</option><option value="Open">Open</option>
                     </select>
                 </div>
                 <div>
@@ -607,7 +607,7 @@
                         <span class="text-sm text-gray-400">⭐ ${escapeHtml(case_.usefulnessScore)} · ${escapeHtml(case_.region)}</span>
                     </div>
                     <div class="mt-3 pt-3 border-t border-gray-700 text-xs text-gray-500">
-                        Knowledge State: ${escapeHtml(case_.status)} · Most Helpful: ${escapeHtml(case_.mostHelpfulAction || '—')}
+                        Case Status: ${escapeHtml(case_.status)} · Most Helpful: ${escapeHtml(case_.mostHelpfulAction || '—')}
                     </div>
                 </div>
             `;
@@ -688,7 +688,7 @@
                 <div class="case-detail-shell">
                     <div class="case-detail-grid">
                         <div class="case-detail-block"><h4 class="case-detail-heading">Press</h4><p class="text-white">${escapeHtml(case_.machineLabel)}</p></div>
-                        <div class="case-detail-block"><h4 class="case-detail-heading">Knowledge State</h4><p class="text-emerald-300 font-semibold">${escapeHtml(case_.status)}</p></div>
+                        <div class="case-detail-block"><h4 class="case-detail-heading">Case Status</h4><p class="text-emerald-300 font-semibold">${escapeHtml(case_.status)}</p></div>
                         <div class="case-detail-block"><h4 class="case-detail-heading">System</h4><p class="text-white">${escapeHtml(case_.system)} · ${escapeHtml(case_.subSystem)}</p></div>
                         <div class="case-detail-block"><h4 class="case-detail-heading">Region</h4><p class="text-white">${escapeHtml(case_.region)}</p></div>
                     </div>

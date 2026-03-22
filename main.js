@@ -289,7 +289,7 @@
             owner: author,
             publishedAt,
             date: publishedAt,
-            status: 'Published',
+            status: String(raw.status || (resolutionSteps.length ? 'Resolved' : 'In Progress')).trim() || 'Resolved',
             criticality: ['Critical', 'Elevated', 'Stable'].includes(criticality) ? criticality : deriveCriticality({ title, description, symptoms }),
             tags,
             usefulnessScore: Number(usefulnessScore.toFixed ? usefulnessScore.toFixed(1) : usefulnessScore),
@@ -345,7 +345,9 @@
                 const matchesPressType = !filters.pressType || item.pressType === filters.pressType;
                 const matchesPress = !filters.pressName && !filters.press ? true : item.pressName === (filters.pressName || filters.press);
                 const matchesSystem = !filters.system || item.system === filters.system;
-                const matchesState = !filters.status || item.status === filters.status;
+                const normalizedStatus = String(item.status || '').toLowerCase();
+                const requestedStatus = String(filters.status || '').toLowerCase();
+                const matchesState = !filters.status || normalizedStatus === requestedStatus;
                 const matchesRegion = !filters.region || item.region === filters.region;
                 const matchesPart = !filters.part || item.parts.some(part => part.toLowerCase() === String(filters.part).toLowerCase());
                 const matchesCriticality = !filters.criticality || item.criticality === filters.criticality;
@@ -354,7 +356,7 @@
         },
         getStats(cases = this.getCases()) {
             const total = cases.length;
-            const published = total;
+            const published = cases.filter(item => ['published', 'resolved'].includes(String(item.status || '').toLowerCase())).length;
             const avgUsefulness = total ? (cases.reduce((sum, item) => sum + (Number(item.usefulnessScore) || 0), 0) / total) : 0;
             const critical = cases.filter(item => item.criticality === 'Critical').length;
             const elevated = cases.filter(item => item.criticality === 'Elevated').length;
