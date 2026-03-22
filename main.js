@@ -289,7 +289,7 @@
             owner: author,
             publishedAt,
             date: publishedAt,
-            status: String(raw.status || (resolutionSteps.length ? 'Resolved' : 'In Progress')).trim() || 'Resolved',
+            status: String(raw.status || 'Published').trim() || 'Published',
             criticality: ['Critical', 'Elevated', 'Stable'].includes(criticality) ? criticality : deriveCriticality({ title, description, symptoms }),
             tags,
             usefulnessScore: Number(usefulnessScore.toFixed ? usefulnessScore.toFixed(1) : usefulnessScore),
@@ -356,7 +356,7 @@
         },
         getStats(cases = this.getCases()) {
             const total = cases.length;
-            const published = cases.filter(item => ['published', 'resolved'].includes(String(item.status || '').toLowerCase())).length;
+            const published = cases.filter(item => String(item.status || '').toLowerCase() === 'published').length;
             const avgUsefulness = total ? (cases.reduce((sum, item) => sum + (Number(item.usefulnessScore) || 0), 0) / total) : 0;
             const critical = cases.filter(item => item.criticality === 'Critical').length;
             const elevated = cases.filter(item => item.criticality === 'Elevated').length;
