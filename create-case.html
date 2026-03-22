@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create Case – Landa CRS</title>
+<title>Publish Resolved Case – Landa CRS</title>
 
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -143,13 +143,13 @@
             <div class="logo-mark"></div>
             <div class="ml-3 leading-tight">
                 <div class="logo-title">LANDA</div>
-                <div class="logo-subtitle">Case Management</div>
+                <div class="logo-subtitle">Resolved Case Intelligence</div>
             </div>
         </div>
         <nav class="sidebar-nav">
             <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
             <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
-            <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
+            <a href="create-case.html" class="nav-link" data-page="create-case">Publish Case</a>
             <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
             <a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
         </nav>
@@ -168,10 +168,10 @@
     <main class="main-shell">
         <div class="page-header">
             <div>
-                <h1 class="page-title">Create New Case</h1>
-                <p class="page-subtitle">Capture machine, system, and troubleshooting context for the case timeline.</p>
+                <h1 class="page-title">Publish Resolved Case</h1>
+                <p class="page-subtitle">Document the issue, the verified resolution, and the knowledge that should help the next team solve it faster.</p>
             </div>
-            <a href="cases.html" class="btn-primary">View Cases</a>
+            <a href="cases.html" class="btn-primary">Browse Library</a>
         </div>
 
         <div class="glass-card p-6 lg:p-8">
@@ -225,25 +225,25 @@
                 </div>
 
                 <div class="sub-card p-4">
-                    <h2 class="section-title mb-4">Issue Narrative</h2>
+                    <h2 class="section-title mb-4">Resolution Narrative</h2>
                     <div class="space-y-4">
                         <div>
                             <label class="form-label" for="subject">Subject</label>
                             <input id="subject" class="form-input" placeholder="Short issue summary">
                         </div>
                         <div>
-                            <label class="form-label" for="issue-description">Issue Description</label>
-                            <textarea id="issue-description" class="form-textarea" placeholder="Describe symptoms, impact, and when issue occurs."></textarea>
+                            <label class="form-label" for="issue-description">Issue Summary</label>
+                            <textarea id="issue-description" class="form-textarea" placeholder="Describe the symptoms, production impact, and the field context observed before resolution."></textarea>
                         </div>
                         <div>
-                            <label class="form-label" for="initial-steps">Initial Troubleshooting</label>
-                            <textarea id="initial-steps" class="form-textarea" placeholder="List actions already attempted (one per line)."></textarea>
+                            <label class="form-label" for="initial-steps">Verified Resolution Actions</label>
+                            <textarea id="initial-steps" class="form-textarea" placeholder="List the actions that resolved the issue, one action per line, in the order they should be tried."></textarea>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3 pt-2">
-                    <button class="btn-primary" type="submit">Create Case</button>
+                    <button class="btn-primary" type="submit">Publish Case</button>
                     <a href="dashboard.html" class="text-sm text-slate-400 hover:text-slate-200">Cancel and return to dashboard</a>
                 </div>
             </form>
@@ -298,9 +298,10 @@ document.getElementById('case-form').addEventListener('submit', function(e){
     subject: document.getElementById('subject').value,
     description: document.getElementById('issue-description').value,
     initialSteps: document.getElementById('initial-steps').value,
-    status: 'In Progress',
+    status: 'Published',
+    criticality: 'Elevated',
     date: new Date().toISOString(),
-    rating: null,
+    rating: 0,
     parts: [],
     attachments: []
   };

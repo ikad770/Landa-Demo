@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Landa Dashboard - Case Management System</title>
+    <title>Landa Dashboard - Resolved Case Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
@@ -52,10 +52,20 @@
         body {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background:
-                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.16), transparent 55%),
-                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.14), transparent 55%),
+                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.18), transparent 52%),
+                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.16), transparent 48%),
+                radial-gradient(circle at 50% 100%, rgba(14, 165, 233, 0.08), transparent 42%),
                 #020617;
             color: var(--text-main);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(180deg, rgba(2,6,23,0.18), rgba(2,6,23,0.58));
+            z-index: -1;
         }
 
         .layout-shell {
@@ -470,6 +480,49 @@
             font-size: 0.74rem;
             color: #cbd5e1;
         }
+
+        .hero-panel {
+            position: relative;
+            overflow: hidden;
+            padding: 1.5rem;
+            border-radius: 1.4rem;
+            background: linear-gradient(135deg, rgba(8,15,34,0.96), rgba(15,23,42,0.88));
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            box-shadow: 0 28px 80px rgba(2,6,23,0.7), inset 0 0 0 1px rgba(96,165,250,0.08);
+        }
+        .hero-panel::after {
+            content: '';
+            position: absolute;
+            inset: auto -10% -35% 40%;
+            height: 280px;
+            background: radial-gradient(circle, rgba(34,211,238,0.24), transparent 62%);
+            pointer-events: none;
+        }
+        .hero-grid {
+            display:grid;
+            grid-template-columns: minmax(0,1.6fr) minmax(320px,1fr);
+            gap: 1.25rem;
+        }
+        .metric-card { position: relative; overflow:hidden; }
+        .metric-card::before {
+            content:''; position:absolute; inset:0 0 auto 0; height:3px;
+            background: linear-gradient(90deg, rgba(34,211,238,0.95), rgba(59,130,246,0));
+        }
+        .intel-strip { display:grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap:0.9rem; }
+        .intel-pill {
+            border-radius: 1rem; border:1px solid rgba(71,85,105,0.75); background: rgba(2,6,23,0.42);
+            padding: 0.9rem 1rem; box-shadow: inset 0 0 0 1px rgba(34,211,238,0.04);
+        }
+        .severity-chip { display:inline-flex; align-items:center; gap:0.4rem; padding:0.25rem 0.65rem; border-radius:999px; font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; }
+        .severity-critical { color:#fecaca; background:rgba(239,68,68,0.14); border:1px solid rgba(239,68,68,0.35); }
+        .severity-elevated { color:#fde68a; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.32); }
+        .severity-stable { color:#a7f3d0; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.32); }
+        .insight-list { display:flex; flex-direction:column; gap:0.75rem; }
+        .insight-item { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:0.85rem 0.95rem; border-radius:1rem; border:1px solid rgba(71,85,105,0.6); background: rgba(2,6,23,0.36); }
+        .chart-card-header p { font-size:0.78rem; color:var(--text-muted); margin-top:0.2rem; }
+        @media (max-width: 1100px){ .hero-grid{grid-template-columns:1fr;} .intel-strip{grid-template-columns:repeat(2,minmax(0,1fr));} }
+        @media (max-width: 640px){ .intel-strip{grid-template-columns:1fr;} }
+
 </style>
 
 
@@ -487,13 +540,13 @@
                 <div class="logo-mark"></div>
                 <div class="ml-3 leading-tight">
                     <div class="logo-title">LANDA</div>
-                    <div class="logo-subtitle">Case Management</div>
+                    <div class="logo-subtitle">Resolved Case Intelligence</div>
                 </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
                 <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
-                <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
+                <a href="create-case.html" class="nav-link" data-page="create-case">Publish Case</a>
                 <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
 
 <a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
@@ -513,11 +566,10 @@
         <div class="main-shell">
 <!-- Main Content -->
     <main class="pt-8 px-6 pb-8">
-        <!-- Page Header -->
         <div class="page-header mb-8">
             <div>
-                <div class="page-title text-xs tracking-[0.3em] uppercase text-slate-300">System Dashboard</div>
-                <div class="page-subtitle mt-1 text-sm text-gray-400">Real-time overview of Landa presses, cases and service activity</div>
+                <div class="page-title text-xs tracking-[0.3em] uppercase text-slate-300">Knowledge Intelligence Dashboard</div>
+                <div class="page-subtitle mt-1 text-sm text-gray-400">Premium field intelligence for resolved press cases, recurring failure patterns, and cross-team knowledge transfer.</div>
             </div>
             <div class="hidden md:flex items-center space-x-2 text-xs text-gray-500">
                 <span>Home</span>
@@ -526,174 +578,74 @@
             </div>
         </div>
 
+        <section class="hero-panel mb-8">
+            <div class="hero-grid">
+                <div>
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="severity-chip severity-critical">Criticality monitored</span>
+                        <span class="severity-chip severity-elevated">Knowledge library live</span>
+                    </div>
+                    <h1 class="text-3xl lg:text-4xl font-semibold text-white max-w-3xl">Resolved-case operational intelligence for supervisors, service leads, and responsible teams.</h1>
+                    <p class="mt-4 text-slate-300 max-w-2xl leading-relaxed">This panel shows where archived issues concentrate, which systems generate the most learning value, and which patterns deserve immediate field attention even after closure.</p>
+                    <div class="intel-strip mt-6">
+                        <div class="intel-pill"><div class="text-xs uppercase tracking-[0.22em] text-slate-400">Knowledge coverage</div><div class="mt-2 text-2xl font-semibold text-white" id="total-cases">0</div><div class="text-sm text-slate-400 mt-1">Published cases</div></div>
+                        <div class="intel-pill"><div class="text-xs uppercase tracking-[0.22em] text-slate-400">High criticality</div><div class="mt-2 text-2xl font-semibold text-red-300" id="critical-cases">0</div><div class="text-sm text-slate-400 mt-1">Cases needing fast recognition</div></div>
+                        <div class="intel-pill"><div class="text-xs uppercase tracking-[0.22em] text-slate-400">Knowledge score</div><div class="mt-2 text-2xl font-semibold text-cyan-300" id="avg-rating">0.0</div><div class="text-sm text-slate-400 mt-1">Average usefulness</div></div>
+                        <div class="intel-pill"><div class="text-xs uppercase tracking-[0.22em] text-slate-400">Library state</div><div class="mt-2 text-2xl font-semibold text-emerald-300" id="published-cases">0</div><div class="text-sm text-slate-400 mt-1">Published and searchable</div></div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-5">
+                    <div class="text-xs uppercase tracking-[0.24em] text-slate-400">Field focus</div>
+                    <h3 class="text-xl font-semibold mt-2">Top knowledge signals</h3>
+                    <p class="text-sm text-slate-400 mt-2">Immediate scan for managers reviewing what the field is repeatedly solving.</p>
+                    <div id="focus-insights" class="insight-list mt-5"></div>
+                </div>
+            </div>
+        </section>
 
-        <!-- Key Metrics -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="metric-card rounded-xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400 text-sm">Total Cases</p>
-                        <p class="text-3xl font-bold text-white" id="total-cases">24</p>
-                    </div>
-                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="metric-card rounded-xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400 text-sm">Resolved Cases</p>
-                        <p class="text-3xl font-bold text-green-400" id="resolved-cases">18</p>
-                    </div>
-                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="metric-card rounded-xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400 text-sm">In Progress</p>
-                        <p class="text-3xl font-bold text-yellow-400" id="in-progress-cases">6</p>
-                    </div>
-                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="metric-card rounded-xl p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400 text-sm">Avg Rating</p>
-                        <p class="text-3xl font-bold text-blue-400" id="avg-rating">4.7</p>
-                    </div>
-                    <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
+            <div class="metric-card rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-gray-400 text-sm">Cases by System</p><p class="text-3xl font-bold text-white" id="top-system-value">—</p><p class="text-sm text-slate-400 mt-2" id="top-system-label">Highest case concentration</p></div><div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center text-cyan-300">Σ</div></div></div>
+            <div class="metric-card rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-gray-400 text-sm">Cases by Region</p><p class="text-3xl font-bold text-white" id="top-region-value">—</p><p class="text-sm text-slate-400 mt-2" id="top-region-label">Most active region</p></div><div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center text-blue-300">◎</div></div></div>
+            <div class="metric-card rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-gray-400 text-sm">Cases by Part</p><p class="text-3xl font-bold text-white" id="top-part-value">—</p><p class="text-sm text-slate-400 mt-2" id="top-part-label">Most referenced component</p></div><div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center text-amber-200">◈</div></div></div>
+            <div class="metric-card rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-gray-400 text-sm">Cases by Press</p><p class="text-3xl font-bold text-white" id="top-press-value">—</p><p class="text-sm text-slate-400 mt-2" id="top-press-label">Most documented press</p></div><div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center text-emerald-200">▣</div></div></div>
         </div>
 
-        
-        <!-- Charts Section -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div class="glass-card rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold">Cases by Region</h3>
-                    <div class="chart-toggle" data-chart="region">
-                        <button class="chart-btn is-active" data-type="bar">Bars</button>
-                        <button class="chart-btn" data-type="pie">Pie</button>
-                    </div>
-                </div>
-                <div id="chart-region" class="chart-viewport" style="height: 300px;"></div>
-            </div>
-
-            <div class="glass-card rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold">Cases by System</h3>
-                    <div class="chart-toggle" data-chart="system">
-                        <button class="chart-btn is-active" data-type="bar">Bars</button>
-                        <button class="chart-btn" data-type="pie">Pie</button>
-                    </div>
-                </div>
-                <div id="chart-system" class="chart-viewport" style="height: 300px;"></div>
-            </div>
-
-            <div class="glass-card rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold">Cases by Press</h3>
-                    <div class="chart-toggle" data-chart="press">
-                        <button class="chart-btn is-active" data-type="bar">Bars</button>
-                        <button class="chart-btn" data-type="pie">Pie</button>
-                    </div>
-                </div>
-                <div id="chart-press" class="chart-viewport" style="height: 300px;"></div>
-            </div>
-
-            <div class="glass-card rounded-xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold">Cases by Part</h3>
-                    <div class="chart-toggle" data-chart="part">
-                        <button class="chart-btn is-active" data-type="bar">Bars</button>
-                        <button class="chart-btn" data-type="pie">Pie</button>
-                    </div>
-                </div>
-                <div id="chart-part" class="chart-viewport" style="height: 300px;"></div>
-            </div>
+            <div class="glass-card rounded-xl p-6"><div class="flex items-center justify-between mb-4"><div class="chart-card-header"><h3 class="text-xl font-semibold">Cases by Region</h3><p>Regional concentration of resolved field knowledge.</p></div><div class="chart-toggle" data-chart="region"><button class="chart-btn is-active" data-type="bar">Bars</button><button class="chart-btn" data-type="pie">Pie</button></div></div><div id="chart-region" class="chart-viewport" style="height: 320px;"></div></div>
+            <div class="glass-card rounded-xl p-6"><div class="flex items-center justify-between mb-4"><div class="chart-card-header"><h3 class="text-xl font-semibold">Cases by System</h3><p>Where recurring solutions cluster across subsystems.</p></div><div class="chart-toggle" data-chart="system"><button class="chart-btn is-active" data-type="bar">Bars</button><button class="chart-btn" data-type="pie">Pie</button></div></div><div id="chart-system" class="chart-viewport" style="height: 320px;"></div></div>
+            <div class="glass-card rounded-xl p-6"><div class="flex items-center justify-between mb-4"><div class="chart-card-header"><h3 class="text-xl font-semibold">Cases by Press</h3><p>Press models with the highest knowledge density.</p></div><div class="chart-toggle" data-chart="press"><button class="chart-btn is-active" data-type="bar">Bars</button><button class="chart-btn" data-type="pie">Pie</button></div></div><div id="chart-press" class="chart-viewport" style="height: 320px;"></div></div>
+            <div class="glass-card rounded-xl p-6"><div class="flex items-center justify-between mb-4"><div class="chart-card-header"><h3 class="text-xl font-semibold">Cases by Part</h3><p>Components most often cited in verified resolutions.</p></div><div class="chart-toggle" data-chart="part"><button class="chart-btn is-active" data-type="bar">Bars</button><button class="chart-btn" data-type="pie">Pie</button></div></div><div id="chart-part" class="chart-viewport" style="height: 320px;"></div></div>
         </div>
 
-        <!-- Recent Cases -->
         <div class="glass-card rounded-xl p-6 mb-8">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-semibold">Recent Cases</h3>
-                <a href="cases.html" class="btn-primary px-4 py-2 rounded-lg text-sm">View All Cases</a>
+                <div>
+                    <h3 class="text-xl font-semibold">Latest published case intelligence</h3>
+                    <p class="text-sm text-slate-400 mt-1">Recent archived cases with criticality context for quick management review.</p>
+                </div>
+                <a href="cases.html" class="btn-primary px-4 py-2 rounded-lg text-sm">Open Library</a>
             </div>
-            
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-gray-700">
                             <th class="text-left py-3 px-4 text-gray-400">Case ID</th>
-                            <th class="text-left py-3 px-4 text-gray-400">Machine</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Press</th>
                             <th class="text-left py-3 px-4 text-gray-400">Subject</th>
-                            <th class="text-left py-3 px-4 text-gray-400">Status</th>
-                            <th class="text-left py-3 px-4 text-gray-400">Owner</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Criticality</th>
+                            <th class="text-left py-3 px-4 text-gray-400">Knowledge State</th>
                             <th class="text-left py-3 px-4 text-gray-400">Date</th>
                         </tr>
                     </thead>
-                    <tbody id="recent-cases-table">
-                        <!-- populated by JS -->
-                    </tbody>
+                    <tbody id="recent-cases-table"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Quick Actions -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="machine-card rounded-xl p-6 text-center">
-                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                </div>
-                <h4 class="text-lg font-semibold mb-2">Create New Case</h4>
-                <p class="text-gray-400 text-sm mb-4">Document a new technical issue or service request</p>
-                <a href="create-case.html" class="btn-primary px-6 py-2 rounded-lg text-sm inline-block">Create Case</a>
-            </div>
-
-            <div class="machine-card rounded-xl p-6 text-center">
-                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </div>
-                <h4 class="text-lg font-semibold mb-2">Find Solutions</h4>
-                <p class="text-gray-400 text-sm mb-4">Search troubleshooting guides and known solutions</p>
-                <a href="troubleshooting.html" class="btn-primary px-6 py-2 rounded-lg text-sm inline-block">Search Solutions</a>
-            </div>
-
-            <div class="machine-card rounded-xl p-6 text-center">
-                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                </div>
-                <h4 class="text-lg font-semibold mb-2">View Analytics</h4>
-                <p class="text-gray-400 text-sm mb-4">Analyze performance metrics and trends</p>
-                <button onclick="showAnalytics()" class="btn-primary px-6 py-2 rounded-lg text-sm">View Reports</button>
-            </div>
+            <div class="machine-card rounded-xl p-6 text-center"><div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></div><h4 class="text-lg font-semibold mb-2">Publish resolved case</h4><p class="text-gray-400 text-sm mb-4">Capture the final fix, affected parts, and reusable knowledge for the next team.</p><a href="create-case.html" class="btn-primary px-6 py-2 rounded-lg text-sm inline-block">Publish Case</a></div>
+            <div class="machine-card rounded-xl p-6 text-center"><div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div><h4 class="text-lg font-semibold mb-2">Find similar resolutions</h4><p class="text-gray-400 text-sm mb-4">Search the library for comparable symptoms, actions, and proven fixes.</p><a href="troubleshooting.html" class="btn-primary px-6 py-2 rounded-lg text-sm inline-block">Search Library</a></div>
+            <div class="machine-card rounded-xl p-6 text-center"><div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div><h4 class="text-lg font-semibold mb-2">Review trends</h4><p class="text-gray-400 text-sm mb-4">Monitor concentration, criticality, and repeat patterns across the knowledge base.</p><button onclick="showAnalytics()" class="btn-primary px-6 py-2 rounded-lg text-sm">View Reports</button></div>
         </div>
     </main>
         </div>
@@ -773,7 +725,8 @@
             out.description = out.description || out.issueDescription || out.details || '';
             out.owner = out.owner || out.caseOwner || out.createdBy || '';
             out.region = out.region || out.site || out.location || '';
-            out.status = (out.status || 'Resolved').toString();
+            out.status = (out.status || 'Published').toString();
+            out.criticality = (out.criticality || deriveCriticality(out)).toString();
             out.date = out.date || out.createdAt || out.created_at || out.updatedAt || out.updated_at || '';
             out.partsUsed = out.partsUsed || out.parts || [];
             out.troubleshooting = out.troubleshooting || out.steps || out.troubleshootingSteps || [];
@@ -787,20 +740,28 @@
 
             // Metrics
             const total = raw.length;
-            const resolved = raw.filter(c => c.status.toLowerCase() === 'resolved').length;
-            const inProgress = raw.filter(c => c.status.toLowerCase().includes('progress')).length;
-            const ratings = raw.map(c => c.rating).filter(v => typeof v === 'number' && !Number.isNaN(v));
+            const published = raw.filter(c => c.status.toLowerCase() === 'published' || c.status.toLowerCase() === 'resolved').length;
+            const critical = raw.filter(c => (c.criticality || '').toLowerCase() === 'critical').length;
+            const ratings = raw.map(c => c.rating).filter(v => typeof v === 'number' && !Number.isNaN(v) && v > 0);
             const avg = ratings.length ? (ratings.reduce((a,b)=>a+b,0) / ratings.length) : 0;
+            const agg = {
+                region: countBy(raw, c => (c.region || 'Unspecified')),
+                system: countBy(raw, c => (c.system || 'Unspecified')),
+                press: countBy(raw, c => (c.press || 'Unspecified')),
+                part: countByParts(raw)
+            };
 
             const totalEl = document.getElementById('total-cases');
-            const resolvedEl = document.getElementById('resolved-cases');
-            const progressEl = document.getElementById('in-progress-cases');
+            const publishedEl = document.getElementById('published-cases');
+            const criticalEl = document.getElementById('critical-cases');
             const avgEl = document.getElementById('avg-rating');
 
             if(totalEl) totalEl.textContent = total || 0;
-            if(resolvedEl) resolvedEl.textContent = resolved || 0;
-            if(progressEl) progressEl.textContent = inProgress || 0;
+            if(publishedEl) publishedEl.textContent = published || 0;
+            if(criticalEl) criticalEl.textContent = critical || 0;
             if(avgEl) avgEl.textContent = avg ? avg.toFixed(1) : '0.0';
+            renderSummaryCards(agg);
+            renderFocusInsights(raw, agg);
 
             // Recent cases
             const tbody = document.getElementById('recent-cases-table');
@@ -822,15 +783,15 @@
             }
 
             tbody.innerHTML = sorted.map((c) => {
-                const status = (c.status || 'Resolved').toString();
-                const isResolved = status.toLowerCase() === 'resolved';
-                const statusDot = isResolved ? 'status-resolved' : 'status-progress';
-                const statusTextClass = isResolved ? 'text-green-400' : 'text-yellow-400';
+                const status = (c.status || 'Published').toString();
+                const criticality = (c.criticality || deriveCriticality(c)).toString();
+                const criticalityClass = criticality === 'Critical' ? 'severity-critical' : (criticality === 'Elevated' ? 'severity-elevated' : 'severity-stable');
                 const safeId = escapeHtml(c.id || '—');
                 const safePress = escapeHtml((c.press || '').toString() || '—');
                 const safeSubject = escapeHtml((c.subject || '').toString() || '—');
                 const safeOwner = escapeHtml((c.owner || '').toString() || '—');
                 const safeDate = escapeHtml(formatDate(c.date));
+                const safeCriticality = escapeHtml(criticality);
                 const encoded = encodeURIComponent(JSON.stringify(c));
                 return `
                     <tr class="border-b border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer table-row-hover"
@@ -838,10 +799,7 @@
                         <td class="py-3 px-4 font-mono text-blue-400">${safeId}</td>
                         <td class="py-3 px-4">${safePress}</td>
                         <td class="py-3 px-4">${safeSubject}</td>
-                        <td class="py-3 px-4">
-                            <span class="status-indicator ${statusDot}"></span>
-                            <span class="${statusTextClass}">${escapeHtml(status)}</span>
-                        </td>
+                        <td class="py-3 px-4"><span class="severity-chip ${criticalityClass}">${safeCriticality}</span></td>
                         <td class="py-3 px-4">${safeOwner}</td>
                         <td class="py-3 px-4 text-gray-400">${safeDate}</td>
                     </tr>
@@ -870,6 +828,49 @@
             if(Number.isNaN(dt.getTime())) return String(d);
             return dt.toISOString().slice(0,10);
         }
+        function deriveCriticality(case_){
+            const text = `${case_.subject || ''} ${case_.description || ''} ${case_.system || ''}`.toLowerCase();
+            if(/jam|registration|error|consistency|curing|interruption|failure/.test(text)) return 'Critical';
+            if(/warning|drift|variation|sensor|network/.test(text)) return 'Elevated';
+            return 'Stable';
+        }
+
+        function summarizeTop(map, fallback){
+            const entries = Object.entries(map || {}).sort((a,b)=>b[1]-a[1]);
+            if(!entries.length) return { name: 'No data', count: 0, label: fallback };
+            return { name: entries[0][0], count: entries[0][1], label: fallback };
+        }
+
+        function renderFocusInsights(cases, agg){
+            const host = document.getElementById('focus-insights');
+            if(!host) return;
+            const topRegion = summarizeTop(agg.region, 'Region with the most archived learning');
+            const topSystem = summarizeTop(agg.system, 'System demanding repeated resolution knowledge');
+            const critical = cases.filter(c => (c.criticality || '').toLowerCase() === 'critical').length;
+            const elevated = cases.filter(c => (c.criticality || '').toLowerCase() === 'elevated').length;
+            host.innerHTML = [
+                {title: topSystem.name, meta: `${topSystem.count} cases · ${topSystem.label}`, cls:'severity-critical', tag:'System hotspot'},
+                {title: topRegion.name, meta: `${topRegion.count} cases · ${topRegion.label}`, cls:'severity-elevated', tag:'Regional focus'},
+                {title: `${critical} critical / ${elevated} elevated`, meta: 'Criticality mix across the published library', cls:'severity-stable', tag:'Risk balance'}
+            ].map(item => `<div class="insight-item"><div><div class="text-sm text-slate-400 uppercase tracking-[0.18em] mb-2">${item.tag}</div><div class="text-lg text-white font-semibold">${item.title}</div><div class="text-sm text-slate-400 mt-1">${item.meta}</div></div><span class="severity-chip ${item.cls}">${item.tag}</span></div>`).join('');
+        }
+
+        function renderSummaryCards(agg){
+            const cards = {
+                system: summarizeTop(agg.system, 'Highest case concentration'),
+                region: summarizeTop(agg.region, 'Most active region'),
+                part: summarizeTop(agg.part, 'Most referenced component'),
+                press: summarizeTop(agg.press, 'Most documented press')
+            };
+            [['system','top-system'],['region','top-region'],['part','top-part'],['press','top-press']].forEach(([key,prefix]) => {
+                const info = cards[key];
+                const valueEl = document.getElementById(`${prefix}-value`);
+                const labelEl = document.getElementById(`${prefix}-label`);
+                if(valueEl) valueEl.textContent = info.name;
+                if(labelEl) labelEl.textContent = `${info.count} case${info.count===1?'':'s'} · ${info.label}`;
+            });
+        }
+
 
         // ---------- CHARTS ----------
         const charts = {};
@@ -1134,9 +1135,8 @@ function setChart(key, type, map){
         }
 
         function createCaseDetailContent(case_) {
-            const status = (case_.status || 'Resolved').toString();
-            const statusColor = status === 'Resolved' ? 'text-green-400' : 
-                               status === 'In Progress' ? 'text-yellow-400' : 'text-red-400';
+            const status = (case_.status || 'Published').toString();
+            const statusColor = 'text-emerald-300';
 
             const pressName = case_.pressName || case_.press || '—';
             const pressType = case_.pressType || '—';
@@ -1162,7 +1162,7 @@ function setChart(key, type, map){
                             <p class="text-white">${escapeHtml(pressType)} - ${escapeHtml(pressName)}</p>
                         </div>
                         <div class="case-detail-block">
-                            <h4 class="case-detail-heading">Status</h4>
+                            <h4 class="case-detail-heading">Knowledge State</h4>
                             <p class="${statusColor} font-semibold">${escapeHtml(status)}</p>
                         </div>
                         <div class="case-detail-block">
@@ -1205,8 +1205,9 @@ function setChart(key, type, map){
 
                     <div class="case-detail-footer">
                         <div class="case-detail-meta">
+                            <span class="case-detail-pill">Knowledge State: ${escapeHtml(status)}</span>
                             <span class="case-detail-pill">Owner: ${escapeHtml(owner)}</span>
-                            <span class="case-detail-pill">Rating: ⭐ ${escapeHtml(rating)}</span>
+                            <span class="case-detail-pill">Usefulness: ⭐ ${escapeHtml(rating)}</span>
                             <span class="case-detail-pill">Attachments: 📎 ${escapeHtml(attachmentsCount)}</span>
                         </div>
                         <button onclick="closeModal()" class="btn-primary px-4 py-2 rounded-lg text-sm">
