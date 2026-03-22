@@ -1,4 +1,4 @@
-// Landa Case Management System - Main JavaScript
+// Landa Resolved Case Intelligence - Main JavaScript
 class LandaSystem {
     constructor() {
         this.currentUser = null;
@@ -65,7 +65,7 @@ class LandaSystem {
                         : (out.rating != null && out.rating !== '' ? Number(out.rating) : 0);
 
                     out.owner = out.owner || '';
-                    out.status = out.status || 'Resolved';
+                    out.status = out.status || 'Published';
                     out.date = out.date || new Date().toISOString().slice(0, 10);
 
                     return out;
@@ -101,7 +101,7 @@ class LandaSystem {
                 parts: ['Ink Supply Hose - Part #IS-001'],
                 date: '2024-12-01',
                 owner: 'Yossi Cohen',
-                status: 'Resolved',
+                status: 'Published',
                 rating: 4.8,
                 attachments: 2
             },
@@ -124,7 +124,7 @@ class LandaSystem {
                 parts: ['Feed Roller Assembly - Part #FR-003'],
                 date: '2024-12-02',
                 owner: 'Sarah Levy',
-                status: 'Resolved',
+                status: 'Published',
                 rating: 4.6,
                 attachments: 3
             },
@@ -147,7 +147,7 @@ class LandaSystem {
                 parts: [],
                 date: '2024-12-03',
                 owner: 'David Gold',
-                status: 'Resolved',
+                status: 'Published',
                 rating: 4.9,
                 attachments: 1
             },
@@ -170,7 +170,7 @@ class LandaSystem {
                 parts: [],
                 date: '2024-12-04',
                 owner: 'Maya Stern',
-                status: 'In Progress',
+                status: 'Published',
                 rating: 4.3,
                 attachments: 4
             },
@@ -193,7 +193,7 @@ class LandaSystem {
                 parts: ['UV Lamp Bulb Set - Part #UV-002'],
                 date: '2024-12-05',
                 owner: 'Yossi Cohen',
-                status: 'Resolved',
+                status: 'Published',
                 rating: 4.7,
                 attachments: 2
             }
@@ -454,11 +454,10 @@ class LandaSystem {
     // Get case statistics
     getCaseStats() {
         const total = this.cases.length;
-        const resolved = this.cases.filter(c => c.status === 'Resolved').length;
-        const inProgress = this.cases.filter(c => c.status === 'In Progress').length;
-        const avgRating = this.cases.reduce((sum, c) => sum + c.rating, 0) / total;
+        const published = this.cases.filter(c => (c.status || '').toLowerCase() === 'published').length;
+        const avgRating = total ? this.cases.reduce((sum, c) => sum + (Number(c.rating) || 0), 0) / total : 0;
 
-        return { total, resolved, inProgress, avgRating: avgRating.toFixed(1) };
+        return { total, published, avgRating: avgRating.toFixed(1) };
     }
 }
 
