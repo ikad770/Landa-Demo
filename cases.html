@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Landa Cases - Case Management System</title>
+    <title>Landa Cases - Resolved Case Library</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
@@ -51,10 +51,20 @@
         body {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background:
-                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.16), transparent 55%),
-                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.14), transparent 55%),
+                radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.18), transparent 52%),
+                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.16), transparent 48%),
+                radial-gradient(circle at 50% 100%, rgba(14, 165, 233, 0.08), transparent 42%),
                 #020617;
             color: var(--text-main);
+        }
+
+        body::before {
+            content:'';
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            background: linear-gradient(180deg, rgba(2,6,23,0.16), rgba(2,6,23,0.55));
+            z-index:-1;
         }
 
         .layout-shell {
@@ -398,7 +408,18 @@
             color: #cbd5e1;
         }
 
-    </style>
+    
+        .page-hero { position:relative; overflow:hidden; border-radius:1.4rem; border:1px solid rgba(56,189,248,0.22); background: linear-gradient(135deg, rgba(8,15,34,0.96), rgba(15,23,42,0.88)); box-shadow: 0 28px 80px rgba(2,6,23,0.68), inset 0 0 0 1px rgba(96,165,250,0.06); }
+        .page-hero::after { content:''; position:absolute; inset:auto -10% -35% 40%; height:260px; background: radial-gradient(circle, rgba(34,211,238,0.20), transparent 62%); pointer-events:none; }
+        .filter-input, .search-input { background: rgba(2,6,23,0.52); border: 1px solid rgba(71,85,105,0.9); }
+        .filter-input:focus, .search-input:focus { border-color: rgba(34,211,238,0.8); box-shadow: 0 0 0 1px rgba(34,211,238,0.35), 0 0 20px rgba(34,211,238,0.12); }
+        .case-card { position:relative; overflow:hidden; backdrop-filter: blur(16px); }
+        .case-card::before { content:''; position:absolute; inset:0 0 auto 0; height:3px; background: linear-gradient(90deg, rgba(34,211,238,0.95), rgba(59,130,246,0)); }
+        .metric-pill{display:inline-flex;align-items:center;gap:0.4rem;padding:0.28rem 0.68rem;border-radius:999px;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;border:1px solid rgba(71,85,105,0.8);background:rgba(2,6,23,0.42);color:#cbd5e1;}
+        .metric-pill.critical{color:#fecaca;border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.12);} 
+        .metric-pill.elevated{color:#fde68a;border-color:rgba(245,158,11,0.32);background:rgba(245,158,11,0.12);} 
+        .metric-pill.stable{color:#a7f3d0;border-color:rgba(16,185,129,0.32);background:rgba(16,185,129,0.12);} 
+</style>
 
 
 
@@ -415,13 +436,13 @@
                 <div class="logo-mark"></div>
                 <div class="ml-3 leading-tight">
                     <div class="logo-title">LANDA</div>
-                    <div class="logo-subtitle">Case Management</div>
+                    <div class="logo-subtitle">Resolved Case Intelligence</div>
                 </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
                 <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
-                <a href="create-case.html" class="nav-link" data-page="create-case">Create Case</a>
+                <a href="create-case.html" class="nav-link" data-page="create-case">Publish Case</a>
                 <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
             
                 <a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
@@ -440,69 +461,52 @@
         <div class="main-shell">
 <!-- Main Content -->
     <main class="pt-20 px-6 pb-8">
-        <!-- Header Section -->
-        <div class="flex items-center justify-between mb-8">
-            <div>
-                <h2 class="section-title text-3xl font-bold mb-2">Case Management</h2>
-                <p class="text-gray-400">View, filter, and manage all technical cases</p>
+        <section class="page-hero p-6 md:p-8 mb-8">
+            <div class="flex items-start justify-between gap-6 flex-col lg:flex-row">
+                <div>
+                    <div class="section-title text-3xl font-bold mb-3">Resolved Case Library</div>
+                    <p class="text-slate-300 max-w-3xl">Search archived press incidents, compare similar symptoms, and review the actions that resolved each issue. This page is built for reuse, not live ticket tracking.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="metric-pill stable">Published knowledge</span>
+                        <span class="metric-pill elevated">Ranked usefulness</span>
+                        <span class="metric-pill critical">Field criticality visible</span>
+                    </div>
+                </div>
+                <a href="create-case.html" class="btn-primary px-6 py-3 rounded-lg font-semibold">+ Publish Resolved Case</a>
             </div>
-            <a href="create-case.html" class="btn-primary px-6 py-3 rounded-lg font-semibold">
-                + Create New Case
-            </a>
-        </div>
+        </section>
 
-        <!-- Filters Section -->
         <div class="glass-card rounded-xl p-6 mb-8">
-            <h3 class="text-lg font-semibold mb-4">Filter Cases</h3>
+            <h3 class="text-lg font-semibold mb-4">Filter archived knowledge</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Search</label>
-                    <input 
-                        type="text" 
-                        id="search-input"
-                        placeholder="Search cases..."
-                        class="filter-input w-full px-4 py-2 rounded-lg text-white placeholder-gray-500 focus:outline-none"
-                    >
+                    <input type="text" id="search-input" placeholder="Search symptoms, systems, parts, owners, or press names..." class="filter-input w-full px-4 py-2 rounded-lg text-white placeholder-gray-500 focus:outline-none">
                 </div>
-                
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Press Type</label>
                     <select id="press-type-filter" class="filter-input w-full px-4 py-2 rounded-lg text-white focus:outline-none">
-                        <option value="">All Types</option>
-                        <option value="Simplex">Simplex</option>
-                        <option value="Duplex">Duplex</option>
+                        <option value="">All Types</option><option value="Simplex">Simplex</option><option value="Duplex">Duplex</option>
                     </select>
                 </div>
-
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Knowledge State</label>
                     <select id="status-filter" class="filter-input w-full px-4 py-2 rounded-lg text-white focus:outline-none">
-                        <option value="">All Status</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Open">Open</option>
+                        <option value="">All States</option><option value="Published">Published</option><option value="Resolved">Resolved (Legacy)</option>
                     </select>
                 </div>
-
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">System</label>
                     <select id="system-filter" class="filter-input w-full px-4 py-2 rounded-lg text-white focus:outline-none">
-                        <option value="">All Systems</option>
-                        <option value="Printing">Printing</option>
-                        <option value="Paper Handling">Paper Handling</option>
-                        <option value="Drying">Drying</option>
-                        <option value="Quality Control">Quality Control</option>
-                        <option value="Control">Control</option>
+                        <option value="">All Systems</option><option value="Printing">Printing</option><option value="Paper Handling">Paper Handling</option><option value="Drying">Drying</option><option value="Quality Control">Quality Control</option><option value="Control">Control</option>
                     </select>
                 </div>
             </div>
-            
             <div class="flex items-center space-x-4 mt-4">
                 <button onclick="applyFilters()" class="btn-primary px-6 py-2 rounded-lg">Apply Filters</button>
                 <button onclick="clearFilters()" class="px-6 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 transition-colors">Clear All</button>
             </div>
         </div>
-
         <!-- Cases Grid -->
         <div id="cases-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Case cards will be populated by JavaScript -->
@@ -567,9 +571,9 @@
         }
 
         function createCaseCard(case_) {
-            const statusClass = case_.status.toLowerCase().replace(' ', '-');
-            const statusColor = case_.status === 'Resolved' ? 'text-green-400' : 
-                               case_.status === 'In Progress' ? 'text-yellow-400' : 'text-red-400';
+            const knowledgeState = (case_.status || 'Published');
+            const criticality = case_.criticality || deriveCriticality(case_);
+            const criticalityClass = criticality === 'Critical' ? 'critical' : (criticality === 'Elevated' ? 'elevated' : 'stable');
             
             return `
                 <div class="case-card rounded-xl p-6" onclick="openCaseDetail('${case_.id}')">
@@ -590,8 +594,7 @@
                     
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
-                            <span class="status-indicator status-${statusClass}"></span>
-                            <span class="${statusColor} text-sm font-medium">${case_.status}</span>
+                            <span class="metric-pill ${criticalityClass}">${criticality}</span>
                         </div>
                         <div class="flex items-center text-sm text-gray-400">
                             <span class="mr-2">⭐ ${case_.rating}</span>
@@ -600,7 +603,7 @@
                     </div>
                     
                     <div class="mt-3 pt-3 border-t border-gray-700">
-                        <span class="text-xs text-gray-500">Owner: ${case_.owner}</span>
+                        <span class="text-xs text-gray-500">Knowledge State: ${knowledgeState} · Owner: ${case_.owner}</span>
                     </div>
                 </div>
             `;
@@ -615,7 +618,7 @@
                     system: 'Printing',
                     subject: 'Ink Flow Interruption',
                     description: 'Intermittent ink flow causing print quality issues on S1 press. Occurs during high-speed operations.',
-                    status: 'Resolved',
+                    status: 'Published',
                     rating: 4.8,
                     attachments: 2,
                     date: '2024-12-01',
@@ -635,7 +638,7 @@
                     system: 'Paper Handling',
                     subject: 'Paper Jams in Feeder Section',
                     description: 'Frequent paper jams occurring in the feeder section of D3 press, particularly with coated stock.',
-                    status: 'Resolved',
+                    status: 'Published',
                     rating: 4.6,
                     attachments: 3,
                     date: '2024-12-02',
@@ -655,7 +658,7 @@
                     system: 'Control',
                     subject: 'Print Registration Error',
                     description: 'Software issue causing print registration to drift during long print runs on S2 press.',
-                    status: 'Resolved',
+                    status: 'Published',
                     rating: 4.9,
                     attachments: 1,
                     date: '2024-12-03',
@@ -675,7 +678,7 @@
                     system: 'Quality Control',
                     subject: 'Color Consistency Issues',
                     description: 'Color variation between front and back sides on D4 duplex press, particularly noticeable in blue tones.',
-                    status: 'In Progress',
+                    status: 'Published',
                     rating: 4.3,
                     attachments: 4,
                     date: '2024-12-04',
@@ -695,7 +698,7 @@
                     system: 'Drying',
                     subject: 'UV Lamp Not Curing Properly',
                     description: 'UV lamps on S3 not providing sufficient curing power, causing smearing and poor adhesion.',
-                    status: 'Resolved',
+                    status: 'Published',
                     rating: 4.7,
                     attachments: 2,
                     date: '2024-12-05',
@@ -715,7 +718,7 @@
                     system: 'Printing',
                     subject: 'Ink Density Variations',
                     description: 'Inconsistent ink density across the print width on D5 press, affecting color uniformity.',
-                    status: 'In Progress',
+                    status: 'Published',
                     rating: 4.2,
                     attachments: 3,
                     date: '2024-12-06',
@@ -728,6 +731,13 @@
                     parts: []
                 }
             ];
+        }
+
+        function deriveCriticality(case_){
+            const text = `${case_.subject || ''} ${case_.description || ''} ${case_.system || ''}`.toLowerCase();
+            if(/jam|registration|error|consistency|curing|interruption|failure/.test(text)) return 'Critical';
+            if(/warning|drift|variation|sensor|network/.test(text)) return 'Elevated';
+            return 'Stable';
         }
 
         function bindFilterEvents() {
@@ -839,8 +849,8 @@ function applyFilters() {
         }
 
         function createCaseDetailContent(case_) {
-            const statusColor = case_.status === 'Resolved' ? 'text-green-400' : 
-                               case_.status === 'In Progress' ? 'text-yellow-400' : 'text-red-400';
+            const knowledgeState = case_.status || 'Published';
+            const criticality = case_.criticality || deriveCriticality(case_);
 
             const steps = Array.isArray(case_.troubleshootSteps) && case_.troubleshootSteps.length
                 ? case_.troubleshootSteps
@@ -857,8 +867,8 @@ function applyFilters() {
                             <p class="text-white">${case_.pressType} - ${case_.pressName}</p>
                         </div>
                         <div class="case-detail-block">
-                            <h4 class="case-detail-heading">Status</h4>
-                            <p class="${statusColor} font-semibold">${case_.status}</p>
+                            <h4 class="case-detail-heading">Knowledge State</h4>
+                            <p class="text-emerald-300 font-semibold">${knowledgeState}</p>
                         </div>
                         <div class="case-detail-block">
                             <h4 class="case-detail-heading">System</h4>
@@ -900,8 +910,9 @@ function applyFilters() {
                     
                     <div class="case-detail-footer">
                         <div class="case-detail-meta">
+                            <span class="case-detail-pill">Criticality: ${criticality}</span>
                             <span class="case-detail-pill">Owner: ${case_.owner}</span>
-                            <span class="case-detail-pill">Rating: ⭐ ${rating}</span>
+                            <span class="case-detail-pill">Usefulness: ⭐ ${rating}</span>
                             <span class="case-detail-pill">Attachments: 📎 ${attachments}</span>
                         </div>
                         <button onclick="closeModal()" class="btn-primary px-4 py-2 rounded-lg text-sm">
