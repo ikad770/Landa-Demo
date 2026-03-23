@@ -349,7 +349,8 @@ class LandaSystem {
             'cases': 'cases.html',
             'create-case': 'create-case.html',
             'troubleshooting': 'troubleshooting.html',
-            'shift-report': 'Shift-Report-Analyzer.html'
+            'shift-report': 'Shift-Report-Analyzer.html',
+            'insights-analyzer': 'insights-analyzer.html'
         };
 
         if (pages[page]) {
@@ -531,7 +532,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'cases': 'cases.html',
         'create-case': 'create-case.html',
         'troubleshooting': 'troubleshooting.html',
-        'shift-report': 'Shift-Report-Analyzer.html'
+        'shift-report': 'Shift-Report-Analyzer.html',
+            'insights-analyzer': 'insights-analyzer.html'
     };
 
     document.querySelectorAll('[data-page]').forEach(el => {
