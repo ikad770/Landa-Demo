@@ -1,8 +1,16 @@
 const HEALTH_LEVELS = [
-  { label: 'Healthy', max: 29, color: '#22c55e' },
-  { label: 'Monitor', max: 49, color: '#eab308' },
-  { label: 'Warning', max: 69, color: '#f97316' },
-  { label: 'Critical', max: 1000, color: '#ef4444' }
+  { label: 'Healthy', min: 0, max: 49, color: '#22c55e' },
+  { label: 'Monitor', min: 50, max: 80, color: '#eab308' },
+  { label: 'Warning', min: 81, max: 150, color: '#f97316' },
+  { label: 'Critical', min: 151, max: Number.POSITIVE_INFINITY, color: '#ef4444' }
+];
+
+const SECTION_OPTIONS = [
+  { key: 'summary', label: 'Summary' },
+  { key: 'machines', label: 'Machines' },
+  { key: 'insights', label: 'Insights' },
+  { key: 'trends', label: 'Trends' },
+  { key: 'subsystems', label: 'Subsystems' }
 ];
 
 const COLUMN_ALIASES = {
@@ -39,7 +47,8 @@ const state = {
   charts: {},
   selectedMachine: null,
   columnMap: null,
-  currentFileName: ''
+  currentFileName: '',
+  visibleSections: new Set(SECTION_OPTIONS.map((section) => section.key))
 };
 
 const els = {};
@@ -60,16 +69,14 @@ function cacheDom() {
     'filter-model', 'filter-version', 'filter-search', 'machine-panel', 'machine-panel-close',
     'machine-panel-content', 'report-modal', 'report-modal-content', 'report-modal-close',
     'export-report', 'copy-summary', 'print-report', 'reset-analysis', 'dataset-name',
-    'column-map', 'alerts-strip', 'kpi-grid', 'problematic-machines', 'machine-table-body',
-    'executive-summary', 'fleet-health-grid', 'action-summary', 'upload-meta'
+    'column-map', 'alerts-strip', 'kpi-grid', 'problematic-machines', 'executive-summary',
+    'fleet-health-grid', 'action-summary', 'upload-meta', 'smart-insights', 'section-selector'
   ].forEach((id) => {
     els[toCamel(id)] = document.getElementById(id);
   });
 
   [
-    'chart-errors-per-machine', 'chart-downtime-per-machine', 'chart-error-trend', 'chart-downtime-trend',
-    'chart-subsystem-distribution', 'chart-error-state-distribution', 'chart-heatmap', 'chart-version-analysis',
-    'chart-recovery-analysis', 'chart-pre-error-state'
+    'chart-error-trend', 'chart-subsystem-distribution', 'chart-top-errors'
   ].forEach((id) => {
     els[toCamel(id)] = document.getElementById(id);
   });
@@ -173,6 +180,8 @@ function bindActionEvents() {
   els.machinePanel.addEventListener('click', (event) => {
     if (event.target === els.machinePanel) closeMachinePanel();
   });
+
+  renderSectionSelector();
 }
 
 function renderInitialState() {
@@ -435,9 +444,10 @@ function recomputeFilteredView(resetMachineSelection = false) {
   renderFleetHealth();
   renderActionSummary();
   renderProblematicMachines();
-  renderMachineTable();
+  renderSmartInsights();
   renderExecutiveSummary();
   renderCharts();
+  updateVisibleSections();
 
   if (resetMachineSelection) closeMachinePanel();
   if (state.selectedMachine) renderMachineDetails(state.selectedMachine);
@@ -477,6 +487,7 @@ function buildAnalytics(filteredEvents, baselineEvents, filters) {
     downtime: sum(events, 'durationMinutes'),
     avgRisk: average(events.map((event) => event.severityWeight))
   }));
+  const highDurationThreshold = getHighDurationThreshold(filteredEvents);
 
   const worseningMachines = machines.filter((machine) => machine.trendDirection === 'Worsening').slice(0, 5);
   const concentratedFailures = machines.filter((machine) => machine.subsystemConcentration >= 0.55).slice(0, 5);
@@ -489,6 +500,7 @@ function buildAnalytics(filteredEvents, baselineEvents, filters) {
 
   const focusAreas = deriveFocusAreas(machines, topSubsystems, topErrors);
   const fleetHealth = buildFleetHealth(filteredEvents, machines);
+  const smartInsights = buildSmartInsights(filteredEvents, machines, topErrors, topSubsystems, highDurationThreshold);
 
   return {
     machines,
@@ -506,6 +518,8 @@ function buildAnalytics(filteredEvents, baselineEvents, filters) {
     unusualPatterns,
     focusAreas,
     fleetHealth,
+    smartInsights,
+    highDurationThreshold,
     baselineEventsCount: baselineEvents.length
   };
 }
@@ -533,20 +547,19 @@ function buildMachineMetrics(machine, events) {
   const problematicPreStateCount = Array.from(preErrorCounts.entries()).filter(([key]) => /idle|recover|standby|ready|print/i.test(key)).reduce((acc, [, count]) => acc + count, 0);
   const burstCount = countBurstEvents(sortedByTime, 180);
 
-  const riskScore = clamp(Math.round(
-    Math.min(28, totalErrors * 2.2) +
-    Math.min(20, totalDowntime / 18) +
-    Math.min(12, repeatedErrorCount * 2.5) +
-    Math.min(10, subsystemConcentration * 18) +
-    Math.min(8, avgDuration / 8) +
-    Math.min(8, Math.max(0, trendDelta) * 2.5) +
-    Math.min(6, recoveryLoopCount * 3) +
-    Math.min(10, criticalCount * 3) +
-    Math.min(6, problematicPreStateCount * 1.2) +
-    Math.min(8, burstCount * 1.8)
-  ), 0, 100);
+  const riskScore = Math.round(
+    totalErrors +
+    Math.min(120, totalDowntime / 4) +
+    repeatedErrorCount * 4 +
+    Math.round(subsystemConcentration * 35) +
+    recoveryLoopCount * 10 +
+    criticalCount * 5 +
+    Math.max(0, trendDelta) * 6 +
+    burstCount * 4 +
+    Math.min(40, avgDuration / 5)
+  );
 
-  const health = HEALTH_LEVELS.find((level) => riskScore <= level.max) || HEALTH_LEVELS[HEALTH_LEVELS.length - 1];
+  const health = HEALTH_LEVELS.find((level) => riskScore >= level.min && riskScore <= level.max) || HEALTH_LEVELS[HEALTH_LEVELS.length - 1];
   const topError = getTopEntry(errorCounts);
   const topSubsystem = getTopEntry(subsystemCounts);
   const trendDirection = trendDelta >= 2 ? 'Worsening' : trendDelta <= -2 ? 'Improving' : 'Stable';
@@ -592,6 +605,7 @@ function buildMachineMetrics(machine, events) {
     preErrorCounts,
     errorStateCounts,
     burstCount,
+    sameErrorConcentration: totalErrors ? topError.value / totalErrors : 0,
     problematicAreas: deriveProblematicAreas(events, topSubsystem.key, topError.key)
   };
 }
@@ -679,25 +693,178 @@ function buildFleetHealth(filteredEvents, machines) {
   };
 }
 
-function renderKPIs() {
-  const { machines, filteredEvents, totalDowntime, dateRange } = state.summary;
-  const worsening = machines.filter((machine) => machine.trendDirection === 'Worsening').length;
-  const critical = machines.filter((machine) => machine.severityLevel === 'Critical').length;
 
+function getHighDurationThreshold(events) {
+  const durations = events.map((event) => Number(event.durationMinutes || 0)).filter((value) => value > 0).sort((a, b) => a - b);
+  if (!durations.length) return 60;
+  return Math.max(60, durations[Math.floor(durations.length * 0.8)] || 60);
+}
+
+function buildSmartInsights(events, machines, topErrors, topSubsystems, highDurationThreshold) {
+  const insights = [];
+  const repeatedErrors = topErrors.filter((item) => item.value > 10).slice(0, 2);
+  repeatedErrors.forEach((item) => {
+    const affectedMachines = uniqueSorted(events.filter((event) => event.title === item.key).map((event) => event.machine)).slice(0, 5);
+    insights.push({
+      title: `Repeated error pattern: ${item.key}`,
+      explanation: `${item.value} occurrences were detected, indicating a recurring failure mode that should be contained before the next shift.`,
+      affectedMachines
+    });
+  });
+
+  const overloadedSubsystems = topSubsystems.filter((item) => item.value > 30).slice(0, 2);
+  overloadedSubsystems.forEach((item) => {
+    const affectedMachines = uniqueSorted(events.filter((event) => event.subsystem === item.key).map((event) => event.machine)).slice(0, 5);
+    insights.push({
+      title: `Subsystem overload: ${item.key}`,
+      explanation: `${item.value} alerts are concentrated in this subsystem, suggesting a systemic issue rather than isolated machine noise.`,
+      affectedMachines
+    });
+  });
+
+  machines.filter((machine) => machine.totalDowntime >= highDurationThreshold && machine.totalErrors < 10).slice(0, 2).forEach((machine) => {
+    insights.push({
+      title: `High downtime with relatively few errors on ${machine.machine}`,
+      explanation: `${formatMinutes(machine.totalDowntime)} of downtime came from only ${machine.totalErrors} alerts, which usually means long-duration incidents or slow recovery.`,
+      affectedMachines: [machine.machine]
+    });
+  });
+
+  const crossMachineErrors = topErrors.filter((item) => uniqueSorted(events.filter((event) => event.title === item.key).map((event) => event.machine)).length >= 3).slice(0, 2);
+  crossMachineErrors.forEach((item) => {
+    const affectedMachines = uniqueSorted(events.filter((event) => event.title === item.key).map((event) => event.machine)).slice(0, 6);
+    insights.push({
+      title: `Shared fleet issue: ${item.key}`,
+      explanation: `The same alert is appearing across multiple machines, which points to a broader fleet issue worth checking centrally.`,
+      affectedMachines
+    });
+  });
+
+  machines.filter((machine) => machine.trendDirection === 'Worsening' || machine.recoveryLoopCount > 0 || machine.sameErrorConcentration >= 0.6).slice(0, 3).forEach((machine) => {
+    const reason = machine.recoveryLoopCount > 0
+      ? `${machine.recoveryLoopCount} repeating failure loop${machine.recoveryLoopCount > 1 ? 's' : ''} detected.`
+      : machine.sameErrorConcentration >= 0.6
+        ? `${Math.round(machine.sameErrorConcentration * 100)}% of alerts are the same error.`
+        : `Recent error volume is rising.`;
+    insights.push({
+      title: `Escalation signal on ${machine.machine}`,
+      explanation: reason,
+      affectedMachines: [machine.machine]
+    });
+  });
+
+  return insights.slice(0, 6);
+}
+
+function renderSectionSelector() {
+  if (!els.sectionSelector) return;
+  els.sectionSelector.innerHTML = SECTION_OPTIONS.map((section) => `
+    <button type="button" class="selector-chip ${state.visibleSections.has(section.key) ? 'active' : ''}" data-section-toggle="${section.key}">${section.label}</button>
+  `).join('');
+  els.sectionSelector.querySelectorAll('[data-section-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.sectionToggle;
+      if (state.visibleSections.has(key) && state.visibleSections.size > 1) state.visibleSections.delete(key);
+      else state.visibleSections.add(key);
+      renderSectionSelector();
+      updateVisibleSections();
+    });
+  });
+}
+
+function updateVisibleSections() {
+  document.querySelectorAll('.dashboard-section').forEach((section) => {
+    section.classList.toggle('hidden', !state.visibleSections.has(section.dataset.section));
+  });
+}
+
+function buildAISummary(summary) {
+  const critical = summary.fleetHealth.counts.find((item) => item.label === 'Critical')?.count || 0;
+  const leadMachine = summary.machines[0];
+  const leadError = summary.topErrors[0]?.key || 'recurring alerts';
+  const leadSubsystem = summary.topSubsystems[0]?.key || 'core subsystems';
+  return `Out of ${summary.machines.length} machines, ${critical} are Critical, mainly driven by repeated ${leadError} events and sustained pressure in ${leadSubsystem}${leadMachine ? `, led by ${leadMachine.machine}` : ''}.`;
+}
+
+function buildEmailSummary(summary) {
+  const health = Object.fromEntries(summary.fleetHealth.counts.map((item) => [item.label, item.count]));
+  const criticalMachines = summary.machines.filter((machine) => machine.severityLevel === 'Critical').slice(0, 5);
+  const keyIssues = summary.smartInsights.slice(0, 3).map((insight) => `- ${insight.title.replace(/^Shared fleet issue: /, '')}: ${insight.explanation}`);
+  return [
+    'Fleet Summary:',
+    `- Total machines: ${summary.machines.length}`,
+    `- Total errors: ${summary.filteredEvents.length}`,
+    `- Total downtime: ${formatMinutes(summary.totalDowntime)}`,
+    `- Critical: ${health.Critical || 0}`,
+    `- Warning: ${health.Warning || 0}`,
+    '',
+    'Critical Machines:',
+    ...(criticalMachines.length ? criticalMachines.map((machine) => `- ${machine.machine} → ${machine.topSubsystem} (${machine.topErrorCount} ${machine.topError === 'Unknown' ? 'alerts' : `${machine.topError} events`})`) : ['- None in the current filter range']),
+    '',
+    'Key Issues:',
+    ...(keyIssues.length ? keyIssues : ['- No major cross-fleet patterns detected']),
+    '',
+    'Recommended Focus:',
+    ...(summary.focusAreas.length ? summary.focusAreas.map((item) => `- ${item}`) : ['- Maintain current preventive maintenance cadence'])
+  ].join('\n');
+}
+
+function renderSmartInsights() {
+  els.smartInsights.innerHTML = state.summary.smartInsights.length
+    ? state.summary.smartInsights.map((insight) => `
+      <div class="insight-card">
+        <h4>${escapeHtml(insight.title)}</h4>
+        <p>${escapeHtml(insight.explanation)}</p>
+        <div class="meta">Affected machines: ${escapeHtml(insight.affectedMachines.join(', ') || 'Fleet-wide')}</div>
+      </div>
+    `).join('')
+    : '<div class="insight-card"><h4>No dominant insight detected</h4><p>The current filters do not show repeated high-risk patterns beyond routine operational variance.</p><div class="meta">Affected machines: None</div></div>';
+}
+
+function renderKPIs() {
+  const { machines, filteredEvents, totalDowntime, dateRange, fleetHealth } = state.summary;
+  const healthLookup = Object.fromEntries(fleetHealth.counts.map((item) => [item.label, item]));
   const cards = [
-    { label: 'Machines analyzed', value: machines.length, detail: dateRange },
-    { label: 'Alerts / errors', value: filteredEvents.length, detail: `${critical} critical machines flagged` },
-    { label: 'Total downtime', value: formatMinutes(totalDowntime), detail: `${worsening} worsening trend machines` },
-    { label: 'Average fleet risk', value: Math.round(state.summary.fleetHealth.avgRisk || 0), detail: `${Math.round(state.summary.fleetHealth.healthyRate || 0)}% healthy / stable` }
+    { label: 'Total machines', value: machines.length, detail: dateRange },
+    { label: 'Total errors', value: filteredEvents.length, detail: `${healthLookup.Critical?.count || 0} critical machines` },
+    { label: 'Total downtime', value: formatMinutes(totalDowntime), detail: `${state.summary.worseningMachines.length} worsening trends` },
+    { label: 'Recommended focus', value: state.summary.machines[0]?.machine || 'Stable fleet', detail: state.summary.machines[0]?.topSubsystem || 'No urgent escalation' }
   ];
 
-  els.kpiGrid.innerHTML = cards.map((card) => `
-    <div class="metric-card">
-      <div class="metric-label">${card.label}</div>
-      <div class="metric-value">${card.value}</div>
-      <div class="metric-detail">${card.detail}</div>
+  const totalMachines = Math.max(fleetHealth.totalMachines, 1);
+  els.kpiGrid.innerHTML = `
+    <div class="executive-shell">
+      <div class="summary-hero">
+        <div class="section-title">Executive summary</div>
+        <div class="section-subtitle mt-2">Fast operational readout designed for rapid decision-making.</div>
+        <div class="summary-kpi-grid">
+          ${cards.map((card) => `
+            <div class="summary-kpi">
+              <span>${card.label}</span>
+              <strong>${escapeHtml(String(card.value))}</strong>
+              <small>${escapeHtml(card.detail)}</small>
+            </div>
+          `).join('')}
+        </div>
+        <div class="ai-summary">${escapeHtml(buildAISummary(state.summary))}</div>
+      </div>
+      <div class="summary-hero">
+        <div class="section-title">Severity distribution</div>
+        <div class="section-subtitle mt-2">Healthy / Monitor / Warning / Critical mix across the filtered fleet.</div>
+        <div class="segmented-bar">
+          ${fleetHealth.counts.map((item) => `<div class="segment" style="width:${(item.count / totalMachines) * 100}%; background:${item.color};"></div>`).join('')}
+        </div>
+        <div class="distribution-list">
+          ${fleetHealth.counts.map((item) => `
+            <div class="distribution-item">
+              <div class="topline"><span>${item.label}</span><strong style="color:${item.color};">${item.count}</strong></div>
+              <div class="metric-detail mt-2">${Math.round((item.count / totalMachines) * 100)}% of fleet</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
     </div>
-  `).join('');
+  `;
 }
 
 function renderFleetHealth() {
@@ -727,22 +894,24 @@ function renderActionSummary() {
 }
 
 function renderProblematicMachines() {
-  const spotlight = state.summary.machines.slice(0, 5);
+  const spotlight = state.summary.machines.slice(0, 8);
   els.problematicMachines.innerHTML = spotlight.map((machine) => `
-    <button class="spotlight-card" data-machine="${escapeHtml(machine.machine)}">
-      <div class="spotlight-top">
+    <button class="machine-list-item" data-machine="${escapeHtml(machine.machine)}">
+      <div class="machine-list-top">
         <div>
           <div class="spotlight-machine">${escapeHtml(machine.machine)}</div>
-          <div class="spotlight-meta">${escapeHtml(machine.model)} · ${escapeHtml(machine.version)}</div>
+          <div class="spotlight-meta">${escapeHtml(machine.model)} · ${escapeHtml(machine.version)} · ${escapeHtml(machine.trendDirection)}</div>
         </div>
         <span class="severity-badge" style="border-color:${machine.severityColor}; color:${machine.severityColor};">${machine.severityLevel}</span>
       </div>
-      <div class="spotlight-score">
-        <span>Risk ${machine.riskScore}</span>
-        <span>${machine.trendDirection}</span>
+      <div class="machine-stats">
+        <div class="machine-stat"><span>Total errors</span><strong>${machine.totalErrors}</strong></div>
+        <div class="machine-stat"><span>Total downtime</span><strong>${formatMinutes(machine.totalDowntime)}</strong></div>
+        <div class="machine-stat"><span>Top error</span><strong>${escapeHtml(machine.topError)}</strong></div>
+        <div class="machine-stat"><span>Top subsystem</span><strong>${escapeHtml(machine.topSubsystem)}</strong></div>
       </div>
-      <div class="spotlight-reasons">${machine.reasons.length ? machine.reasons.map(escapeHtml).join(' · ') : 'No dominant risk factor flagged.'}</div>
-      <div class="spotlight-actions">${escapeHtml(machine.recommendation)}</div>
+      <div class="spotlight-reasons">${escapeHtml(machine.reasons[0] || 'No dominant risk factor flagged.')}</div>
+      <div class="spotlight-actions"><strong>Why flagged:</strong> ${escapeHtml(machine.reasons.slice(0, 2).join(' · ') || 'No major clustering detected.')}<br><strong>Action:</strong> ${escapeHtml(machine.recommendation)}</div>
     </button>
   `).join('');
 
@@ -815,6 +984,15 @@ function renderMachineDetails(machineName) {
           ${Array.from(machine.errorCounts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([key, value]) => `<li>${escapeHtml(key)} · ${value} events</li>`).join('')}
         </ul>
       </div>
+      <div class="panel-section">
+        <h4>Recovery and duration patterns</h4>
+        <ul>
+          <li>Average incident duration · ${formatMinutes(machine.avgDuration)}</li>
+          <li>Recovery loops · ${machine.recoveryLoopCount}</li>
+          <li>Burst sequences · ${machine.burstCount}</li>
+          <li>Top recovery state · ${escapeHtml(getTopEntry(machine.recoveryCounts).key)}</li>
+        </ul>
+      </div>
       <div class="panel-section full-width">
         <h4>Recent event timeline</h4>
         <div class="table-scroll">
@@ -841,16 +1019,14 @@ function closeMachinePanel() {
 function renderExecutiveSummary() {
   const summary = state.summary;
   const topMachines = summary.machines.slice(0, 5);
-  const unusualPatterns = summary.unusualPatterns.length ? summary.unusualPatterns : ['No unusual fleet patterns were detected in the filtered range.'];
+  const unusualPatterns = summary.smartInsights.length ? summary.smartInsights.map((item) => `${item.title}: ${item.explanation}`) : ['No unusual fleet patterns were detected in the filtered range.'];
   const html = `
     <div class="summary-block">
-      <p><strong>Scope:</strong> ${summary.machines.length} machines, ${summary.filteredEvents.length} alerts, ${formatMinutes(summary.totalDowntime)} downtime across ${summary.dateRange}.</p>
-      <p><strong>Top problematic machines:</strong> ${topMachines.map((machine) => `${machine.machine} (${machine.severityLevel}, risk ${machine.riskScore})`).join('; ') || 'None'}.</p>
-      <p><strong>Top recurring errors:</strong> ${summary.topErrors.map((item) => `${item.key} (${item.value})`).join('; ') || 'None'}.</p>
-      <p><strong>Top problematic subsystems:</strong> ${summary.topSubsystems.map((item) => `${item.key} (${item.value})`).join('; ') || 'None'}.</p>
-      <p><strong>Unusual patterns:</strong> ${unusualPatterns.join(' ')}</p>
-      <p><strong>Operational focus:</strong> ${summary.focusAreas.join(' ') || 'Maintain current preventive maintenance cadence.'}</p>
-      <p><strong>Fleet conclusion:</strong> ${buildFleetConclusion(summary.fleetHealth, topMachines)}</p>
+      <p><strong>Fleet Summary:</strong><br>- Total machines: ${summary.machines.length}<br>- Total errors: ${summary.filteredEvents.length}<br>- Total downtime: ${formatMinutes(summary.totalDowntime)}<br>- Critical: ${summary.fleetHealth.counts.find((item) => item.label === 'Critical')?.count || 0}<br>- Warning: ${summary.fleetHealth.counts.find((item) => item.label === 'Warning')?.count || 0}</p>
+      <p><strong>Critical Machines:</strong><br>${topMachines.length ? topMachines.map((machine) => `- ${machine.machine} → ${machine.topSubsystem} (${machine.topErrorCount} errors, ${formatMinutes(machine.totalDowntime)} downtime)`).join('<br>') : '- None'}</p>
+      <p><strong>Key Issues:</strong><br>${unusualPatterns.map((item) => `- ${escapeHtml(item)}`).join('<br>')}</p>
+      <p><strong>Recommended Focus:</strong><br>${(summary.focusAreas.length ? summary.focusAreas : ['Maintain current preventive maintenance cadence.']).map((item) => `- ${escapeHtml(item)}`).join('<br>')}</p>
+      <p><strong>Fleet conclusion:</strong> ${escapeHtml(buildFleetConclusion(summary.fleetHealth, topMachines))}</p>
     </div>
   `;
   els.executiveSummary.innerHTML = html;
@@ -915,29 +1091,19 @@ function buildReportHtml() {
 
 async function copySummaryToClipboard() {
   try {
-    const text = els.executiveSummary.textContent.trim();
+    const text = buildEmailSummary(state.summary);
     await navigator.clipboard.writeText(text);
-    setUploadStatus('Executive summary copied to clipboard.', 'success');
+    setUploadStatus('Email summary copied to clipboard.', 'success');
   } catch (error) {
     setUploadStatus('Clipboard copy failed in this environment.', 'error');
   }
 }
 
 function renderCharts() {
-  renderBarChart('chartErrorsPerMachine', 'Total errors per machine', state.summary.machines.slice(0, 12).map((machine) => machine.machine), state.summary.machines.slice(0, 12).map((machine) => machine.totalErrors), '#38bdf8');
-  renderBarChart('chartDowntimePerMachine', 'Total downtime per machine (min)', state.summary.machines.slice(0, 12).map((machine) => machine.machine), state.summary.machines.slice(0, 12).map((machine) => round(machine.totalDowntime)), '#f97316');
-
   const errorTrend = timeSeries(state.filteredEvents, 'count');
-  renderLineChart('chartErrorTrend', 'Error trend over time', errorTrend.labels, errorTrend.values, '#22d3ee');
-  const downtimeTrend = timeSeries(state.filteredEvents, 'downtime');
-  renderLineChart('chartDowntimeTrend', 'Downtime trend over time', downtimeTrend.labels, downtimeTrend.values, '#fb7185');
-
-  renderPieChart('chartSubsystemDistribution', 'Subsystem distribution', getTopCounts(state.filteredEvents, (event) => event.subsystem, 8));
-  renderPieChart('chartErrorStateDistribution', 'Error state distribution', getTopCounts(state.filteredEvents, (event) => event.errorState, 8));
-  renderRecoveryChart();
-  renderPreErrorChart();
-  renderVersionChart();
-  renderHeatmap();
+  renderLineChart('chartErrorTrend', 'Errors over time', errorTrend.labels, errorTrend.values, '#22d3ee');
+  renderPieChart('chartSubsystemDistribution', 'Top subsystems', getTopCounts(state.filteredEvents, (event) => event.subsystem, 5));
+  renderBarChart('chartTopErrors', 'Top errors', getTopCounts(state.filteredEvents, (event) => event.title, 10).map((item) => item.key), getTopCounts(state.filteredEvents, (event) => event.title, 10).map((item) => item.value), '#f97316');
 }
 
 function renderBarChart(key, title, categories, series, color) {
