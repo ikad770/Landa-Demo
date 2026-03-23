@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landa Insights Analyzer - Operational Intelligence</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #020617;
+            --bg-surface: rgba(15, 23, 42, 0.98);
+            --bg-surface-soft: rgba(15, 23, 42, 0.78);
+            --border-soft: rgba(51, 65, 85, 0.9);
+            --border-strong: rgba(148, 163, 184, 0.7);
+            --accent-blue: #2563eb;
+            --accent-cyan: #06b6d4;
+            --text-main: #e5e7eb;
+            --text-muted: #94a3b8;
+        }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: radial-gradient(circle at 0% 0%, rgba(37,99,235,0.18), transparent 48%), radial-gradient(circle at 100% 0%, rgba(6,182,212,0.16), transparent 42%), radial-gradient(circle at 50% 100%, rgba(14,165,233,0.08), transparent 42%), #020617;
+            color: var(--text-main);
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(2,6,23,0.18), rgba(2,6,23,0.72));
+            pointer-events: none;
+            z-index: -1;
+        }
+        .layout-shell { min-height: 100vh; display: flex; }
+        .sidebar {
+            width: 240px; background: rgba(10, 16, 30, 0.98); border-right: 1px solid rgba(15, 23, 42, 0.95); box-shadow: 4px 0 24px rgba(15, 23, 42, 0.85), 0 0 0 1px rgba(15, 23, 42, 1); padding: 1.25rem 1rem; display: flex; flex-direction: column;
+        }
+        .sidebar-header { display: flex; align-items: center; margin-bottom: 1.75rem; }
+        .logo-mark { height: 32px; width: 32px; border-radius: 0.75rem; background: #020617; position: relative; box-shadow: 0 0 0 1px rgba(15,23,42,1), 0 0 18px rgba(34,211,238,0.8); overflow: hidden; }
+        .logo-mark::before { content:''; position:absolute; width:18px; height:18px; border-radius:999px; background: radial-gradient(circle at 30% 30%, #22d3ee, #0f172a); top:7px; left:7px; box-shadow:0 0 18px rgba(34,211,238,0.9); }
+        .logo-title { font-family: 'Satoshi', system-ui, sans-serif; font-size: 0.78rem; letter-spacing: 0.26em; text-transform: uppercase; }
+        .logo-subtitle { font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
+        .sidebar-nav { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; }
+        .nav-link { display:block; border-radius:0.6rem; padding:0.5rem 0.75rem; font-size:0.83rem; color:#cbd5f5; }
+        .nav-link:hover { background: rgba(15, 23, 42, 0.96); color: #eff6ff; }
+        .nav-link-active { background: rgba(37, 99, 235, 0.16); color: var(--accent-cyan); border: 1px solid rgba(37, 99, 235, 0.6); }
+        .sidebar-footer { margin-top:auto; padding-top:1.25rem; border-top:1px solid rgba(30,41,59,0.9); display:flex; flex-direction:column; gap:0.5rem; }
+        .user-pill { display:flex; align-items:center; gap:0.45rem; padding:0.35rem 0.75rem; border-radius:999px; background:rgba(15,23,42,0.96); border:1px solid var(--border-strong); box-shadow:0 10px 26px rgba(15,23,42,0.98), 0 0 0 1px rgba(30,64,175,0.4); }
+        .user-avatar { width:24px; height:24px; border-radius:999px; background: radial-gradient(circle at 30% 20%, var(--accent-cyan), #0f172a); font-size:0.7rem; font-weight:600; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 1px rgba(15,23,42,1), 0 0 14px rgba(34,211,238,0.9); }
+        .user-name { font-size:0.8rem; }
+        .user-role { font-size:0.6rem; text-transform:uppercase; letter-spacing:0.16em; color:var(--text-muted); }
+        .nav-logout { border-radius:999px; padding:0.45rem 0.85rem; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.16em; border:1px solid rgba(148,163,184,0.65); color:var(--text-muted); }
+        .main-shell { flex:1; min-height:100vh; padding:1.75rem 2rem; }
+        .page-header { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:1.5rem; }
+        .page-title { font-family:'Satoshi', system-ui, sans-serif; font-size:0.95rem; letter-spacing:0.28em; text-transform:uppercase; }
+        .page-subtitle { color:var(--text-muted); font-size:0.85rem; max-width:48rem; }
+        .glass-card, .metric-card, .panel-card, .spotlight-card, .health-card {
+            background: var(--bg-surface);
+            border-radius: 1rem;
+            border: 1px solid var(--border-strong);
+            box-shadow: 0 16px 42px rgba(15,23,42,0.98), 0 0 0 1px rgba(15,23,42,1);
+        }
+        .glass-card { padding:1.1rem; }
+        .metric-card { padding:1rem 1.1rem; }
+        .metric-label { font-size:0.72rem; text-transform:uppercase; letter-spacing:0.18em; color:var(--text-muted); }
+        .metric-value { font-size:1.9rem; font-weight:700; margin-top:0.3rem; }
+        .metric-detail { color:var(--text-muted); font-size:0.83rem; margin-top:0.35rem; }
+        .section-title { font-family:'Satoshi', system-ui, sans-serif; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.22em; color:#e2e8f0; }
+        .section-subtitle { color:var(--text-muted); font-size:0.82rem; }
+        .btn-primary, .btn-ghost {
+            border-radius:999px; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.16em; font-weight:600; padding:0.7rem 1rem;
+        }
+        .btn-primary { background-image: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan)); border:1px solid rgba(191,219,254,0.7); color:#03111f; box-shadow:0 16px 34px rgba(37,99,235,0.65); }
+        .btn-ghost { border:1px solid rgba(148,163,184,0.55); background:rgba(2,6,23,0.18); color:rgba(226,232,240,0.92); }
+        .drop-zone {
+            min-height: 220px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:1rem; text-align:center; border:1px dashed rgba(56,189,248,0.45); background:linear-gradient(180deg, rgba(15,23,42,0.86), rgba(2,6,23,0.74));
+        }
+        .drop-zone.drag-active { border-color: rgba(34,211,238,0.95); box-shadow:0 0 0 1px rgba(34,211,238,0.4), 0 0 40px rgba(34,211,238,0.18); }
+        .upload-icon { width:56px; height:56px; border-radius:18px; background:radial-gradient(circle at 30% 20%, rgba(34,211,238,0.55), rgba(15,23,42,1)); display:grid; place-items:center; box-shadow:0 0 24px rgba(34,211,238,0.16); }
+        .status-pill { display:inline-flex; align-items:center; gap:0.45rem; border-radius:999px; padding:0.42rem 0.8rem; font-size:0.8rem; border:1px solid rgba(148,163,184,0.45); }
+        .status-success { color:#6ee7b7; background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.45); }
+        .status-error { color:#fda4af; background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.45); }
+        .status-info { color:#bae6fd; background:rgba(56,189,248,0.12); border-color:rgba(56,189,248,0.45); }
+        .meta-chip { display:inline-flex; align-items:center; gap:0.35rem; border-radius:999px; border:1px solid rgba(148,163,184,0.3); background:rgba(2,6,23,0.28); color:#cbd5e1; padding:0.3rem 0.65rem; font-size:0.72rem; }
+        .accent-chip { border-color: rgba(34,211,238,0.45); }
+        .filter-grid { display:grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap:0.75rem; }
+        .filter-field label { display:block; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.18em; color:var(--text-muted); margin-bottom:0.45rem; }
+        .input-shell, select, input[type="date"], input[type="search"] {
+            width:100%; border-radius:0.95rem; border:1px solid rgba(100,116,139,0.45); background:rgba(2,6,23,0.42); color:#e2e8f0; padding:0.72rem 0.8rem;
+        }
+        .health-card { padding:0.9rem 1rem; display:flex; gap:0.8rem; align-items:center; }
+        .health-dot { width:14px; height:14px; border-radius:999px; box-shadow:0 0 18px currentColor; }
+        .health-label { font-size:0.78rem; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-muted); }
+        .health-value { font-size:1rem; font-weight:600; margin-top:0.2rem; }
+        .chart-card { height:340px; }
+        .chart-canvas { height:280px; }
+        .spotlight-card { padding:1rem; text-align:left; transition: transform .2s ease, border-color .2s ease; }
+        .spotlight-card:hover { transform:translateY(-2px); border-color:rgba(34,211,238,0.55); }
+        .spotlight-top, .spotlight-score { display:flex; justify-content:space-between; gap:1rem; align-items:center; }
+        .spotlight-machine { font-size:1rem; font-weight:700; }
+        .spotlight-meta, .spotlight-reasons, .spotlight-actions { color:var(--text-muted); font-size:0.82rem; margin-top:0.5rem; }
+        .severity-badge { display:inline-flex; padding:0.25rem 0.55rem; border-radius:999px; border:1px solid; font-size:0.72rem; font-weight:600; letter-spacing:0.08em; }
+        .machine-table { width:100%; border-collapse:collapse; }
+        .machine-table th { font-size:0.72rem; text-transform:uppercase; letter-spacing:0.16em; color:var(--text-muted); text-align:left; padding:0.95rem 0.9rem; border-bottom:1px solid rgba(100,116,139,0.24); }
+        .machine-table td { padding:0.95rem 0.9rem; border-bottom:1px solid rgba(100,116,139,0.15); vertical-align:top; font-size:0.88rem; }
+        .table-link { color:#67e8f9; text-decoration:none; font-weight:600; }
+        .summary-block p { margin-bottom:0.8rem; color:#dbeafe; line-height:1.65; }
+        .modal-overlay { position:fixed; inset:0; background:rgba(2,6,23,0.78); display:flex; align-items:center; justify-content:center; padding:1rem; z-index:40; }
+        .modal-card { width:min(980px, 96vw); max-height:88vh; overflow:auto; border-radius:1.2rem; border:1px solid rgba(148,163,184,0.35); background:rgba(2,6,23,0.96); padding:1.2rem; box-shadow:0 28px 80px rgba(0,0,0,0.55); }
+        .side-panel { position:fixed; inset:0; background:rgba(2,6,23,0.76); z-index:50; display:flex; justify-content:flex-end; }
+        .side-panel-card { width:min(700px, 96vw); height:100%; overflow:auto; background:rgba(2,6,23,0.98); border-left:1px solid rgba(148,163,184,0.28); box-shadow:-24px 0 48px rgba(0,0,0,0.45); padding:1.2rem; }
+        .panel-header { display:flex; justify-content:space-between; gap:1rem; align-items:flex-start; }
+        .panel-title { font-size:1.4rem; font-weight:700; }
+        .panel-subtitle { color:var(--text-muted); margin-top:0.2rem; }
+        .panel-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:0.75rem; margin-top:1rem; }
+        .panel-card { padding:0.95rem; }
+        .panel-card span { display:block; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.16em; }
+        .panel-card strong { display:block; margin-top:0.35rem; font-size:1rem; }
+        .panel-sections { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:0.9rem; margin-top:1rem; }
+        .panel-section { background:var(--bg-surface-soft); border-radius:1rem; border:1px solid rgba(148,163,184,0.18); padding:1rem; }
+        .panel-section.full-width { grid-column:1 / -1; }
+        .panel-section h4 { font-size:0.8rem; text-transform:uppercase; letter-spacing:0.18em; color:#cbd5e1; margin-bottom:0.7rem; }
+        .panel-section p, .panel-section li { color:#cbd5e1; font-size:0.88rem; line-height:1.6; }
+        .detail-table { width:100%; border-collapse:collapse; }
+        .detail-table th, .detail-table td { padding:0.7rem; border-bottom:1px solid rgba(100,116,139,0.18); text-align:left; }
+        .report-shell { color:#e2e8f0; }
+        .report-header, .report-grid { display:grid; grid-template-columns:1.5fr 1fr; gap:1rem; }
+        .report-filter-box, .report-section { border:1px solid rgba(148,163,184,0.2); border-radius:1rem; background:rgba(15,23,42,0.72); padding:1rem; }
+        .hidden { display:none !important; }
+        @media (max-width: 1280px) {
+            .filter-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+        @media (max-width: 1024px) {
+            .layout-shell { flex-direction:column; }
+            .sidebar { width:100%; }
+            .filter-grid, .panel-grid, .panel-sections, .report-header, .report-grid { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout-shell">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-mark"></div>
+                <div class="ml-3 leading-tight">
+                    <div class="logo-title">LANDA</div>
+                    <div class="logo-subtitle">Resolved Case Intelligence</div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-link" data-page="dashboard">Dashboard</a>
+                <a href="cases.html" class="nav-link" data-page="cases">Cases</a>
+                <a href="create-case.html" class="nav-link" data-page="create-case">Publish Case</a>
+                <a href="troubleshooting.html" class="nav-link" data-page="troubleshooting">Solutions</a>
+                <a href="Shift-Report-Analyzer.html" class="nav-link" data-page="shift-report">Shift Report Analyzer</a>
+                <a href="insights-analyzer.html" class="nav-link nav-link-active" data-page="insights-analyzer">Insights Analyzer</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-pill">
+                    <div class="user-avatar" id="nav-user-avatar">EX</div>
+                    <div class="flex flex-col leading-tight">
+                        <span class="user-name" id="nav-user-name">Expert User</span>
+                        <span class="user-role" id="nav-user-role">EXPERT ACCESS</span>
+                    </div>
+                </div>
+                <button onclick="logout()" class="nav-logout">Logout</button>
+            </div>
+        </aside>
+        <main class="main-shell">
+            <header class="page-header">
+                <div>
+                    <div class="page-title">Operational Intelligence / Insights Analyzer</div>
+                    <p class="page-subtitle">Upload machine Insight exports to detect problematic presses early, understand repeat failure behavior, rank fleet risk, and generate management-ready operational summaries.</p>
+                </div>
+                <div class="flex flex-wrap gap-3 justify-end">
+                    <button id="copy-summary" class="btn-ghost">Copy Summary</button>
+                    <button id="print-report" class="btn-ghost">Print View</button>
+                    <button id="export-report" class="btn-primary">Open Report</button>
+                </div>
+            </header>
+
+            <section class="glass-card mb-6">
+                <div class="flex flex-col xl:flex-row gap-6">
+                    <div class="flex-1">
+                        <div id="drop-zone" class="drop-zone glass-card">
+                            <div class="upload-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-cyan-100"><path d="M12 16V4m0 0 4 4m-4-4-4 4M5 20h14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-semibold">Upload Insight export</h2>
+                                <p class="text-slate-400 mt-2 max-w-2xl">Supports Excel (.xlsx) and CSV exports with flexible column mapping for machine, alert, state, subsystem, recovery, and duration fields.</p>
+                            </div>
+                            <div class="flex flex-wrap justify-center gap-3">
+                                <label class="btn-primary cursor-pointer">
+                                    Select file
+                                    <input id="file-input" type="file" accept=".csv,.xlsx" class="hidden">
+                                </label>
+                                <button id="reset-analysis" class="btn-ghost">Reset</button>
+                            </div>
+                            <div id="upload-status" class="status-pill status-info">Awaiting file…</div>
+                        </div>
+                    </div>
+                    <div class="w-full xl:w-[420px] flex flex-col gap-4">
+                        <div class="glass-card">
+                            <div class="section-title">Dataset intelligence</div>
+                            <div class="section-subtitle mt-2">Normalized schema mapping and upload context.</div>
+                            <div class="mt-4 text-sm text-slate-200 font-medium" id="dataset-name">No file loaded</div>
+                            <div class="text-sm text-slate-400 mt-1" id="upload-meta">Upload a file to generate metrics.</div>
+                            <div id="column-map" class="mt-4 flex flex-wrap gap-2"></div>
+                        </div>
+                        <div class="glass-card">
+                            <div class="section-title">Action-required summary</div>
+                            <div class="section-subtitle mt-2">Fleet-level issues that need preventive attention first.</div>
+                            <ul id="action-summary" class="mt-4 space-y-3 text-sm text-slate-200"></ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div id="loading-state" class="glass-card hidden mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin"></div>
+                <span class="text-slate-200">Analyzing file…</span>
+            </div>
+
+            <div id="empty-state" class="glass-card text-center py-16">
+                <h3 class="text-2xl font-semibold">Operational analytics will appear here</h3>
+                <p class="text-slate-400 mt-3 max-w-2xl mx-auto">The page will compute machine risk, recurring alerts, subsystem concentrations, recovery loops, trend deterioration, executive summaries, and exportable reports after upload.</p>
+            </div>
+
+            <div id="analysis-shell" class="hidden space-y-6">
+                <section class="glass-card">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                        <div>
+                            <div class="section-title">Active filters</div>
+                            <div class="section-subtitle mt-2">All dashboards, rankings, and summaries react to the current machine and date selection.</div>
+                        </div>
+                        <div id="alerts-strip" class="flex flex-wrap gap-2"></div>
+                    </div>
+                    <div class="filter-grid">
+                        <div class="filter-field"><label>Date from</label><input id="filter-date-from" type="date"></div>
+                        <div class="filter-field"><label>Date to</label><input id="filter-date-to" type="date"></div>
+                        <div class="filter-field"><label>Machine</label><select id="filter-machine"></select></div>
+                        <div class="filter-field"><label>Subsystem</label><select id="filter-subsystem"></select></div>
+                        <div class="filter-field"><label>Error state</label><select id="filter-error-state"></select></div>
+                        <div class="filter-field"><label>Model</label><select id="filter-model"></select></div>
+                        <div class="filter-field"><label>Version</label><select id="filter-version"></select></div>
+                    </div>
+                    <div class="filter-field mt-4"><label>Search</label><input id="filter-search" type="search" placeholder="Search machine, error text, alert body, or subsystem"></div>
+                </section>
+
+                <section>
+                    <div id="kpi-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+                </section>
+
+                <section class="grid grid-cols-1 xl:grid-cols-[1.4fr_1fr] gap-6">
+                    <div class="glass-card">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <div class="section-title">Problematic machines spotlight</div>
+                                <div class="section-subtitle mt-2">Highest-risk presses based on severity, downtime, repeat failures, concentration, trend, and recovery loops.</div>
+                            </div>
+                        </div>
+                        <div id="problematic-machines" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    </div>
+                    <div class="glass-card">
+                        <div class="section-title">Fleet health overview</div>
+                        <div class="section-subtitle mt-2">Immediate risk posture across the filtered fleet.</div>
+                        <div id="fleet-health-grid" class="grid grid-cols-1 gap-3 mt-4"></div>
+                    </div>
+                </section>
+
+                <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div class="glass-card chart-card"><div id="chart-errors-per-machine" class="chart-canvas"></div></div>
+                    <div class="glass-card chart-card"><div id="chart-downtime-per-machine" class="chart-canvas"></div></div>
+                    <div class="glass-card chart-card"><div id="chart-error-trend" class="chart-canvas"></div></div>
+                    <div class="glass-card chart-card"><div id="chart-downtime-trend" class="chart-canvas"></div></div>
+                    <div class="glass-card chart-card"><div id="chart-subsystem-distribution" class="chart-canvas"></div></div>
+                    <div class="glass-card chart-card"><div id="chart-error-state-distribution" class="chart-canvas"></div></div>
+                    <div class="glass-card chart-card"><div id="chart-recovery-analysis" class="chart-canvas"></div></div>
+                    <div class="glass-card chart-card"><div id="chart-pre-error-state" class="chart-canvas"></div></div>
+                    <div class="glass-card chart-card xl:col-span-2"><div id="chart-version-analysis" class="chart-canvas"></div></div>
+                    <div class="glass-card chart-card xl:col-span-2"><div id="chart-heatmap" class="chart-canvas"></div></div>
+                </section>
+
+                <section class="glass-card">
+                    <div class="section-title">Machine ranking table</div>
+                    <div class="section-subtitle mt-2">Click a machine for drill-down details, recent events, recurring clusters, and proactive focus areas.</div>
+                    <div class="overflow-x-auto mt-4">
+                        <table class="machine-table">
+                            <thead>
+                                <tr>
+                                    <th>Machine</th>
+                                    <th>Model</th>
+                                    <th>Total Errors</th>
+                                    <th>Total Downtime</th>
+                                    <th>Top Error</th>
+                                    <th>Top Subsystem</th>
+                                    <th>Severity</th>
+                                    <th>Risk Score</th>
+                                    <th>Trend</th>
+                                    <th>Interpretation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="machine-table-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="glass-card">
+                    <div class="section-title">Executive summary</div>
+                    <div class="section-subtitle mt-2">Professional summary for operations and management teams, ready for export or email copy.</div>
+                    <div id="executive-summary" class="mt-4"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <div id="machine-panel" class="side-panel hidden">
+        <div class="side-panel-card">
+            <div class="flex justify-end mb-4">
+                <button id="machine-panel-close" class="btn-ghost">Close</button>
+            </div>
+            <div id="machine-panel-content"></div>
+        </div>
+    </div>
+
+    <div id="report-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <div>
+                    <div class="section-title">Exportable report view</div>
+                    <div class="section-subtitle mt-2">HTML / print-friendly report for email or PDF workflows.</div>
+                </div>
+                <button id="report-modal-close" class="btn-ghost">Close</button>
+            </div>
+            <div id="report-modal-content"></div>
+        </div>
+    </div>
+
+    <script src="insights-analyzer.js"></script>
+</body>
+</html>
