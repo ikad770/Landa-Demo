@@ -1,22 +1,27 @@
 const HEALTH_LEVELS = [
   { label: 'Healthy', min: 0, max: 49, color: '#22c55e' },
-  { label: 'Monitor', min: 50, max: 80, color: '#eab308' },
-  { label: 'Warning', min: 81, max: 150, color: '#f97316' },
-  { label: 'Critical', min: 151, max: Number.POSITIVE_INFINITY, color: '#ef4444' }
+  { label: 'Monitor', min: 50, max: 79, color: '#eab308' },
+  { label: 'Warning', min: 80, max: 149, color: '#f97316' },
+  { label: 'Critical', min: 150, max: Number.POSITIVE_INFINITY, color: '#ef4444' }
 ];
 
 const SECTION_OPTIONS = [
-  { key: 'summary', label: 'Summary' },
-  { key: 'machines', label: 'Critical machines' },
-  { key: 'insights', label: 'Smart insights' },
-  { key: 'trends', label: 'Trend analytics' },
-  { key: 'subsystems', label: 'Top errors' }
+  { key: 'attention', label: 'Attention now' },
+  { key: 'findings', label: 'Intelligence layer' },
+  { key: 'evidence', label: 'Supporting evidence' },
+  { key: 'summary', label: 'Executive summary' }
+];
+
+const VIEW_PRESETS = [
+  { key: 'executive', label: 'Executive', sections: ['attention', 'findings', 'summary'] },
+  { key: 'operations', label: 'Operations', sections: ['attention', 'findings', 'evidence', 'summary'] },
+  { key: 'investigation', label: 'Investigation', sections: ['attention', 'evidence', 'summary'] }
 ];
 
 const COLUMN_ALIASES = {
   machine: ['press', 'press name', 'machine', 'machine name', 'name', 'press id'],
   model: ['model', 'press model', 'machine model'],
-  title: ['alert message title', 'alert title', 'message title', 'title', 'alert'],
+  title: ['alert message title', 'alert title', 'message title', 'title', 'alert', 'error name'],
   body: ['alert message body', 'alert body', 'message body', 'body', 'description'],
   solution: ['alert message solution', 'solution', 'recommended solution', 'recommendation'],
   startTime: ['start time', 'start', 'event start', 'time', 'timestamp'],
@@ -45,11 +50,11 @@ const state = {
   },
   summary: null,
   charts: {},
-  selectedMachine: null,
   selectedPanel: null,
   columnMap: null,
   currentFileName: '',
-  visibleSections: new Set(SECTION_OPTIONS.map((section) => section.key))
+  visibleSections: new Set(VIEW_PRESETS[1].sections),
+  activePreset: 'operations'
 };
 
 const els = {};
@@ -68,10 +73,12 @@ function cacheDom() {
     'drop-zone', 'file-input', 'upload-status', 'analysis-shell', 'empty-state', 'loading-state',
     'filter-date-from', 'filter-date-to', 'filter-machine', 'filter-subsystem', 'filter-error-state',
     'filter-model', 'filter-version', 'filter-search', 'machine-panel', 'machine-panel-close',
-    'machine-panel-content', 'report-modal', 'report-modal-content', 'report-modal-close',
-    'export-report', 'copy-summary', 'copy-summary-inline', 'print-report', 'reset-analysis', 'dataset-name',
-    'column-map', 'alerts-strip', 'kpi-grid', 'problematic-machines', 'executive-summary',
-    'fleet-health-grid', 'action-summary', 'upload-meta', 'smart-insights', 'section-selector'
+    'machine-panel-content', 'machine-panel-title', 'machine-panel-subtitle', 'report-modal',
+    'report-modal-content', 'report-modal-close', 'export-report', 'copy-summary', 'copy-summary-inline',
+    'print-report', 'reset-analysis', 'column-map', 'alerts-strip', 'problematic-machines',
+    'smart-insights', 'fleet-health-grid', 'action-summary', 'executive-summary', 'hero-narrative',
+    'hero-metrics', 'fleet-score', 'fleet-posture-copy', 'severity-stack', 'focus-flow', 'upload-meta',
+    'view-presets', 'section-selector', 'executive-summary-meta'
   ].forEach((id) => {
     els[toCamel(id)] = document.getElementById(id);
   });
@@ -82,28 +89,24 @@ function cacheDom() {
 }
 
 function toCamel(value) {
-  return value.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  return value.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
 }
 
 function bootstrapNavigation() {
-  const user = (() => {
-    try {
-      return JSON.parse(localStorage.getItem('landaUser') || '{}');
-    } catch (error) {
-      return {};
-    }
-  })();
+  let user = {};
+  try {
+    user = JSON.parse(localStorage.getItem('landaUser') || '{}');
+  } catch (error) {
+    user = {};
+  }
 
   const name = user.username || 'Expert User';
   const role = (user.role || user.type || 'expert').toUpperCase();
   const avatar = name.split(' ').map((part) => part[0]).join('').slice(0, 2) || 'EX';
 
-  const nameEl = document.getElementById('nav-user-name');
-  const roleEl = document.getElementById('nav-user-role');
-  const avatarEl = document.getElementById('nav-user-avatar');
-  if (nameEl) nameEl.textContent = name;
-  if (roleEl) roleEl.textContent = `${role} ACCESS`;
-  if (avatarEl) avatarEl.textContent = avatar;
+  document.getElementById('nav-user-name').textContent = name;
+  document.getElementById('nav-user-role').textContent = `${role} ACCESS`;
+  document.getElementById('nav-user-avatar').textContent = avatar;
 
   window.logout = () => {
     localStorage.removeItem('landaUser');
@@ -112,8 +115,7 @@ function bootstrapNavigation() {
 }
 
 function bindUploadEvents() {
-  const dropZone = els.dropZone;
-  const fileInput = els.fileInput;
+  const { dropZone, fileInput } = els;
 
   ['dragenter', 'dragover'].forEach((eventName) => {
     dropZone.addEventListener(eventName, (event) => {
@@ -152,12 +154,13 @@ function bindFilterEvents() {
   };
 
   Object.entries(mappings).forEach(([elementKey, filterKey]) => {
-    els[elementKey].addEventListener('input', (event) => {
+    const element = els[elementKey];
+    element.addEventListener('input', (event) => {
       state.filters[filterKey] = event.target.value;
       recomputeFilteredView();
     });
-    if (els[elementKey].tagName === 'SELECT') {
-      els[elementKey].addEventListener('change', (event) => {
+    if (element.tagName === 'SELECT') {
+      element.addEventListener('change', (event) => {
         state.filters[filterKey] = event.target.value;
         recomputeFilteredView();
       });
@@ -166,14 +169,13 @@ function bindFilterEvents() {
 }
 
 function bindActionEvents() {
-  els.resetAnalysis.addEventListener('click', resetAnalysis);
+  els.resetAnalysis.addEventListener('click', () => resetAnalysis(true));
   els.machinePanelClose.addEventListener('click', closeMachinePanel);
   els.reportModalClose.addEventListener('click', () => els.reportModal.classList.add('hidden'));
   els.exportReport.addEventListener('click', openReportModal);
   els.copySummary.addEventListener('click', copySummaryToClipboard);
-  if (els.copySummaryInline) els.copySummaryInline.addEventListener('click', copySummaryToClipboard);
+  els.copySummaryInline.addEventListener('click', copySummaryToClipboard);
   els.printReport.addEventListener('click', () => window.print());
-
   els.reportModal.addEventListener('click', (event) => {
     if (event.target === els.reportModal) els.reportModal.classList.add('hidden');
   });
@@ -181,20 +183,36 @@ function bindActionEvents() {
     if (event.target === els.machinePanel) closeMachinePanel();
   });
 
+  renderViewPresets();
   renderSectionSelector();
+  window.addEventListener('resize', debounce(() => Object.values(state.charts).forEach((chart) => chart?.resize?.()), 100));
 }
 
 function renderInitialState() {
-  setUploadStatus('Upload an Insight export in CSV or XLSX to unlock the fleet analytics workspace.', 'info');
+  setUploadStatus('Upload an Insight export in CSV or XLSX to unlock the fleet briefing.', 'info');
   els.analysisShell.classList.add('hidden');
   els.emptyState.classList.remove('hidden');
   els.loadingState.classList.add('hidden');
+  renderHeroPlaceholder();
+}
+
+function renderHeroPlaceholder() {
+  els.heroNarrative.textContent = 'Upload a CSV or XLSX export to generate a premium operational brief that prioritizes risk, recurring failures, downtime impact, and fleet-wide issue signals.';
+  els.heroMetrics.innerHTML = [
+    ['Machines', '—', 'No data loaded'],
+    ['Errors', '—', 'Waiting for export'],
+    ['Downtime', '—', 'Impact not calculated'],
+    ['Lead issue', '—', 'No pattern yet']
+  ].map(([label, value, note]) => renderHeroMetric(label, value, note)).join('');
+  els.fleetScore.textContent = '—';
+  els.fleetPostureCopy.textContent = 'No dataset loaded yet.';
+  els.severityStack.innerHTML = '';
+  els.focusFlow.innerHTML = '<span class="meta-pill">No focus areas yet</span>';
 }
 
 async function processUpload(file) {
-  const fileName = file.name.toLowerCase();
-  const valid = fileName.endsWith('.csv') || fileName.endsWith('.xlsx');
-  if (!valid) {
+  const name = file.name.toLowerCase();
+  if (!name.endsWith('.csv') && !name.endsWith('.xlsx')) {
     setUploadStatus('Invalid file type. Please upload a .csv or .xlsx Insight export.', 'error');
     return;
   }
@@ -203,10 +221,7 @@ async function processUpload(file) {
     setLoading(true, `Analyzing ${file.name}…`);
     state.currentFileName = file.name;
 
-    const rows = fileName.endsWith('.csv')
-      ? parseCsv(await file.text())
-      : parseWorkbook(await file.arrayBuffer());
-
+    const rows = name.endsWith('.csv') ? parseCsv(await file.text()) : parseWorkbook(await file.arrayBuffer());
     if (!rows.length) throw new Error('The uploaded file contains no rows to analyze.');
 
     const normalization = normalizeDataset(rows);
@@ -230,18 +245,18 @@ async function processUpload(file) {
   }
 }
 
-function setLoading(isLoading, message = 'Analyzing file…') {
+function setLoading(isLoading, message) {
   els.loadingState.classList.toggle('hidden', !isLoading);
   els.loadingState.querySelector('span').textContent = message;
   if (isLoading) {
-    els.analysisShell.classList.add('hidden');
     els.emptyState.classList.add('hidden');
+    els.analysisShell.classList.add('hidden');
   }
 }
 
 function setUploadStatus(message, mode) {
   els.uploadStatus.textContent = message;
-  els.uploadStatus.className = `status-pill status-${mode}`;
+  els.uploadStatus.className = `status-pill ${mode}`;
 }
 
 function parseCsv(text) {
@@ -252,9 +267,7 @@ function parseCsv(text) {
     dynamicTyping: false,
     transformHeader: (header) => header.trim()
   });
-  if (parsed.errors?.length && parsed.data.length === 0) {
-    throw new Error(`CSV parsing failed: ${parsed.errors[0].message}`);
-  }
+  if (parsed.errors?.length && parsed.data.length === 0) throw new Error(`CSV parsing failed: ${parsed.errors[0].message}`);
   return parsed.data.filter((row) => Object.values(row).some((value) => String(value || '').trim()));
 }
 
@@ -284,8 +297,7 @@ function normalizeDataset(rows) {
 }
 
 function normalizeRow(row, index, columnMap) {
-  const rawStart = getMappedValue(row, columnMap.startTime);
-  const startTime = parseDate(rawStart);
+  const startTime = parseDate(getMappedValue(row, columnMap.startTime));
   if (!startTime) return null;
 
   const machine = cleanText(getMappedValue(row, columnMap.machine), 'Unknown Machine');
@@ -299,7 +311,6 @@ function normalizeRow(row, index, columnMap) {
   const version = cleanText(getMappedValue(row, columnMap.version), 'Unknown');
   const model = cleanText(getMappedValue(row, columnMap.model), 'Unknown');
   const durationMinutes = parseDurationToMinutes(getMappedValue(row, columnMap.duration));
-  const severityWeight = getSeverityWeight(errorState, title, body);
 
   return {
     id: cleanText(getMappedValue(row, columnMap.eventId), `event-${index + 1}`),
@@ -315,27 +326,751 @@ function normalizeRow(row, index, columnMap) {
     version,
     startTime,
     durationMinutes,
-    severityWeight,
-    text: `${machine} ${model} ${title} ${body} ${subsystem} ${errorState}`.toLowerCase(),
+    severityWeight: getSeverityWeight(errorState, title, body),
+    text: `${machine} ${model} ${title} ${body} ${subsystem} ${errorState} ${version}`.toLowerCase(),
     dayKey: formatDateKey(startTime),
-    hourBucket: `${String(startTime.getHours()).padStart(2, '0')}:00`,
-    weekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][startTime.getDay()],
     raw: row
   };
 }
 
-function getMappedValue(row, key) {
-  return key ? row[key] : '';
+function initializeFilters() {
+  const dates = state.normalizedEvents.map((event) => event.startTime).sort((a, b) => a - b);
+  state.filters.dateFrom = formatDateInput(dates[0]);
+  state.filters.dateTo = formatDateInput(dates[dates.length - 1]);
+  state.filters.machine = 'all';
+  state.filters.subsystem = 'all';
+  state.filters.errorState = 'all';
+  state.filters.model = 'all';
+  state.filters.version = 'all';
+  state.filters.search = '';
+
+  els.filterDateFrom.value = state.filters.dateFrom;
+  els.filterDateTo.value = state.filters.dateTo;
+  els.filterSearch.value = '';
+
+  populateSelect(els.filterMachine, uniqueSorted(state.normalizedEvents.map((event) => event.machine)));
+  populateSelect(els.filterSubsystem, uniqueSorted(state.normalizedEvents.map((event) => event.subsystem)));
+  populateSelect(els.filterErrorState, uniqueSorted(state.normalizedEvents.map((event) => event.errorState)));
+  populateSelect(els.filterModel, uniqueSorted(state.normalizedEvents.map((event) => event.model)));
+  populateSelect(els.filterVersion, uniqueSorted(state.normalizedEvents.map((event) => event.version)));
+
+  els.uploadMeta.innerHTML = [
+    `<span class="meta-pill">${escapeHtml(state.currentFileName)}</span>`,
+    `<span class="meta-pill">${state.normalizedEvents.length} events</span>`,
+    `<span class="meta-pill">${uniqueSorted(state.normalizedEvents.map((event) => event.machine)).length} machines</span>`
+  ].join('');
+
+  els.columnMap.innerHTML = Object.entries(state.columnMap)
+    .map(([key, value]) => `<span class="meta-pill">${labelize(key)} → ${escapeHtml(value)}</span>`)
+    .join('');
 }
 
-function normalizeHeader(header) {
-  return String(header || '').trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+function recomputeFilteredView(resetPanel = false) {
+  if (!state.normalizedEvents.length) return;
+  state.filteredEvents = applyFilters(state.normalizedEvents, state.filters);
+  state.summary = buildAnalytics(state.filteredEvents, state.normalizedEvents, state.filters);
+
+  els.analysisShell.classList.remove('hidden');
+  els.emptyState.classList.add('hidden');
+
+  renderHero();
+  renderAttentionNow();
+  renderSmartInsights();
+  renderEvidence();
+  renderSummaryComposer();
+  updateVisibleSections();
+
+  if (resetPanel) closeMachinePanel();
+  if (state.selectedPanel) {
+    if (state.selectedPanel.type === 'machine') renderMachineDetails(state.selectedPanel.value);
+    else openCategoryPanel(state.selectedPanel.type, state.selectedPanel.value);
+  }
 }
 
-function cleanText(value, fallback = 'Unknown') {
-  const text = String(value == null ? '' : value).trim();
-  return text || fallback;
+function buildAnalytics(filteredEvents, baselineEvents, filters) {
+  const machineMap = groupBy(filteredEvents, 'machine');
+  const machines = Array.from(machineMap.entries()).map(([machine, events]) => buildMachineMetrics(machine, events));
+  machines.sort((a, b) => b.riskScore - a.riskScore || b.totalDowntime - a.totalDowntime);
+
+  const totalDowntime = sum(filteredEvents, 'durationMinutes');
+  const topErrors = getTopCounts(filteredEvents, (event) => event.title, 10);
+  const topSubsystems = getTopCounts(filteredEvents, (event) => event.subsystem, 8);
+  const dailyTrend = getDailyTrend(filteredEvents);
+  const fleetHealth = buildFleetHealth(machines, filteredEvents.length);
+  const highDurationThreshold = getHighDurationThreshold(filteredEvents);
+  const worseningMachines = machines.filter((machine) => machine.trendDirection === 'Worsening');
+  const concentratedFailures = machines.filter((machine) => machine.subsystemConcentration >= 0.55 || machine.sameErrorConcentration >= 0.6);
+  const highDowntimeMachines = machines.filter((machine) => machine.totalDowntime >= highDurationThreshold);
+  const recoveryLoops = machines.filter((machine) => machine.recoveryLoopCount > 0);
+  const recurringFleetErrors = topErrors.filter((item) => item.value >= 10).map((item) => ({
+    ...item,
+    affectedMachines: uniqueSorted(filteredEvents.filter((event) => event.title === item.key).map((event) => event.machine))
+  }));
+  const recurringFleetSubsystems = topSubsystems.filter((item) => item.value >= 30).map((item) => ({
+    ...item,
+    affectedMachines: uniqueSorted(filteredEvents.filter((event) => event.subsystem === item.key).map((event) => event.machine))
+  }));
+  const criticalMachines = machines.filter((machine) => machine.severityLevel === 'Critical');
+  const priorityMachines = machines.slice(0, 6);
+  const findings = buildFindings({
+    machines,
+    worseningMachines,
+    concentratedFailures,
+    highDowntimeMachines,
+    recurringFleetErrors,
+    recurringFleetSubsystems,
+    filteredEvents,
+    topSubsystems
+  });
+  const focusAreas = deriveFocusAreas({
+    criticalMachines,
+    recurringFleetErrors,
+    recurringFleetSubsystems,
+    worseningMachines,
+    highDowntimeMachines,
+    concentratedFailures,
+    topSubsystems,
+    topErrors
+  });
+
+  return {
+    machines,
+    totalDowntime,
+    filteredEvents,
+    topErrors,
+    topSubsystems,
+    dailyTrend,
+    fleetHealth,
+    highDurationThreshold,
+    worseningMachines,
+    concentratedFailures,
+    highDowntimeMachines,
+    recoveryLoops,
+    recurringFleetErrors,
+    recurringFleetSubsystems,
+    criticalMachines,
+    priorityMachines,
+    findings,
+    focusAreas,
+    emailSummary: buildEmailSummary({
+      machines,
+      fleetHealth,
+      criticalMachines,
+      recurringFleetErrors,
+      recurringFleetSubsystems,
+      topErrors,
+      topSubsystems,
+      totalDowntime,
+      focusAreas,
+      filteredEvents,
+      baselineEvents
+    }),
+    narrative: buildNarrative({ machines, fleetHealth, criticalMachines, topErrors, topSubsystems, worseningMachines, highDowntimeMachines }),
+    postureScore: calculateFleetScore(machines),
+    baselineEventsCount: baselineEvents.length,
+    dateRange: getAnalyzedDateRange(filteredEvents, filters)
+  };
 }
+
+function buildMachineMetrics(machine, events) {
+  const totalErrors = events.length;
+  const totalDowntime = sum(events, 'durationMinutes');
+  const errorCounts = countBy(events, (event) => event.title);
+  const subsystemCounts = countBy(events, (event) => event.subsystem);
+  const recoveryCounts = countBy(events, (event) => event.recovery);
+  const errorStateCounts = countBy(events, (event) => event.errorState);
+  const sortedByTime = [...events].sort((a, b) => a.startTime - b.startTime);
+  const midpoint = Math.max(1, Math.floor(sortedByTime.length / 2));
+  const previousWindow = sortedByTime.slice(0, midpoint);
+  const recentWindow = sortedByTime.slice(midpoint);
+  const trendDelta = recentWindow.length - previousWindow.length;
+  const topError = getTopEntry(errorCounts);
+  const topSubsystem = getTopEntry(subsystemCounts);
+  const repeatedErrorCount = Array.from(errorCounts.values()).filter((count) => count > 1).reduce((acc, count) => acc + (count - 1), 0);
+  const subsystemConcentration = totalErrors ? topSubsystem.value / totalErrors : 0;
+  const sameErrorConcentration = totalErrors ? topError.value / totalErrors : 0;
+  const recoveryLoopCount = countRecoveryLoops(sortedByTime);
+  const burstCount = countBurstEvents(sortedByTime, 180);
+  const highDurationFlag = totalDowntime >= getHighDurationThreshold(events);
+  const criticalStateCount = Array.from(errorStateCounts.entries())
+    .filter(([label]) => /critical|fatal|emergency/i.test(label))
+    .reduce((acc, [, count]) => acc + count, 0);
+
+  const riskScore = Math.round(
+    totalErrors +
+    Math.min(120, totalDowntime / 4) +
+    repeatedErrorCount * 4 +
+    Math.round(subsystemConcentration * 36) +
+    Math.round(sameErrorConcentration * 22) +
+    recoveryLoopCount * 10 +
+    Math.max(0, trendDelta) * 8 +
+    burstCount * 5 +
+    criticalStateCount * 5 +
+    (topSubsystem.value >= 30 ? 12 : 0) +
+    (topError.value >= 10 ? 10 : 0) +
+    (highDurationFlag ? 14 : 0)
+  );
+
+  const severity = HEALTH_LEVELS.find((item) => riskScore >= item.min && riskScore <= item.max) || HEALTH_LEVELS[HEALTH_LEVELS.length - 1];
+  const trendDirection = trendDelta >= 2 ? 'Worsening' : trendDelta <= -2 ? 'Improving' : 'Stable';
+  const reasons = [];
+  if (topSubsystem.value >= 30) reasons.push(`${topSubsystem.key} exceeds the subsystem alert threshold with ${topSubsystem.value} events.`);
+  if (topError.value >= 10) reasons.push(`${topError.key} crosses the recurring error threshold with ${topError.value} repeats.`);
+  if (highDurationFlag) reasons.push(`${formatMinutes(totalDowntime)} of downtime creates strong availability impact.`);
+  if (subsystemConcentration >= 0.55) reasons.push(`${Math.round(subsystemConcentration * 100)}% of machine failures come from ${topSubsystem.key}.`);
+  if (sameErrorConcentration >= 0.6) reasons.push(`${Math.round(sameErrorConcentration * 100)}% of machine failures are driven by a single error.`);
+  if (recoveryLoopCount > 0) reasons.push(`${recoveryLoopCount} recovery/failure loop${recoveryLoopCount > 1 ? 's' : ''} detected.`);
+  if (trendDirection === 'Worsening') reasons.push('Recent event flow is worsening within the selected period.');
+  if (!reasons.length) reasons.push('The machine remains visible due to cumulative operational risk.');
+
+  return {
+    machine,
+    model: events[0]?.model || 'Unknown',
+    version: events[0]?.version || 'Unknown',
+    totalErrors,
+    totalDowntime,
+    topError: topError.key,
+    topErrorCount: topError.value,
+    topSubsystem: topSubsystem.key,
+    topSubsystemCount: topSubsystem.value,
+    riskScore,
+    severityLevel: severity.label,
+    severityColor: severity.color,
+    trendDirection,
+    recentWindowErrors: recentWindow.length,
+    subsystemConcentration,
+    sameErrorConcentration,
+    recoveryLoopCount,
+    repeatedErrorCount,
+    burstCount,
+    reasons,
+    recommendation: deriveMachineRecommendation(events, topSubsystem.key, topError.key),
+    eventTimeline: sortedByTime,
+    errorCounts,
+    subsystemCounts,
+    recoveryCounts,
+    errorStateCounts,
+    problematicAreas: deriveProblematicAreas(events, topSubsystem.key, topError.key)
+  };
+}
+
+function buildFindings({ machines, worseningMachines, concentratedFailures, highDowntimeMachines, recurringFleetErrors, recurringFleetSubsystems, filteredEvents, topSubsystems }) {
+  const findings = [];
+
+  if (recurringFleetErrors[0]) {
+    findings.push({
+      title: `${recurringFleetErrors[0].affectedMachines.length} machines are hit by the same recurring error`,
+      copy: `${recurringFleetErrors[0].key} appears ${recurringFleetErrors[0].value} times across the selected fleet slice. This suggests a shared issue pattern rather than isolated machine noise.`,
+      chips: recurringFleetErrors[0].affectedMachines.slice(0, 6),
+      type: 'error',
+      value: recurringFleetErrors[0].key
+    });
+  }
+
+  if (highDowntimeMachines.length) {
+    findings.push({
+      title: `${highDowntimeMachines.length} presses show heavy downtime impact`,
+      copy: `These presses cross the high-duration alert threshold even when raw event counts alone might seem moderate. Availability risk should be reviewed alongside recurrence, not separately.`,
+      chips: highDowntimeMachines.slice(0, 5).map((machine) => machine.machine),
+      type: 'machine-list',
+      value: highDowntimeMachines.slice(0, 5).map((machine) => machine.machine)
+    });
+  }
+
+  if (recurringFleetSubsystems[0]) {
+    findings.push({
+      title: `${recurringFleetSubsystems[0].key} is creating a cross-fleet subsystem concern`,
+      copy: `${recurringFleetSubsystems[0].value} subsystem-linked events exceed the fleet notification threshold. This subsystem deserves preventive focus before issues fragment into one-off investigations.`,
+      chips: recurringFleetSubsystems[0].affectedMachines.slice(0, 6),
+      type: 'subsystem',
+      value: recurringFleetSubsystems[0].key
+    });
+  }
+
+  if (worseningMachines.length) {
+    findings.push({
+      title: `${worseningMachines.length} machine${worseningMachines.length > 1 ? 's are' : ' is'} trending worse`,
+      copy: `Recent event volume is higher than the earlier half of the selected period. These machines should be watched for escalation before the next production window.`,
+      chips: worseningMachines.slice(0, 5).map((machine) => machine.machine),
+      type: 'machine-list',
+      value: worseningMachines.slice(0, 5).map((machine) => machine.machine)
+    });
+  }
+
+  if (concentratedFailures.length) {
+    findings.push({
+      title: `${concentratedFailures.length} machines are dominated by a single source`,
+      copy: `Strong concentration around one subsystem or error often points to a localized root cause. These are typically the fastest wins for focused engineering intervention.`,
+      chips: concentratedFailures.slice(0, 5).map((machine) => machine.machine),
+      type: 'machine-list',
+      value: concentratedFailures.slice(0, 5).map((machine) => machine.machine)
+    });
+  }
+
+  if (!findings.length && topSubsystems[0]) {
+    findings.push({
+      title: `${topSubsystems[0].key} remains the dominant subsystem signal`,
+      copy: `The current filter set does not reveal an outsized anomaly, but subsystem concentration still indicates where preventive inspection will be most useful.`,
+      chips: uniqueSorted(filteredEvents.filter((event) => event.subsystem === topSubsystems[0].key).map((event) => event.machine)).slice(0, 6),
+      type: 'subsystem',
+      value: topSubsystems[0].key
+    });
+  }
+
+  return findings.slice(0, 6);
+}
+
+function deriveFocusAreas({ criticalMachines, recurringFleetErrors, recurringFleetSubsystems, worseningMachines, highDowntimeMachines, concentratedFailures, topSubsystems, topErrors }) {
+  const areas = [];
+  if (criticalMachines.length) areas.push(`Stabilize ${criticalMachines[0].machine} and other critical presses before the next production window.`);
+  if (recurringFleetSubsystems[0]) areas.push(`Inspect ${recurringFleetSubsystems[0].key} across the fleet; it exceeds the subsystem notification threshold.`);
+  if (recurringFleetErrors[0]) areas.push(`Contain ${recurringFleetErrors[0].key}; it is the strongest repeating fleet-wide error pattern.`);
+  if (highDowntimeMachines.length) areas.push('Prioritize machines with heavy downtime impact even when their event counts look deceptively moderate.');
+  if (concentratedFailures.length) areas.push('Use concentrated same-source failures as root-cause entry points for faster resolution.');
+  if (worseningMachines.length) areas.push('Monitor worsening trajectories to prevent more machines entering the warning or critical band.');
+  if (!areas.length && topSubsystems[0] && topErrors[0]) areas.push(`Continue preventive review of ${topSubsystems[0].key} and ${topErrors[0].key}.`);
+  return areas.slice(0, 5);
+}
+
+function buildNarrative({ machines, fleetHealth, criticalMachines, topErrors, topSubsystems, worseningMachines, highDowntimeMachines }) {
+  const criticalCount = fleetHealth.counts.find((item) => item.label === 'Critical')?.count || 0;
+  const warningCount = fleetHealth.counts.find((item) => item.label === 'Warning')?.count || 0;
+  const leadMachine = criticalMachines[0] || machines[0];
+  const leadError = topErrors[0]?.key || 'recurring machine alerts';
+  const leadSubsystem = topSubsystems[0]?.key || 'key production subsystems';
+  return `${criticalCount} of ${machines.length} machines are currently in Critical, with ${warningCount} more in Warning. The strongest signals are repeated ${leadError} events and persistent pressure in ${leadSubsystem}${leadMachine ? `, led by ${leadMachine.machine}` : ''}. ${highDowntimeMachines.length ? `${highDowntimeMachines.length} machines also show elevated downtime impact.` : ''} ${worseningMachines.length ? `${worseningMachines.length} machine${worseningMachines.length > 1 ? 's are' : ' is'} trending worse across the selected period.` : ''}`.trim();
+}
+
+function calculateFleetScore(machines) {
+  if (!machines.length) return 0;
+  const avgRisk = average(machines.map((machine) => machine.riskScore));
+  return Math.max(0, Math.round(100 - Math.min(95, avgRisk * 0.48)));
+}
+
+function buildFleetHealth(machines, totalEvents) {
+  const counts = HEALTH_LEVELS.map((level) => ({
+    label: level.label,
+    count: machines.filter((machine) => machine.severityLevel === level.label).length,
+    color: level.color
+  }));
+  return {
+    counts,
+    totalMachines: machines.length,
+    totalEvents
+  };
+}
+
+function buildEmailSummary({ machines, fleetHealth, criticalMachines, recurringFleetErrors, recurringFleetSubsystems, topErrors, topSubsystems, totalDowntime, focusAreas }) {
+  const counts = Object.fromEntries(fleetHealth.counts.map((item) => [item.label, item.count]));
+  return [
+    'Landa Insights Analyzer — Executive Fleet Summary',
+    '',
+    `Machines analyzed: ${machines.length}`,
+    `Severity distribution: Healthy ${counts.Healthy || 0} | Monitor ${counts.Monitor || 0} | Warning ${counts.Warning || 0} | Critical ${counts.Critical || 0}`,
+    `Availability impact: ${formatMinutes(totalDowntime)} total downtime captured in the selected filter range`,
+    '',
+    'Critical machines and why:',
+    ...(criticalMachines.length
+      ? criticalMachines.slice(0, 5).map((machine) => `- ${machine.machine}: ${machine.reasons[0] || 'High fleet risk score.'}`)
+      : ['- No critical machines in the current slice.']),
+    '',
+    'Main recurring issues:',
+    ...(recurringFleetErrors.length
+      ? recurringFleetErrors.slice(0, 3).map((item) => `- ${item.key}: ${item.value} events across ${item.affectedMachines.length} machines`)
+      : topErrors[0] ? [`- ${topErrors[0].key}: ${topErrors[0].value} total events`] : ['- No major recurring error pattern detected.']),
+    '',
+    'Main subsystem concerns:',
+    ...(recurringFleetSubsystems.length
+      ? recurringFleetSubsystems.slice(0, 3).map((item) => `- ${item.key}: ${item.value} events across ${item.affectedMachines.length} machines`)
+      : topSubsystems[0] ? [`- ${topSubsystems[0].key}: ${topSubsystems[0].value} total events`] : ['- No subsystem concern stands out in the current selection.']),
+    '',
+    'Recommended focus areas:',
+    ...(focusAreas.length ? focusAreas.map((item) => `- ${item}`) : ['- Continue routine preventive monitoring.'])
+  ].join('\n');
+}
+
+function renderHero() {
+  const { summary } = state;
+  const critical = summary.fleetHealth.counts.find((item) => item.label === 'Critical')?.count || 0;
+  const totalMachines = Math.max(summary.machines.length, 1);
+  const lead = summary.priorityMachines[0];
+
+  els.heroNarrative.textContent = summary.narrative;
+  els.heroMetrics.innerHTML = [
+    ['Machines analyzed', summary.machines.length, summary.dateRange],
+    ['Events captured', summary.filteredEvents.length, `${critical} critical machines`],
+    ['Downtime impact', formatMinutes(summary.totalDowntime), `${summary.highDowntimeMachines.length} high-duration presses`],
+    ['Lead issue', summary.topErrors[0]?.key || 'No dominant pattern', lead ? lead.topSubsystem : 'No leading machine']
+  ].map(([label, value, note]) => renderHeroMetric(label, value, note)).join('');
+
+  els.fleetScore.textContent = summary.postureScore;
+  els.fleetPostureCopy.textContent = `${summary.postureScore >= 75 ? 'Fleet posture is relatively controlled.' : summary.postureScore >= 50 ? 'Fleet posture needs active supervision.' : 'Fleet posture is under significant strain.'} ${critical ? `${critical} machine${critical > 1 ? 's are' : ' is'} in the critical band.` : 'No machines are in the critical band.'}`;
+
+  els.severityStack.innerHTML = summary.fleetHealth.counts.map((item) => `
+    <div class="severity-bar">
+      <div class="posture-label" style="color:${item.color}">${item.label}</div>
+      <div class="severity-track"><div class="severity-fill" style="width:${Math.round((item.count / totalMachines) * 100)}%; background:${item.color};"></div></div>
+      <div>${item.count}</div>
+    </div>
+  `).join('');
+
+  els.focusFlow.innerHTML = summary.focusAreas.length
+    ? summary.focusAreas.map((focus) => `<span class="meta-pill">${escapeHtml(focus)}</span>`).join('')
+    : '<span class="meta-pill">No urgent focus area identified</span>';
+}
+
+function renderHeroMetric(label, value, note) {
+  return `
+    <div class="hero-metric">
+      <div class="hero-metric-label">${escapeHtml(label)}</div>
+      <div class="hero-metric-value">${escapeHtml(String(value))}</div>
+      <div class="hero-metric-note">${escapeHtml(note)}</div>
+    </div>
+  `;
+}
+
+function renderAttentionNow() {
+  els.alertsStrip.innerHTML = state.summary.focusAreas.map((item) => `<span class="meta-pill">${escapeHtml(item)}</span>`).join('');
+  els.problematicMachines.innerHTML = state.summary.priorityMachines.map((machine) => `
+    <button class="machine-row" data-machine="${escapeHtml(machine.machine)}">
+      <div>
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="machine-name">${escapeHtml(machine.machine)}</div>
+          <span class="severity-badge" style="color:${machine.severityColor}">${escapeHtml(machine.severityLevel)}</span>
+        </div>
+        <div class="machine-sub">${escapeHtml(machine.model)} · ${escapeHtml(machine.version)} · ${escapeHtml(machine.trendDirection)}</div>
+      </div>
+      <div class="machine-reason">${escapeHtml(machine.reasons[0] || machine.recommendation)}</div>
+      <div class="stat-pair">
+        <div class="stat-label">Errors / Downtime</div>
+        <div class="stat-value">${machine.totalErrors} / ${formatMinutes(machine.totalDowntime)}</div>
+        <div class="stat-label mt-2">Lead subsystem</div>
+        <div class="stat-value">${escapeHtml(machine.topSubsystem)}</div>
+      </div>
+    </button>
+  `).join('') || '<div class="summary-list-item">No machine signals available for the current filter set.</div>';
+
+  els.problematicMachines.querySelectorAll('[data-machine]').forEach((button) => {
+    button.addEventListener('click', () => renderMachineDetails(button.dataset.machine));
+  });
+}
+
+function renderSmartInsights() {
+  els.smartInsights.innerHTML = state.summary.findings.map((finding, index) => `
+    <div class="finding-card">
+      <div class="finding-index">Finding ${index + 1}</div>
+      <div class="finding-title">${escapeHtml(finding.title)}</div>
+      <div class="finding-copy">${escapeHtml(finding.copy)}</div>
+      <div class="finding-meta">
+        ${finding.chips.length ? finding.chips.map((chip) => `<button class="chip-link" data-chip-machine="${escapeHtml(chip)}">${escapeHtml(chip)}</button>`).join('') : '<span class="meta-pill">Fleet-wide</span>'}
+      </div>
+    </div>
+  `).join('');
+
+  els.smartInsights.querySelectorAll('[data-chip-machine]').forEach((button) => {
+    button.addEventListener('click', () => renderMachineDetails(button.dataset.chipMachine));
+  });
+}
+
+function renderEvidence() {
+  renderFleetHealth();
+  renderCharts();
+}
+
+function renderFleetHealth() {
+  const totalMachines = Math.max(state.summary.machines.length, 1);
+  els.fleetHealthGrid.innerHTML = state.summary.fleetHealth.counts.map((item) => `
+    <div class="health-row">
+      <button class="health-left" data-health-filter="${escapeHtml(item.label)}">
+        <span class="health-dot" style="background:${item.color}; color:${item.color}"></span>
+        <span>
+          <div class="posture-label">${item.label}</div>
+          <div>${item.count} machine${item.count === 1 ? '' : 's'}</div>
+        </span>
+      </button>
+      <div>${Math.round((item.count / totalMachines) * 100)}%</div>
+      <div style="color:${item.color}">Open</div>
+    </div>
+  `).join('');
+
+  els.fleetHealthGrid.querySelectorAll('[data-health-filter]').forEach((button) => {
+    button.addEventListener('click', () => openCategoryPanel('health', button.dataset.healthFilter));
+  });
+}
+
+function renderSummaryComposer() {
+  els.executiveSummary.textContent = state.summary.emailSummary;
+  els.executiveSummaryMeta.innerHTML = [
+    `<span class="meta-pill">${state.summary.machines.length} machines</span>`,
+    `<span class="meta-pill">${state.summary.filteredEvents.length} events</span>`,
+    `<span class="meta-pill">${formatMinutes(state.summary.totalDowntime)} downtime</span>`
+  ].join('');
+
+  els.actionSummary.innerHTML = state.summary.focusAreas.length
+    ? state.summary.focusAreas.map((item) => `<div class="summary-list-item">${escapeHtml(item)}</div>`).join('')
+    : '<div class="summary-list-item">No urgent focus areas identified.</div>';
+}
+
+function renderCharts() {
+  renderTrendChart();
+  renderSubsystemChart();
+  renderTopErrorsChart();
+}
+
+function renderTrendChart() {
+  if (!els.chartErrorTrend) return;
+  const chart = getOrCreateChart('errorTrend', els.chartErrorTrend);
+  chart.setOption({
+    backgroundColor: 'transparent',
+    grid: { left: 26, right: 16, top: 26, bottom: 30, containLabel: true },
+    tooltip: { trigger: 'axis' },
+    xAxis: { type: 'category', data: state.summary.dailyTrend.map((item) => item.day), axisLabel: { color: '#9fb2c8' }, axisLine: { lineStyle: { color: 'rgba(148,163,184,.18)' } } },
+    yAxis: { type: 'value', axisLabel: { color: '#9fb2c8' }, splitLine: { lineStyle: { color: 'rgba(148,163,184,.12)' } } },
+    series: [{
+      type: 'line', smooth: true, symbol: 'circle', symbolSize: 8,
+      data: state.summary.dailyTrend.map((item) => item.value),
+      lineStyle: { color: '#58c4ff', width: 3 },
+      areaStyle: { color: 'rgba(88,196,255,.12)' },
+      itemStyle: { color: '#58c4ff' }
+    }]
+  });
+}
+
+function renderSubsystemChart() {
+  const chart = getOrCreateChart('subsystemDistribution', els.chartSubsystemDistribution);
+  chart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'item' },
+    series: [{
+      type: 'pie',
+      radius: ['45%', '72%'],
+      center: ['50%', '54%'],
+      label: { color: '#d7e3f1', formatter: '{b}\n{d}%' },
+      labelLine: { lineStyle: { color: 'rgba(215,227,241,.4)' } },
+      itemStyle: { borderWidth: 4, borderColor: '#0c1524' },
+      data: state.summary.topSubsystems.slice(0, 5).map((item, index) => ({
+        name: item.key,
+        value: item.value,
+        itemStyle: { color: ['#58c4ff', '#2dd4bf', '#eab308', '#f97316', '#ef4444'][index % 5] }
+      }))
+    }]
+  });
+}
+
+function renderTopErrorsChart() {
+  const chart = getOrCreateChart('topErrors', els.chartTopErrors);
+  const data = [...state.summary.topErrors.slice(0, 6)].reverse();
+  chart.setOption({
+    backgroundColor: 'transparent',
+    grid: { left: 120, right: 18, top: 16, bottom: 20 },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    xAxis: { type: 'value', axisLabel: { color: '#9fb2c8' }, splitLine: { lineStyle: { color: 'rgba(148,163,184,.10)' } } },
+    yAxis: { type: 'category', data: data.map((item) => truncate(item.key, 24)), axisLabel: { color: '#d7e3f1' }, axisLine: { show: false } },
+    series: [{
+      type: 'bar',
+      data: data.map((item) => ({ value: item.value, itemStyle: { color: item.value >= 10 ? '#f97316' : '#58c4ff', borderRadius: [0, 10, 10, 0] } }))
+    }]
+  });
+}
+
+function renderMachineDetails(machineName) {
+  const machine = state.summary.machines.find((item) => item.machine === machineName);
+  if (!machine) return;
+  state.selectedPanel = { type: 'machine', value: machineName };
+  els.machinePanel.classList.remove('hidden');
+  els.machinePanelTitle.textContent = machine.machine;
+  els.machinePanelSubtitle.textContent = `${machine.model} · ${machine.version} · ${machine.severityLevel} · ${machine.trendDirection}`;
+
+  const timeline = machine.eventTimeline.slice(-8).reverse().map((event) => `
+    <div class="timeline-item">
+      <div class="flex flex-wrap justify-between gap-2">
+        <strong>${escapeHtml(event.title)}</strong>
+        <span>${escapeHtml(formatDateTime(event.startTime))}</span>
+      </div>
+      <div class="text-slate-300 text-sm mt-2">${escapeHtml(event.subsystem)} · ${escapeHtml(event.errorState)} · ${formatMinutes(event.durationMinutes)}</div>
+      <div class="text-slate-400 text-sm mt-2">Recovery: ${escapeHtml(event.recovery)}${event.solution ? ` · Suggested action: ${escapeHtml(event.solution)}` : ''}</div>
+    </div>
+  `).join('');
+
+  els.machinePanelContent.innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-block"><div class="detail-k">Total errors</div><div class="detail-v">${machine.totalErrors}</div></div>
+      <div class="detail-block"><div class="detail-k">Top error</div><div class="detail-v">${escapeHtml(machine.topError)}</div></div>
+      <div class="detail-block"><div class="detail-k">Top subsystem</div><div class="detail-v">${escapeHtml(machine.topSubsystem)}</div></div>
+      <div class="detail-block"><div class="detail-k">Downtime</div><div class="detail-v">${formatMinutes(machine.totalDowntime)}</div></div>
+    </div>
+    <div class="drawer-sections">
+      <div class="detail-block">
+        <div class="detail-k">Why it needs attention</div>
+        <ul class="bullet-list mt-3">${machine.reasons.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+      </div>
+      <div class="detail-block">
+        <div class="detail-k">Suggested focus areas</div>
+        <ul class="bullet-list mt-3">${machine.problematicAreas.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}<li>${escapeHtml(machine.recommendation)}</li></ul>
+      </div>
+      <div class="detail-block">
+        <div class="detail-k">Recurrence + behavior</div>
+        <ul class="bullet-list mt-3">
+          <li>${machine.topErrorCount} instances of the leading error.</li>
+          <li>${machine.topSubsystemCount} instances in the leading subsystem.</li>
+          <li>${machine.recoveryLoopCount} recovery loop${machine.recoveryLoopCount === 1 ? '' : 's'} detected.</li>
+          <li>${machine.burstCount} concentrated burst window${machine.burstCount === 1 ? '' : 's'} detected.</li>
+        </ul>
+      </div>
+      <div class="detail-block">
+        <div class="detail-k">Linked related issues</div>
+        <ul class="bullet-list mt-3">
+          <li>Error concentration: ${Math.round(machine.sameErrorConcentration * 100)}%</li>
+          <li>Subsystem concentration: ${Math.round(machine.subsystemConcentration * 100)}%</li>
+          <li>Recent events in latest window: ${machine.recentWindowErrors}</li>
+          <li>Risk score: ${machine.riskScore}</li>
+        </ul>
+      </div>
+      <div class="detail-block full">
+        <div class="detail-k">Timeline</div>
+        <div class="timeline-list">${timeline || '<div class="timeline-item">No recent timeline available.</div>'}</div>
+      </div>
+    </div>
+  `;
+}
+
+function openCategoryPanel(type, value) {
+  let title = value;
+  let subtitle = '';
+  let items = [];
+
+  if (type === 'health') {
+    const matches = state.summary.machines.filter((machine) => machine.severityLevel === value);
+    title = `${value} machines`;
+    subtitle = `Machines classified using the mandated severity thresholds.`;
+    items = matches.map((machine) => `<div class="summary-list-item"><strong>${escapeHtml(machine.machine)}</strong><div class="text-slate-400 text-sm mt-2">${escapeHtml(machine.topSubsystem)} · ${machine.totalErrors} errors · ${formatMinutes(machine.totalDowntime)} downtime</div></div>`);
+  } else if (type === 'subsystem') {
+    const matches = state.filteredEvents.filter((event) => event.subsystem === value);
+    subtitle = `Events associated with subsystem ${value}.`;
+    items = uniqueSorted(matches.map((event) => event.machine)).map((machine) => `<button class="summary-list-item" data-machine-link="${escapeHtml(machine)}"><strong>${escapeHtml(machine)}</strong><div class="text-slate-400 text-sm mt-2">Open machine investigation</div></button>`);
+  } else if (type === 'error') {
+    const matches = state.filteredEvents.filter((event) => event.title === value);
+    subtitle = `Events associated with error ${value}.`;
+    items = uniqueSorted(matches.map((event) => event.machine)).map((machine) => `<button class="summary-list-item" data-machine-link="${escapeHtml(machine)}"><strong>${escapeHtml(machine)}</strong><div class="text-slate-400 text-sm mt-2">Open machine investigation</div></button>`);
+  }
+
+  state.selectedPanel = { type, value };
+  els.machinePanel.classList.remove('hidden');
+  els.machinePanelTitle.textContent = title;
+  els.machinePanelSubtitle.textContent = subtitle;
+  els.machinePanelContent.innerHTML = `<div class="summary-list mt-5">${items.join('') || '<div class="summary-list-item">No matching records found.</div>'}</div>`;
+  els.machinePanelContent.querySelectorAll('[data-machine-link]').forEach((button) => {
+    button.addEventListener('click', () => renderMachineDetails(button.dataset.machineLink));
+  });
+}
+
+function openReportModal() {
+  if (!state.summary) return;
+  els.reportModal.classList.remove('hidden');
+  els.reportModalContent.innerHTML = `
+    <div class="report-grid">
+      <div class="detail-block">
+        <div class="detail-k">Executive brief</div>
+        <div class="summary-body">${escapeHtml(state.summary.emailSummary)}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-k">What needs attention now</div>
+        <div class="summary-list mt-4">${state.summary.priorityMachines.map((machine) => `<div class="summary-list-item"><strong>${escapeHtml(machine.machine)}</strong><div class="text-slate-400 text-sm mt-2">${escapeHtml(machine.reasons[0])}</div></div>`).join('')}</div>
+      </div>
+    </div>
+  `;
+}
+
+function copySummaryToClipboard() {
+  if (!state.summary?.emailSummary) return;
+  navigator.clipboard.writeText(state.summary.emailSummary)
+    .then(() => setUploadStatus('Executive summary copied to clipboard.', 'success'))
+    .catch(() => setUploadStatus('Unable to copy summary in this browser.', 'error'));
+}
+
+function closeMachinePanel() {
+  state.selectedPanel = null;
+  els.machinePanel.classList.add('hidden');
+}
+
+function resetAnalysis(showMessage = true) {
+  state.rawEvents = [];
+  state.normalizedEvents = [];
+  state.filteredEvents = [];
+  state.summary = null;
+  state.selectedPanel = null;
+  state.columnMap = null;
+  state.currentFileName = '';
+  els.fileInput.value = '';
+  els.analysisShell.classList.add('hidden');
+  els.emptyState.classList.remove('hidden');
+  els.machinePanel.classList.add('hidden');
+  els.reportModal.classList.add('hidden');
+  els.uploadMeta.innerHTML = '';
+  els.columnMap.innerHTML = '';
+  renderHeroPlaceholder();
+  if (showMessage) setUploadStatus('Analysis reset. Upload another file to begin again.', 'info');
+}
+
+function renderViewPresets() {
+  els.viewPresets.innerHTML = VIEW_PRESETS.map((preset) => `
+    <button class="preset-pill ${state.activePreset === preset.key ? 'active' : ''}" data-preset="${preset.key}">${preset.label}</button>
+  `).join('');
+  els.viewPresets.querySelectorAll('[data-preset]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const preset = VIEW_PRESETS.find((item) => item.key === button.dataset.preset);
+      state.activePreset = preset.key;
+      state.visibleSections = new Set(preset.sections);
+      renderViewPresets();
+      renderSectionSelector();
+      updateVisibleSections();
+    });
+  });
+}
+
+function renderSectionSelector() {
+  els.sectionSelector.innerHTML = SECTION_OPTIONS.map((section) => `
+    <button class="section-pill ${state.visibleSections.has(section.key) ? 'active' : ''}" data-section-toggle="${section.key}">${section.label}</button>
+  `).join('');
+  els.sectionSelector.querySelectorAll('[data-section-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.sectionToggle;
+      if (state.visibleSections.has(key) && state.visibleSections.size > 1) state.visibleSections.delete(key);
+      else state.visibleSections.add(key);
+      state.activePreset = '';
+      renderViewPresets();
+      renderSectionSelector();
+      updateVisibleSections();
+    });
+  });
+}
+
+function updateVisibleSections() {
+  document.querySelectorAll('.dashboard-section').forEach((section) => {
+    section.classList.toggle('hidden', !state.visibleSections.has(section.dataset.section));
+  });
+}
+
+function applyFilters(events, filters) {
+  const from = filters.dateFrom ? new Date(`${filters.dateFrom}T00:00:00`) : null;
+  const to = filters.dateTo ? new Date(`${filters.dateTo}T23:59:59`) : null;
+  const search = filters.search.trim().toLowerCase();
+  return events.filter((event) => {
+    if (from && event.startTime < from) return false;
+    if (to && event.startTime > to) return false;
+    if (filters.machine !== 'all' && event.machine !== filters.machine) return false;
+    if (filters.subsystem !== 'all' && event.subsystem !== filters.subsystem) return false;
+    if (filters.errorState !== 'all' && event.errorState !== filters.errorState) return false;
+    if (filters.model !== 'all' && event.model !== filters.model) return false;
+    if (filters.version !== 'all' && event.version !== filters.version) return false;
+    if (search && !event.text.includes(search)) return false;
+    return true;
+  });
+}
+
+function getMappedValue(row, key) { return key ? row[key] : ''; }
+function normalizeHeader(header) { return String(header || '').trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' '); }
+function cleanText(value, fallback = 'Unknown') { const text = String(value == null ? '' : value).trim(); return text || fallback; }
 
 function parseDate(value) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
@@ -347,7 +1082,6 @@ function parseDate(value) {
   if (!normalized) return null;
   const direct = new Date(normalized);
   if (!Number.isNaN(direct.getTime())) return direct;
-
   const match = normalized.match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
   if (!match) return null;
   const [, a, b, c, hh = '0', mm = '0', ss = '0'] = match;
@@ -365,19 +1099,9 @@ function parseDurationToMinutes(value) {
   if (!text) return 0;
   if (/^\d+(\.\d+)?$/.test(text)) return Number(text);
   const timeMatch = text.match(/(?:(\d+)\s*h)?\s*(?:(\d+)\s*m)?\s*(?:(\d+)\s*s)?/);
-  if (timeMatch && timeMatch[0].trim()) {
-    const hours = Number(timeMatch[1] || 0);
-    const minutes = Number(timeMatch[2] || 0);
-    const seconds = Number(timeMatch[3] || 0);
-    return hours * 60 + minutes + seconds / 60;
-  }
+  if (timeMatch && timeMatch[0].trim()) return Number(timeMatch[1] || 0) * 60 + Number(timeMatch[2] || 0) + Number(timeMatch[3] || 0) / 60;
   const hhmmss = text.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
-  if (hhmmss) {
-    const hours = Number(hhmmss[1]);
-    const minutes = Number(hhmmss[2]);
-    const seconds = Number(hhmmss[3] || 0);
-    return hours * 60 + minutes + seconds / 60;
-  }
+  if (hhmmss) return Number(hhmmss[1]) * 60 + Number(hhmmss[2]) + Number(hhmmss[3] || 0) / 60;
   return 0;
 }
 
@@ -397,214 +1121,16 @@ function getSeverityWeight(errorState, title, body) {
   return 2;
 }
 
-function initializeFilters() {
-  const dates = state.normalizedEvents.map((event) => event.startTime).sort((a, b) => a - b);
-  state.filters.dateFrom = formatDateInput(dates[0]);
-  state.filters.dateTo = formatDateInput(dates[dates.length - 1]);
-
-  els.filterDateFrom.value = state.filters.dateFrom;
-  els.filterDateTo.value = state.filters.dateTo;
-
-  populateSelect(els.filterMachine, uniqueSorted(state.normalizedEvents.map((event) => event.machine)));
-  populateSelect(els.filterSubsystem, uniqueSorted(state.normalizedEvents.map((event) => event.subsystem)));
-  populateSelect(els.filterErrorState, uniqueSorted(state.normalizedEvents.map((event) => event.errorState)));
-  populateSelect(els.filterModel, uniqueSorted(state.normalizedEvents.map((event) => event.model)));
-  populateSelect(els.filterVersion, uniqueSorted(state.normalizedEvents.map((event) => event.version)));
-
-  els.filterSearch.value = '';
-  els.datasetName.textContent = state.currentFileName;
-  els.uploadMeta.textContent = `${state.normalizedEvents.length} events normalized across ${uniqueSorted(state.normalizedEvents.map((event) => event.machine)).length} machines.`;
-  els.columnMap.innerHTML = Object.entries(state.columnMap)
-    .map(([key, value]) => `<span class="meta-chip">${labelize(key)} → ${escapeHtml(value)}</span>`)
-    .join('');
+function deriveMachineRecommendation(events, topSubsystem, topError) {
+  const explicit = events.find((event) => event.solution && !/No recommended/i.test(event.solution));
+  return explicit ? `${explicit.solution}. Prioritize ${topSubsystem} validation.` : `Inspect ${topSubsystem} first, validate ${topError}, and review recent recovery behavior for repeat escalation.`;
 }
 
-function populateSelect(select, values) {
-  const current = select.value || 'all';
-  select.innerHTML = '<option value="all">All</option>' + values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
-  select.value = values.includes(current) ? current : 'all';
-}
-
-function recomputeFilteredView(resetMachineSelection = false) {
-  if (!state.normalizedEvents.length) return;
-  const filtered = applyFilters(state.normalizedEvents, state.filters);
-  state.filteredEvents = filtered;
-  state.summary = buildAnalytics(filtered, state.normalizedEvents, state.filters);
-
-  els.analysisShell.classList.remove('hidden');
-  els.emptyState.classList.add('hidden');
-
-  renderKPIs();
-  renderFleetHealth();
-  renderActionSummary();
-  renderProblematicMachines();
-  renderSmartInsights();
-  renderExecutiveSummary();
-  renderCharts();
-  updateVisibleSections();
-
-  if (resetMachineSelection) closeMachinePanel();
-  if (state.selectedPanel) {
-    if (state.selectedPanel.type === 'machine') renderMachineDetails(state.selectedPanel.value);
-    else openCategoryPanel(state.selectedPanel.type, state.selectedPanel.value);
-  }
-}
-
-function applyFilters(events, filters) {
-  const from = filters.dateFrom ? new Date(`${filters.dateFrom}T00:00:00`) : null;
-  const to = filters.dateTo ? new Date(`${filters.dateTo}T23:59:59`) : null;
-  const search = filters.search.trim().toLowerCase();
-
-  return events.filter((event) => {
-    if (from && event.startTime < from) return false;
-    if (to && event.startTime > to) return false;
-    if (filters.machine !== 'all' && event.machine !== filters.machine) return false;
-    if (filters.subsystem !== 'all' && event.subsystem !== filters.subsystem) return false;
-    if (filters.errorState !== 'all' && event.errorState !== filters.errorState) return false;
-    if (filters.model !== 'all' && event.model !== filters.model) return false;
-    if (filters.version !== 'all' && event.version !== filters.version) return false;
-    if (search && !event.text.includes(search)) return false;
-    return true;
-  });
-}
-
-function buildAnalytics(filteredEvents, baselineEvents, filters) {
-  const machines = Array.from(groupBy(filteredEvents, 'machine').entries()).map(([machine, events]) => buildMachineMetrics(machine, events));
-  machines.sort((a, b) => b.riskScore - a.riskScore || b.totalDowntime - a.totalDowntime);
-
-  const totalDowntime = filteredEvents.reduce((sumValue, event) => sumValue + event.durationMinutes, 0);
-  const topErrors = getTopCounts(filteredEvents, (event) => event.title, 8);
-  const topSubsystems = getTopCounts(filteredEvents, (event) => event.subsystem, 6);
-  const mostCommonAlertsBySubsystem = buildNestedCounts(filteredEvents, 'subsystem', 'title');
-  const dateRange = getAnalyzedDateRange(filteredEvents, filters);
-  const recoveryDistribution = getTopCounts(filteredEvents, (event) => event.recovery, 6);
-  const versionAnalysis = Array.from(groupBy(filteredEvents, 'version').entries()).map(([version, events]) => ({
-    version,
-    events: events.length,
-    downtime: sum(events, 'durationMinutes'),
-    avgRisk: average(events.map((event) => event.severityWeight))
-  }));
-  const highDurationThreshold = getHighDurationThreshold(filteredEvents);
-
-  const worseningMachines = machines.filter((machine) => machine.trendDirection === 'Worsening').slice(0, 5);
-  const concentratedFailures = machines.filter((machine) => machine.subsystemConcentration >= 0.55).slice(0, 5);
-  const recoveryLoops = machines.filter((machine) => machine.recoveryLoopCount > 0).slice(0, 5);
-  const unusualPatterns = [
-    ...worseningMachines.map((machine) => `${machine.machine} shows a worsening recent trend with ${machine.recentWindowErrors} recent events.`),
-    ...concentratedFailures.map((machine) => `${machine.machine} has ${Math.round(machine.subsystemConcentration * 100)}% of failures concentrated in ${machine.topSubsystem}.`),
-    ...recoveryLoops.map((machine) => `${machine.machine} entered ${machine.recoveryLoopCount} recovery/failure loops.`)
-  ].slice(0, 6);
-
-  const focusAreas = deriveFocusAreas(machines, topSubsystems, topErrors);
-  const fleetHealth = buildFleetHealth(filteredEvents, machines);
-  const smartInsights = buildSmartInsights(filteredEvents, machines, topErrors, topSubsystems, highDurationThreshold);
-
-  return {
-    machines,
-    filteredEvents,
-    totalDowntime,
-    topErrors,
-    topSubsystems,
-    mostCommonAlertsBySubsystem,
-    dateRange,
-    recoveryDistribution,
-    versionAnalysis,
-    worseningMachines,
-    concentratedFailures,
-    recoveryLoops,
-    unusualPatterns,
-    focusAreas,
-    fleetHealth,
-    smartInsights,
-    highDurationThreshold,
-    baselineEventsCount: baselineEvents.length
-  };
-}
-
-function buildMachineMetrics(machine, events) {
-  const totalErrors = events.length;
-  const totalDowntime = sum(events, 'durationMinutes');
-  const avgDuration = totalErrors ? totalDowntime / totalErrors : 0;
-  const errorCounts = countBy(events, (event) => event.title);
-  const subsystemCounts = countBy(events, (event) => event.subsystem);
-  const recoveryCounts = countBy(events, (event) => event.recovery);
-  const preErrorCounts = countBy(events, (event) => event.preErrorState);
-  const errorStateCounts = countBy(events, (event) => event.errorState);
-  const sortedByTime = [...events].sort((a, b) => a.startTime - b.startTime);
-  const midpoint = Math.floor(sortedByTime.length / 2) || 1;
-  const previousWindow = sortedByTime.slice(0, midpoint);
-  const recentWindow = sortedByTime.slice(midpoint);
-  const recentWindowErrors = recentWindow.length;
-  const priorWindowErrors = previousWindow.length;
-  const trendDelta = recentWindowErrors - priorWindowErrors;
-  const repeatedErrorCount = Array.from(errorCounts.values()).filter((count) => count > 1).reduce((acc, count) => acc + count - 1, 0);
-  const subsystemConcentration = totalErrors ? Math.max(...subsystemCounts.values()) / totalErrors : 0;
-  const recoveryLoopCount = countRecoveryLoops(sortedByTime);
-  const criticalCount = Array.from(errorStateCounts.entries()).filter(([key]) => /critical|fatal|emergency/i.test(key)).reduce((acc, [, count]) => acc + count, 0);
-  const burstCount = countBurstEvents(sortedByTime, 180);
-
-  const riskScore = Math.round(
-    totalErrors +
-    Math.min(120, totalDowntime / 4) +
-    repeatedErrorCount * 4 +
-    Math.round(subsystemConcentration * 35) +
-    recoveryLoopCount * 10 +
-    criticalCount * 5 +
-    Math.max(0, trendDelta) * 6 +
-    burstCount * 4 +
-    Math.min(40, avgDuration / 5)
-  );
-
-  const health = HEALTH_LEVELS.find((level) => riskScore >= level.min && riskScore <= level.max) || HEALTH_LEVELS[HEALTH_LEVELS.length - 1];
-  const topError = getTopEntry(errorCounts);
-  const topSubsystem = getTopEntry(subsystemCounts);
-  const trendDirection = trendDelta >= 2 ? 'Worsening' : trendDelta <= -2 ? 'Improving' : 'Stable';
-  const reasons = [];
-  if (topError.value > 10) reasons.push(`${topError.value} repeated ${topError.key} errors`);
-  if (topSubsystem.value > 30) reasons.push(`${topSubsystem.key} exceeded 30 alerts`);
-  if (totalDowntime >= getHighDurationThreshold(events)) reasons.push(`${formatMinutes(totalDowntime)} downtime impact`);
-  if (subsystemConcentration >= 0.55) reasons.push(`${Math.round(subsystemConcentration * 100)}% of issues are concentrated in ${topSubsystem.key}`);
-  if (recoveryLoopCount) reasons.push(`${recoveryLoopCount} recovery loop${recoveryLoopCount > 1 ? 's' : ''}`);
-  if (trendDirection === 'Worsening') reasons.push('recent trend is worsening');
-  if (!reasons.length) reasons.push('elevated operational risk score');
-
-  const recommendation = deriveMachineRecommendation(events, topSubsystem.key, topError.key);
-
-  return {
-    machine,
-    model: events[0]?.model || 'Unknown',
-    version: events[0]?.version || 'Unknown',
-    totalErrors,
-    totalDowntime,
-    avgDuration,
-    topError: topError.key,
-    topErrorCount: topError.value,
-    topSubsystem: topSubsystem.key,
-    topSubsystemCount: topSubsystem.value,
-    recoveryRate: totalErrors ? ((recoveryCounts.get('Recovered') || 0) / totalErrors) * 100 : 0,
-    riskScore,
-    severityLevel: health.label,
-    severityColor: health.color,
-    trendDirection,
-    trendDelta,
-    subsystemConcentration,
-    repeatedErrorCount,
-    recoveryLoopCount,
-    criticalCount,
-    recentWindowErrors,
-    recommendation,
-    reasons,
-    interpretation: buildInterpretation(health.label, trendDirection, topSubsystem.key, topError.key),
-    eventTimeline: sortedByTime,
-    errorCounts,
-    subsystemCounts,
-    recoveryCounts,
-    preErrorCounts,
-    errorStateCounts,
-    burstCount,
-    sameErrorConcentration: totalErrors ? topError.value / totalErrors : 0,
-    problematicAreas: deriveProblematicAreas(events, topSubsystem.key, topError.key)
-  };
+function deriveProblematicAreas(events, topSubsystem, topError) {
+  const notes = [`Subsystem: ${topSubsystem}`, `Repeat error: ${topError}`];
+  const solutionText = events.map((event) => event.solution).find((value) => value && !/No recommended/i.test(value));
+  if (solutionText) notes.push(`Suggested check: ${solutionText}`);
+  return notes;
 }
 
 function countRecoveryLoops(events) {
@@ -622,70 +1148,14 @@ function countBurstEvents(events, shortWindowMinutes) {
   let bursts = 0;
   for (let index = 0; index < events.length; index += 1) {
     const start = events[index].startTime;
-    let windowCount = 1;
+    let count = 1;
     for (let lookahead = index + 1; lookahead < events.length; lookahead += 1) {
-      if ((events[lookahead].startTime - start) / 60000 <= shortWindowMinutes) windowCount += 1;
+      if ((events[lookahead].startTime - start) / 60000 <= shortWindowMinutes) count += 1;
       else break;
     }
-    if (windowCount >= 3) bursts += 1;
+    if (count >= 3) bursts += 1;
   }
   return bursts;
-}
-
-function deriveMachineRecommendation(events, topSubsystem, topError) {
-  const matching = events.find((event) => event.solution && event.solution !== 'No recommended solution provided');
-  const fallback = `Inspect ${topSubsystem} first, validate conditions behind “${topError}”, and review recent recoveries for repeat escalation.`;
-  return matching ? `${matching.solution}. Prioritize ${topSubsystem} checks.` : fallback;
-}
-
-function buildInterpretation(level, trend, subsystem, error) {
-  if (level === 'Critical') return `Immediate service attention required. ${subsystem} is repeatedly driving ${error}.`;
-  if (level === 'Warning') return `Active degradation detected. Monitor ${subsystem} and interrupt repeat ${error} sequences.`;
-  if (level === 'Monitor') return `Emerging risk pattern. Keep ${subsystem} under watch and verify recurrence of ${error}.`;
-  return `Machine is operating within normal tolerance. Continue routine checks around ${subsystem}.`;
-}
-
-function deriveProblematicAreas(events, topSubsystem, topError) {
-  const snippets = [];
-  const solutionText = events.map((event) => event.solution).find((value) => value && !/No recommended/i.test(value));
-  if (topError) snippets.push(`Repeat error: ${topError}`);
-  if (topSubsystem) snippets.push(`Subsystem: ${topSubsystem}`);
-  if (solutionText) snippets.push(`Suggested check: ${solutionText}`);
-  return snippets;
-}
-
-function deriveFocusAreas(machines, topSubsystems, topErrors) {
-  const focusAreas = [];
-  if (machines.some((machine) => machine.trendDirection === 'Worsening')) {
-    focusAreas.push('Stabilize machines with worsening recent trends before the next production window.');
-  }
-  if (topSubsystems[0]) {
-    focusAreas.push(`Investigate ${topSubsystems[0].key} because it is the most failure-prone subsystem in the filtered fleet.`);
-  }
-  if (topErrors[0]) {
-    focusAreas.push(`Fix ${topErrors[0].key}, the most recurring alert across the fleet.`);
-  }
-  if (machines.some((machine) => machine.recoveryLoopCount > 0)) {
-    focusAreas.push('Escalate machines entering recovery/failure loops to avoid hidden chronic faults.');
-  }
-  return focusAreas.slice(0, 4);
-}
-
-function buildFleetHealth(filteredEvents, machines) {
-  const counts = HEALTH_LEVELS.map((level) => ({
-    label: level.label,
-    count: machines.filter((machine) => machine.severityLevel === level.label).length,
-    color: level.color
-  }));
-  const totalMachines = machines.length;
-  const healthyMachines = counts.find((item) => item.label === 'Healthy')?.count || 0;
-  return {
-    counts,
-    totalMachines,
-    healthyRate: totalMachines ? (healthyMachines / totalMachines) * 100 : 0,
-    totalEvents: filteredEvents.length,
-    avgRisk: average(machines.map((machine) => machine.riskScore))
-  };
 }
 
 function getHighDurationThreshold(events) {
@@ -694,740 +1164,58 @@ function getHighDurationThreshold(events) {
   return Math.max(60, durations[Math.floor(durations.length * 0.8)] || 60);
 }
 
-function buildSmartInsights(events, machines, topErrors, topSubsystems, highDurationThreshold) {
-  const insights = [];
-
-  topErrors.filter((item) => item.value > 10).slice(0, 2).forEach((item) => {
-    const affectedMachines = uniqueSorted(events.filter((event) => event.title === item.key).map((event) => event.machine)).slice(0, 6);
-    insights.push({
-      title: `Repeated error detected: ${item.key}`,
-      explanation: `${item.value} occurrences were detected. This is above the >10 recurrence alert threshold and should be contained quickly.`,
-      affectedMachines
-    });
-  });
-
-  topSubsystems.filter((item) => item.value > 30).slice(0, 2).forEach((item) => {
-    const affectedMachines = uniqueSorted(events.filter((event) => event.subsystem === item.key).map((event) => event.machine)).slice(0, 6);
-    insights.push({
-      title: `Subsystem overload: ${item.key}`,
-      explanation: `${item.value} alerts were recorded in this subsystem, exceeding the >30 subsystem alert rule and indicating a cross-machine issue pattern.`,
-      affectedMachines
-    });
-  });
-
-  machines.filter((machine) => machine.totalDowntime >= highDurationThreshold).slice(0, 2).forEach((machine) => {
-    insights.push({
-      title: `High duration impact on ${machine.machine}`,
-      explanation: `${formatMinutes(machine.totalDowntime)} of downtime was accumulated, making this machine a high-duration alert candidate even when alert count alone understates the impact.`,
-      affectedMachines: [machine.machine]
-    });
-  });
-
-  machines.filter((machine) => machine.subsystemConcentration >= 0.55 || machine.sameErrorConcentration >= 0.6).slice(0, 2).forEach((machine) => {
-    insights.push({
-      title: `Concentrated issue pattern on ${machine.machine}`,
-      explanation: `${Math.round(Math.max(machine.subsystemConcentration, machine.sameErrorConcentration) * 100)}% of failures are concentrated around one dominant issue, which typically signals a localized root cause rather than random fleet noise.`,
-      affectedMachines: [machine.machine]
-    });
-  });
-
-  return insights.slice(0, 6);
+function getDailyTrend(events) {
+  const dayMap = new Map();
+  events.forEach((event) => dayMap.set(event.dayKey, (dayMap.get(event.dayKey) || 0) + 1));
+  return Array.from(dayMap.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([day, value]) => ({ day, value }));
 }
 
-function renderSectionSelector() {
-  if (!els.sectionSelector) return;
-  els.sectionSelector.innerHTML = SECTION_OPTIONS.map((section) => `
-    <button type="button" class="selector-chip ${state.visibleSections.has(section.key) ? 'active' : ''}" data-section-toggle="${section.key}">${section.label}</button>
-  `).join('');
-  els.sectionSelector.querySelectorAll('[data-section-toggle]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const key = button.dataset.sectionToggle;
-      if (state.visibleSections.has(key) && state.visibleSections.size > 1) state.visibleSections.delete(key);
-      else state.visibleSections.add(key);
-      renderSectionSelector();
-      updateVisibleSections();
-    });
-  });
+function getAnalyzedDateRange(events, filters) {
+  if (!events.length) return 'No data in selected range';
+  return `${filters.dateFrom || formatDateInput(events[0].startTime)} → ${filters.dateTo || formatDateInput(events[events.length - 1].startTime)}`;
 }
 
-function updateVisibleSections() {
-  document.querySelectorAll('.dashboard-section').forEach((section) => {
-    section.classList.toggle('hidden', !state.visibleSections.has(section.dataset.section));
-  });
+function getTopCounts(events, selector, limit) {
+  return Array.from(countBy(events, selector).entries()).map(([key, value]) => ({ key, value })).sort((a, b) => b.value - a.value).slice(0, limit);
 }
 
-function buildAISummary(summary) {
-  const critical = summary.fleetHealth.counts.find((item) => item.label === 'Critical')?.count || 0;
-  const warning = summary.fleetHealth.counts.find((item) => item.label === 'Warning')?.count || 0;
-  const leadMachine = summary.machines[0];
-  const leadError = summary.topErrors[0]?.key || 'recurring alerts';
-  const leadSubsystem = summary.topSubsystems[0]?.key || 'core subsystems';
-  return `${critical} out of ${summary.machines.length} machines are in Critical state, mainly driven by recurring ${leadError} failures and elevated downtime pressure in ${leadSubsystem}${leadMachine ? `, led by ${leadMachine.machine}` : ''}. ${warning ? `${warning} additional machines remain in Warning and should be monitored this shift.` : 'The remaining fleet is operating outside the critical band.'}`;
-}
-
-function buildEmailSummary(summary) {
-  const health = Object.fromEntries(summary.fleetHealth.counts.map((item) => [item.label, item.count]));
-  const criticalMachines = summary.machines.filter((machine) => machine.severityLevel === 'Critical').slice(0, 5);
-  const keyIssues = [
-    ...(summary.topSubsystems[0] ? [`- ${summary.topSubsystems[0].key} failures across ${uniqueSorted(summary.filteredEvents.filter((event) => event.subsystem === summary.topSubsystems[0].key).map((event) => event.machine)).length} machines`] : []),
-    ...(summary.topErrors[0] ? [`- ${summary.topErrors[0].key} repeating ${summary.topErrors[0].value} times`] : []),
-    ...summary.smartInsights.slice(0, 1).map((insight) => `- ${insight.title.replace(/^Shared fleet issue: /, '')}`)
-  ].slice(0, 3);
-
-  return [
-    'Fleet Summary:',
-    `- Total machines: ${summary.machines.length}`,
-    `- Critical: ${health.Critical || 0}`,
-    `- Warning: ${health.Warning || 0}`,
-    '',
-    'Critical Machines:',
-    ...(criticalMachines.length ? criticalMachines.map((machine) => `- ${machine.machine} → ${machine.topSubsystem} (${machine.topErrorCount} errors)`) : ['- None in the current filter range']),
-    '',
-    'Key Issues:',
-    ...(keyIssues.length ? keyIssues : ['- No major cross-fleet patterns detected']),
-    '',
-    'Recommended Focus:',
-    ...(summary.focusAreas.length ? summary.focusAreas.slice(0, 2).map((item) => `- ${item}`) : ['- Maintain current preventive maintenance cadence'])
-  ].join('\n');
-}
-
-function renderSmartInsights() {
-  els.smartInsights.innerHTML = state.summary.smartInsights.length
-    ? state.summary.smartInsights.map((insight, index) => `
-      <div class="insight-card">
-        <div class="insight-eyebrow">Insight ${index + 1}</div>
-        <h4>${escapeHtml(insight.title)}</h4>
-        <p>${escapeHtml(insight.explanation)}</p>
-        <div class="insight-meta">
-          ${(insight.affectedMachines.length ? insight.affectedMachines : ['Fleet-wide']).map((machine) => `<button class="inline-link-chip" data-machine-drill="${escapeHtml(machine)}">${escapeHtml(machine)}</button>`).join('')}
-        </div>
-      </div>
-    `).join('')
-    : '<div class="insight-card"><div class="insight-eyebrow">Insight</div><h4>No dominant insight detected</h4><p>The current filters do not show repeated high-risk patterns beyond routine operational variance.</p><div class="insight-meta"><span class="meta-chip">Affected machines: None</span></div></div>';
-
-  els.smartInsights.querySelectorAll('[data-machine-drill]').forEach((button) => {
-    button.addEventListener('click', () => renderMachineDetails(button.dataset.machineDrill));
-  });
-}
-
-function renderKPIs() {
-  const { machines, filteredEvents, totalDowntime, dateRange, fleetHealth } = state.summary;
-  const healthLookup = Object.fromEntries(fleetHealth.counts.map((item) => [item.label, item]));
-  const cards = [
-    { label: 'Total machines', value: machines.length, detail: dateRange },
-    { label: 'Total errors', value: filteredEvents.length, detail: `${healthLookup.Critical?.count || 0} critical machines` },
-    { label: 'Total downtime', value: formatMinutes(totalDowntime), detail: `${state.summary.worseningMachines.length} worsening trends` },
-    { label: 'Most exposed machine', value: state.summary.machines[0]?.machine || 'Stable fleet', detail: state.summary.machines[0]?.topSubsystem || 'No urgent escalation' }
-  ];
-
-  const totalMachines = Math.max(fleetHealth.totalMachines, 1);
-  const conicSegments = [];
-  let running = 0;
-  fleetHealth.counts.forEach((item) => {
-    const end = running + (item.count / totalMachines) * 100;
-    conicSegments.push(`${item.color} ${running}% ${end}%`);
-    running = end;
-  });
-
-  els.kpiGrid.innerHTML = `
-    <div class="hero-grid">
-      <div class="app-card hero-panel">
-        <div class="hero-overline">Executive summary</div>
-        <div class="hero-title">Immediate fleet posture at a glance.</div>
-        <div class="hero-ai-summary">${escapeHtml(buildAISummary(state.summary))}</div>
-        <div class="hero-kpis">
-          ${cards.map((card) => `
-            <div class="hero-kpi">
-              <span>${card.label}</span>
-              <strong>${escapeHtml(String(card.value))}</strong>
-              <small>${escapeHtml(card.detail)}</small>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-      <div class="app-card hero-panel distribution-ring-shell">
-        <div>
-          <div class="section-heading">Severity distribution</div>
-          <div class="section-copy">Healthy / Monitor / Warning / Critical using the mandated fleet risk thresholds.</div>
-        </div>
-        <div class="distribution-ring" style="background:conic-gradient(${conicSegments.join(', ')}); border-radius:999px;">
-          <div class="distribution-ring-center">
-            <div>
-              <strong>${machines.length}</strong>
-              <div class="text-slate-400 text-sm mt-1">Machines</div>
-            </div>
-          </div>
-        </div>
-        <div class="distribution-grid">
-          ${fleetHealth.counts.map((item) => `
-            <button class="distribution-card text-left" data-health-filter="${escapeHtml(item.label)}">
-              <div class="label">${item.label}</div>
-              <div class="value" style="color:${item.color};">${item.count}</div>
-              <div class="subtext">${Math.round((item.count / totalMachines) * 100)}% of fleet</div>
-            </button>
-          `).join('')}
-        </div>
-      </div>
-    </div>
-  `;
-
-  els.kpiGrid.querySelectorAll('[data-health-filter]').forEach((button) => {
-    button.addEventListener('click', () => openCategoryPanel('health', button.dataset.healthFilter));
-  });
-}
-
-function renderFleetHealth() {
-  els.fleetHealthGrid.innerHTML = state.summary.fleetHealth.counts.map((item) => `
-    <button class="health-row w-full text-left" data-health-filter="${escapeHtml(item.label)}">
-      <div class="health-row-left">
-        <div class="health-dot" style="background:${item.color}; color:${item.color}"></div>
-        <div>
-          <div class="text-sm uppercase tracking-[0.18em] text-slate-400">${item.label}</div>
-          <div class="text-base font-semibold mt-1">${item.count} machine${item.count === 1 ? '' : 's'}</div>
-        </div>
-      </div>
-      <div class="text-slate-400 text-sm">Open drill-down</div>
-    </button>
-  `).join('');
-
-  els.fleetHealthGrid.querySelectorAll('[data-health-filter]').forEach((button) => {
-    button.addEventListener('click', () => openCategoryPanel('health', button.dataset.healthFilter));
-  });
-}
-
-function renderActionSummary() {
-  const actionLines = [
-    ...state.summary.worseningMachines.slice(0, 2).map((machine) => `${machine.machine}: worsening trend with ${machine.recentWindowErrors} recent alerts.`),
-    ...state.summary.concentratedFailures.slice(0, 2).map((machine) => `${machine.machine}: ${machine.topSubsystem} is absorbing ${Math.round(machine.subsystemConcentration * 100)}% of failures.`),
-    ...state.summary.recoveryLoops.slice(0, 2).map((machine) => `${machine.machine}: repeated recovery loop behavior detected.`)
-  ].slice(0, 5);
-
-  els.actionSummary.innerHTML = actionLines.length
-    ? actionLines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')
-    : '<li>No urgent fleet-wide actions in the current filtered slice.</li>';
-
-  els.alertsStrip.innerHTML = state.summary.focusAreas.map((focus) => `<span class="meta-chip">${escapeHtml(focus)}</span>`).join('');
-}
-
-function renderProblematicMachines() {
-  const spotlight = state.summary.machines.slice(0, 8);
-  els.problematicMachines.innerHTML = spotlight.map((machine) => `
-    <button class="machine-card" data-machine="${escapeHtml(machine.machine)}">
-      <div class="machine-card-top">
-        <div>
-          <div class="machine-card-title">${escapeHtml(machine.machine)}</div>
-          <div class="machine-card-meta">${escapeHtml(machine.model)} · ${escapeHtml(machine.version)} · ${escapeHtml(machine.trendDirection)}</div>
-        </div>
-        <span class="severity-badge" style="color:${machine.severityColor};">${machine.severityLevel}</span>
-      </div>
-      <div class="machine-card-stats">
-        <div class="machine-card-stat"><span>Total errors</span><strong>${machine.totalErrors}</strong></div>
-        <div class="machine-card-stat"><span>Total downtime</span><strong>${formatMinutes(machine.totalDowntime)}</strong></div>
-        <div class="machine-card-stat"><span>Top error</span><strong>${escapeHtml(machine.topError)}</strong></div>
-        <div class="machine-card-stat"><span>Top subsystem</span><strong>${escapeHtml(machine.topSubsystem)}</strong></div>
-      </div>
-      <div class="machine-card-reason"><strong>Reason:</strong> ${escapeHtml(machine.reasons.slice(0, 2).join(' · '))}</div>
-      <div class="machine-card-links">
-        <button type="button" class="inline-link-chip" data-machine-secondary="${escapeHtml(machine.machine)}">Open machine</button>
-        <button type="button" class="inline-link-chip" data-subsystem-drill="${escapeHtml(machine.topSubsystem)}">${escapeHtml(machine.topSubsystem)}</button>
-        <button type="button" class="inline-link-chip" data-error-drill="${escapeHtml(machine.topError)}">${escapeHtml(machine.topError)}</button>
-      </div>
-    </button>
-  `).join('');
-
-  els.problematicMachines.querySelectorAll('[data-machine]').forEach((button) => {
-    button.addEventListener('click', (event) => {
-      if (event.target.closest('[data-subsystem-drill], [data-error-drill], [data-machine-secondary]')) return;
-      renderMachineDetails(button.dataset.machine);
-    });
-  });
-  els.problematicMachines.querySelectorAll('[data-machine-secondary]').forEach((button) => {
-    button.addEventListener('click', (event) => {
-      event.stopPropagation();
-      renderMachineDetails(button.dataset.machineSecondary);
-    });
-  });
-  els.problematicMachines.querySelectorAll('[data-subsystem-drill]').forEach((button) => {
-    button.addEventListener('click', (event) => {
-      event.stopPropagation();
-      openCategoryPanel('subsystem', button.dataset.subsystemDrill);
-    });
-  });
-  els.problematicMachines.querySelectorAll('[data-error-drill]').forEach((button) => {
-    button.addEventListener('click', (event) => {
-      event.stopPropagation();
-      openCategoryPanel('error', button.dataset.errorDrill);
-    });
-  });
-}
-
-function renderMachineDetails(machineName) {
-  const machine = state.summary.machines.find((item) => item.machine === machineName);
-  if (!machine) return;
-  state.selectedMachine = machineName;
-  state.selectedPanel = { type: 'machine', value: machineName };
-
-  const timelineRows = machine.eventTimeline.slice(-12).reverse().map((event) => `
-    <tr>
-      <td>${formatDateTime(event.startTime)}</td>
-      <td><button class="inline-link-chip" data-error-drill="${escapeHtml(event.title)}">${escapeHtml(event.title)}</button></td>
-      <td><button class="inline-link-chip" data-subsystem-drill="${escapeHtml(event.subsystem)}">${escapeHtml(event.subsystem)}</button></td>
-      <td>${escapeHtml(event.errorState)}</td>
-      <td>${formatMinutes(event.durationMinutes)}</td>
-    </tr>
-  `).join('');
-
-  els.machinePanelContent.innerHTML = `
-    <div class="panel-header">
-      <div>
-        <div class="panel-title">${escapeHtml(machine.machine)}</div>
-        <div class="panel-subtitle">${escapeHtml(machine.model)} · ${escapeHtml(machine.version)} · ${machine.severityLevel}</div>
-      </div>
-      <span class="severity-badge" style="color:${machine.severityColor};">Risk ${machine.riskScore}</span>
-    </div>
-    <div class="panel-grid">
-      <div class="panel-card"><span>Total errors</span><strong>${machine.totalErrors}</strong></div>
-      <div class="panel-card"><span>Total downtime</span><strong>${formatMinutes(machine.totalDowntime)}</strong></div>
-      <div class="panel-card"><span>Top error</span><strong>${escapeHtml(machine.topError)}</strong></div>
-      <div class="panel-card"><span>Top subsystem</span><strong>${escapeHtml(machine.topSubsystem)}</strong></div>
-      <div class="panel-card"><span>Trend</span><strong>${machine.trendDirection}</strong></div>
-      <div class="panel-card"><span>Recovery loops</span><strong>${machine.recoveryLoopCount}</strong></div>
-      <div class="panel-card"><span>Same error concentration</span><strong>${Math.round(machine.sameErrorConcentration * 100)}%</strong></div>
-      <div class="panel-card"><span>Burst sequences</span><strong>${machine.burstCount}</strong></div>
-    </div>
-    <div class="panel-sections">
-      <div class="panel-section">
-        <h4>Operational interpretation</h4>
-        <p>${escapeHtml(machine.interpretation)}</p>
-        <ul>${machine.problematicAreas.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
-      </div>
-      <div class="panel-section">
-        <h4>Dominant issue drivers</h4>
-        <ul>
-          ${Array.from(machine.errorCounts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([key, value]) => `<li><button class="inline-link-chip" data-error-drill="${escapeHtml(key)}">${escapeHtml(key)}</button> · ${value} events</li>`).join('')}
-        </ul>
-      </div>
-      <div class="panel-section">
-        <h4>Subsystem pressure</h4>
-        <ul>
-          ${Array.from(machine.subsystemCounts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([key, value]) => `<li><button class="inline-link-chip" data-subsystem-drill="${escapeHtml(key)}">${escapeHtml(key)}</button> · ${value} alerts</li>`).join('')}
-        </ul>
-      </div>
-      <div class="panel-section">
-        <h4>Recovery and duration patterns</h4>
-        <ul>
-          <li>Average incident duration · ${formatMinutes(machine.avgDuration)}</li>
-          <li>Recovery loops · ${machine.recoveryLoopCount}</li>
-          <li>Burst sequences · ${machine.burstCount}</li>
-          <li>Top recovery state · ${escapeHtml(getTopEntry(machine.recoveryCounts).key)}</li>
-        </ul>
-      </div>
-      <div class="panel-section full-width">
-        <h4>Recent event timeline</h4>
-        <div class="table-scroll">
-          <table class="detail-table">
-            <thead><tr><th>Start time</th><th>Alert</th><th>Subsystem</th><th>Error state</th><th>Duration</th></tr></thead>
-            <tbody>${timelineRows || '<tr><td colspan="5">No event timeline available.</td></tr>'}</tbody>
-          </table>
-        </div>
-      </div>
-      <div class="panel-section full-width">
-        <h4>Recommended proactive focus</h4>
-        <p>${escapeHtml(machine.recommendation)}</p>
-      </div>
-    </div>
-  `;
-  attachPanelDrilldownHandlers();
-  els.machinePanel.classList.remove('hidden');
-}
-
-function attachPanelDrilldownHandlers() {
-  els.machinePanelContent.querySelectorAll('[data-subsystem-drill]').forEach((button) => {
-    button.addEventListener('click', () => openCategoryPanel('subsystem', button.dataset.subsystemDrill));
-  });
-  els.machinePanelContent.querySelectorAll('[data-error-drill]').forEach((button) => {
-    button.addEventListener('click', () => openCategoryPanel('error', button.dataset.errorDrill));
-  });
-}
-
-function openCategoryPanel(type, value) {
-  const events = state.filteredEvents.filter((event) => {
-    if (type === 'subsystem') return event.subsystem === value;
-    if (type === 'error') return event.title === value;
-    if (type === 'health') {
-      const machine = state.summary.machines.find((item) => item.machine === event.machine);
-      return machine?.severityLevel === value;
-    }
-    return false;
-  });
-
-  const machineNames = uniqueSorted(events.map((event) => event.machine));
-  const topMachines = machineNames
-    .map((machineName) => state.summary.machines.find((item) => item.machine === machineName))
-    .filter(Boolean)
-    .sort((a, b) => b.totalErrors - a.totalErrors)
-    .slice(0, 8);
-
-  const title = type === 'subsystem' ? value : type === 'error' ? value : `${value} machines`;
-  const subtitle = type === 'subsystem'
-    ? 'Subsystem drill-down with affected machines, recurring alerts, and duration impact.'
-    : type === 'error'
-      ? 'Error drill-down with spread, concentration, and machine exposure.'
-      : 'Severity drill-down for the selected fleet health tier.';
-
-  els.machinePanelContent.innerHTML = `
-    <div class="panel-header">
-      <div>
-        <div class="panel-title">${escapeHtml(title)}</div>
-        <div class="panel-subtitle">${escapeHtml(subtitle)}</div>
-      </div>
-      <span class="severity-badge" style="color:#7dd3fc; border-color:#7dd3fc;">${type.toUpperCase()}</span>
-    </div>
-    <div class="panel-grid">
-      <div class="panel-card"><span>Affected machines</span><strong>${machineNames.length}</strong></div>
-      <div class="panel-card"><span>Total alerts</span><strong>${events.length}</strong></div>
-      <div class="panel-card"><span>Total downtime</span><strong>${formatMinutes(sum(events, 'durationMinutes'))}</strong></div>
-      <div class="panel-card"><span>Top related subsystem</span><strong>${escapeHtml(getTopCounts(events, (event) => event.subsystem, 1)[0]?.key || 'N/A')}</strong></div>
-    </div>
-    <div class="panel-sections">
-      <div class="panel-section">
-        <h4>Affected machines</h4>
-        <ul>
-          ${topMachines.length ? topMachines.map((machine) => `<li><button class="inline-link-chip" data-machine-drill="${escapeHtml(machine.machine)}">${escapeHtml(machine.machine)}</button> · ${machine.totalErrors} alerts · ${formatMinutes(machine.totalDowntime)} downtime</li>`).join('') : '<li>No machines detected in the current filter range.</li>'}
-        </ul>
-      </div>
-      <div class="panel-section">
-        <h4>Related error clusters</h4>
-        <ul>
-          ${(getTopCounts(events, (event) => event.title, 6).map((row) => `<li><button class="inline-link-chip" data-error-drill="${escapeHtml(row.key)}">${escapeHtml(row.key)}</button> · ${row.value}</li>`).join('')) || '<li>No related errors.</li>'}
-        </ul>
-      </div>
-      <div class="panel-section full-width">
-        <h4>Recent events</h4>
-        <table class="detail-table">
-          <thead><tr><th>Start time</th><th>Machine</th><th>Alert</th><th>Subsystem</th><th>Duration</th></tr></thead>
-          <tbody>
-            ${events.slice().sort((a, b) => b.startTime - a.startTime).slice(0, 12).map((event) => `<tr><td>${formatDateTime(event.startTime)}</td><td><button class="inline-link-chip" data-machine-drill="${escapeHtml(event.machine)}">${escapeHtml(event.machine)}</button></td><td>${escapeHtml(event.title)}</td><td>${escapeHtml(event.subsystem)}</td><td>${formatMinutes(event.durationMinutes)}</td></tr>`).join('') || '<tr><td colspan="5">No events available.</td></tr>'}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-  state.selectedPanel = { type, value };
-  els.machinePanelContent.querySelectorAll('[data-machine-drill]').forEach((button) => {
-    button.addEventListener('click', () => renderMachineDetails(button.dataset.machineDrill));
-  });
-  attachPanelDrilldownHandlers();
-  els.machinePanel.classList.remove('hidden');
-}
-
-function closeMachinePanel() {
-  state.selectedMachine = null;
-  state.selectedPanel = null;
-  els.machinePanel.classList.add('hidden');
-}
-
-function renderExecutiveSummary() {
-  const summary = state.summary;
-  const topMachines = summary.machines.slice(0, 5);
-  const health = Object.fromEntries(summary.fleetHealth.counts.map((item) => [item.label, item.count]));
-  els.executiveSummary.innerHTML = `
-    <div class="summary-block">
-      <div class="summary-copy-card">
-        <h4>Fleet Summary</h4>
-        <p>- Total machines: ${summary.machines.length}<br>- Total errors: ${summary.filteredEvents.length}<br>- Total downtime: ${formatMinutes(summary.totalDowntime)}<br>- Critical: ${health.Critical || 0}<br>- Warning: ${health.Warning || 0}</p>
-      </div>
-      <div class="summary-copy-card">
-        <h4>Critical Machines</h4>
-        <p>${topMachines.length ? topMachines.map((machine) => `- <button class="inline-link-chip" data-machine-drill="${escapeHtml(machine.machine)}">${escapeHtml(machine.machine)}</button> → <button class="inline-link-chip" data-subsystem-drill="${escapeHtml(machine.topSubsystem)}">${escapeHtml(machine.topSubsystem)}</button> (${machine.topErrorCount} errors)`).join('<br>') : '- None'}</p>
-      </div>
-      <div class="summary-copy-card">
-        <h4>Key Issues</h4>
-        <p>${(summary.smartInsights.length ? summary.smartInsights.slice(0, 3).map((item) => `- ${escapeHtml(item.title)}`) : ['- No unusual fleet patterns were detected in the filtered range.']).join('<br>')}</p>
-      </div>
-      <div class="summary-copy-card">
-        <h4>Recommended Focus</h4>
-        <p>${(summary.focusAreas.length ? summary.focusAreas.slice(0, 3) : ['Maintain current preventive maintenance cadence.']).map((item) => `- ${escapeHtml(item)}`).join('<br>')}</p>
-        <p><strong>Fleet conclusion:</strong> ${escapeHtml(buildFleetConclusion(summary.fleetHealth, topMachines))}</p>
-      </div>
-    </div>
-  `;
-
-  els.executiveSummary.querySelectorAll('[data-machine-drill]').forEach((button) => {
-    button.addEventListener('click', () => renderMachineDetails(button.dataset.machineDrill));
-  });
-  els.executiveSummary.querySelectorAll('[data-subsystem-drill]').forEach((button) => {
-    button.addEventListener('click', () => openCategoryPanel('subsystem', button.dataset.subsystemDrill));
-  });
-}
-
-function buildFleetConclusion(fleetHealth, topMachines) {
-  const critical = fleetHealth.counts.find((item) => item.label === 'Critical')?.count || 0;
-  if (critical >= 2) {
-    return `Fleet risk is elevated. Prioritize immediate intervention on ${topMachines.slice(0, 2).map((machine) => machine.machine).join(' and ')} while containing repeated downtime drivers.`;
-  }
-  if (fleetHealth.avgRisk >= 45) {
-    return 'Fleet is stable but showing meaningful early-warning signals. Targeted preventive action is recommended this cycle.';
-  }
-  return 'Fleet health is broadly stable with isolated issues. Continue monitoring and preventive actions on flagged machines.';
-}
-
-function openReportModal() {
-  els.reportModalContent.innerHTML = buildReportHtml();
-  els.reportModal.classList.remove('hidden');
-}
-
-function buildReportHtml() {
-  const summary = state.summary;
-  return `
-    <div class="report-shell">
-      <div class="report-header">
-        <div>
-          <h2>Landa Operational Intelligence Report</h2>
-          <p>${escapeHtml(state.currentFileName)} · Generated ${formatDateTime(new Date())}</p>
-        </div>
-        <div class="report-filter-box">
-          <div><strong>Filters</strong></div>
-          <div>${escapeHtml(summary.dateRange)}</div>
-          <div>Machine: ${escapeHtml(state.filters.machine)}</div>
-          <div>Subsystem: ${escapeHtml(state.filters.subsystem)}</div>
-          <div>Error State: ${escapeHtml(state.filters.errorState)}</div>
-        </div>
-      </div>
-      <div class="report-section">
-        <h3>Fleet summary</h3>
-        ${els.executiveSummary.innerHTML}
-      </div>
-      <div class="report-section">
-        <h3>Critical machines</h3>
-        <ul>
-          ${summary.machines.slice(0, 5).map((machine) => `<li><strong>${escapeHtml(machine.machine)}</strong> — ${escapeHtml(machine.interpretation)} Recommended action: ${escapeHtml(machine.recommendation)}</li>`).join('')}
-        </ul>
-      </div>
-      <div class="report-section">
-        <h3>Recommended focus areas</h3>
-        <ul>${summary.focusAreas.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
-      </div>
-      <div class="report-section report-grid">
-        <div><strong>Top errors</strong><br>${summary.topErrors.map((item) => `${escapeHtml(item.key)} (${item.value})`).join('<br>')}</div>
-        <div><strong>Top subsystems</strong><br>${summary.topSubsystems.map((item) => `${escapeHtml(item.key)} (${item.value})`).join('<br>')}</div>
-        <div><strong>Health mix</strong><br>${summary.fleetHealth.counts.map((item) => `${item.label}: ${item.count}`).join('<br>')}</div>
-      </div>
-    </div>
-  `;
-}
-
-async function copySummaryToClipboard() {
-  try {
-    const text = buildEmailSummary(state.summary);
-    await navigator.clipboard.writeText(text);
-    setUploadStatus('Executive summary copied to clipboard.', 'success');
-  } catch (error) {
-    setUploadStatus('Clipboard copy failed in this environment.', 'error');
-  }
-}
-
-function renderCharts() {
-  const errorTrend = timeSeries(state.filteredEvents, 'count');
-  renderLineChart('chartErrorTrend', 'Errors over time', errorTrend.labels, errorTrend.values, '#38bdf8');
-  renderPieChart('chartSubsystemDistribution', 'Top subsystems', getTopCounts(state.filteredEvents, (event) => event.subsystem, 5));
-  const topErrors = getTopCounts(state.filteredEvents, (event) => event.title, 8);
-  renderBarChart('chartTopErrors', 'Top errors', topErrors.map((item) => item.key), topErrors.map((item) => item.value), '#f97316');
-
-  const subsystemChart = ensureChart(els.chartSubsystemDistribution);
-  const errorChart = ensureChart(els.chartTopErrors);
-  if (subsystemChart) {
-    subsystemChart.off('click');
-    subsystemChart.on('click', (params) => openCategoryPanel('subsystem', params.name));
-  }
-  if (errorChart) {
-    errorChart.off('click');
-    errorChart.on('click', (params) => openCategoryPanel('error', params.name));
-  }
-}
-
-function renderBarChart(key, title, categories, series, color) {
-  const chart = ensureChart(els[key]);
-  if (!chart) return;
-  chart.setOption({
-    backgroundColor: 'transparent',
-    title: { text: title, textStyle: { color: '#e2e8f0', fontSize: 14, fontWeight: 600 } },
-    tooltip: { trigger: 'axis' },
-    grid: { left: 56, right: 24, top: 48, bottom: 62 },
-    xAxis: { type: 'category', data: categories, axisLabel: { color: '#94a3b8', interval: 0, rotate: 22 } },
-    yAxis: { type: 'value', axisLabel: { color: '#94a3b8' }, splitLine: { lineStyle: { color: 'rgba(148,163,184,0.12)' } } },
-    series: [{ type: 'bar', data: series, itemStyle: { color, borderRadius: [10, 10, 0, 0] } }]
-  });
-}
-
-function renderLineChart(key, title, labels, values, color) {
-  const chart = ensureChart(els[key]);
-  if (!chart) return;
-  chart.setOption({
-    backgroundColor: 'transparent',
-    title: { text: title, textStyle: { color: '#e2e8f0', fontSize: 14, fontWeight: 600 } },
-    tooltip: { trigger: 'axis' },
-    grid: { left: 56, right: 24, top: 48, bottom: 42 },
-    xAxis: { type: 'category', data: labels, axisLabel: { color: '#94a3b8' } },
-    yAxis: { type: 'value', axisLabel: { color: '#94a3b8' }, splitLine: { lineStyle: { color: 'rgba(148,163,184,0.12)' } } },
-    series: [{ type: 'line', smooth: true, data: values, lineStyle: { color, width: 3 }, areaStyle: { color: `${color}22` }, symbolSize: 8 }]
-  });
-}
-
-function renderPieChart(key, title, rows) {
-  const chart = ensureChart(els[key]);
-  if (!chart) return;
-  chart.setOption({
-    backgroundColor: 'transparent',
-    title: { text: title, textStyle: { color: '#e2e8f0', fontSize: 14, fontWeight: 600 } },
-    tooltip: { trigger: 'item' },
-    legend: { bottom: 0, textStyle: { color: '#94a3b8' } },
-    series: [{
-      type: 'pie',
-      radius: ['54%', '76%'],
-      top: 24,
-      label: { color: '#e2e8f0' },
-      itemStyle: { borderColor: '#081220', borderWidth: 4 },
-      data: rows.map((row) => ({ name: row.key, value: row.value }))
-    }]
-  });
-}
-
-function ensureChart(element) {
-  if (!element) return null;
-  if (!state.charts[element.id]) {
-    state.charts[element.id] = echarts.init(element);
-    window.addEventListener('resize', () => state.charts[element.id]?.resize());
-  }
-  return state.charts[element.id];
-}
-
-function resetAnalysis(showMessage = true) {
-  state.rawEvents = [];
-  state.normalizedEvents = [];
-  state.filteredEvents = [];
-  state.summary = null;
-  state.selectedMachine = null;
-  state.selectedPanel = null;
-  state.columnMap = null;
-  state.currentFileName = '';
-  els.fileInput.value = '';
-  els.analysisShell.classList.add('hidden');
-  els.emptyState.classList.remove('hidden');
-  closeMachinePanel();
-  if (showMessage) setUploadStatus('Analysis reset. Upload another dataset to continue.', 'info');
+function countBy(items, selector) {
+  return items.reduce((map, item) => {
+    const key = selector(item);
+    map.set(key, (map.get(key) || 0) + 1);
+    return map;
+  }, new Map());
 }
 
 function groupBy(items, key) {
-  const map = new Map();
-  items.forEach((item) => {
-    const value = typeof key === 'function' ? key(item) : item[key];
+  return items.reduce((map, item) => {
+    const value = item[key];
     if (!map.has(value)) map.set(value, []);
     map.get(value).push(item);
-  });
-  return map;
-}
-
-function countBy(items, getter) {
-  const map = new Map();
-  items.forEach((item) => {
-    const key = getter(item);
-    map.set(key, (map.get(key) || 0) + 1);
-  });
-  return map;
-}
-
-function getTopCounts(items, getter, limit) {
-  return Array.from(countBy(items, getter).entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([key, value]) => ({ key, value }));
-}
-
-function buildNestedCounts(items, outerKey, innerKey) {
-  const nested = new Map();
-  items.forEach((item) => {
-    const outer = item[outerKey];
-    const inner = item[innerKey];
-    if (!nested.has(outer)) nested.set(outer, new Map());
-    const innerMap = nested.get(outer);
-    innerMap.set(inner, (innerMap.get(inner) || 0) + 1);
-  });
-  return nested;
+    return map;
+  }, new Map());
 }
 
 function getTopEntry(map) {
-  const sorted = Array.from(map.entries()).sort((a, b) => b[1] - a[1])[0];
-  return sorted ? { key: sorted[0], value: sorted[1] } : { key: 'Unknown', value: 0 };
+  let best = ['None', 0];
+  map.forEach((value, key) => { if (value > best[1]) best = [key, value]; });
+  return { key: best[0], value: best[1] };
 }
 
-function getAnalyzedDateRange(events) {
-  if (!events.length) return 'No events in active filter range';
-  const sorted = [...events].sort((a, b) => a.startTime - b.startTime);
-  return `${formatDate(sorted[0].startTime)} → ${formatDate(sorted[sorted.length - 1].startTime)}`;
-}
+function sum(items, key) { return items.reduce((acc, item) => acc + Number(item[key] || 0), 0); }
+function average(values) { return values.length ? values.reduce((acc, value) => acc + value, 0) / values.length : 0; }
+function uniqueSorted(values) { return [...new Set(values.filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b))); }
+function populateSelect(select, values) { select.innerHTML = '<option value="all">All</option>' + values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join(''); select.value = 'all'; }
+function formatDateInput(date) { return date instanceof Date ? date.toISOString().slice(0, 10) : ''; }
+function formatDateKey(date) { return date.toISOString().slice(0, 10); }
+function formatDateTime(date) { return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(date); }
+function formatMinutes(minutes) { if (!minutes) return '0 min'; const hrs = Math.floor(minutes / 60); const mins = Math.round(minutes % 60); if (!hrs) return `${mins} min`; return `${hrs}h ${mins}m`; }
+function labelize(value) { return value.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase()); }
+function escapeHtml(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
+function truncate(value, length) { return value.length > length ? `${value.slice(0, length - 1)}…` : value; }
+function debounce(fn, wait) { let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), wait); }; }
 
-function timeSeries(events, mode) {
-  const grouped = groupBy([...events].sort((a, b) => a.startTime - b.startTime), (event) => event.dayKey);
-  const labels = Array.from(grouped.keys());
-  const values = labels.map((label) => {
-    const rows = grouped.get(label);
-    return mode === 'downtime' ? round(sum(rows, 'durationMinutes')) : rows.length;
-  });
-  return { labels, values };
-}
-
-function sum(items, key) {
-  return items.reduce((total, item) => total + Number(item[key] || 0), 0);
-}
-
-function average(values) {
-  return values.length ? values.reduce((acc, value) => acc + value, 0) / values.length : 0;
-}
-
-function uniqueSorted(values) {
-  return [...new Set(values)].sort((a, b) => String(a).localeCompare(String(b)));
-}
-
-function formatDateInput(date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function formatDate(date) {
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
-}
-
-function formatDateTime(date) {
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(date);
-}
-
-function formatDateKey(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
-
-function formatMinutes(value) {
-  const minutes = Number(value || 0);
-  if (minutes >= 60) {
-    const hours = Math.floor(minutes / 60);
-    const remainder = Math.round(minutes % 60);
-    return `${hours}h ${remainder}m`;
-  }
-  return `${Math.round(minutes)}m`;
-}
-
-function round(value) {
-  return Math.round(value * 10) / 10;
-}
-
-function labelize(key) {
-  return key.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase());
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+function getOrCreateChart(key, element) {
+  if (!state.charts[key]) state.charts[key] = echarts.init(element);
+  return state.charts[key];
 }

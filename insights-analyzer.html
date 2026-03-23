@@ -6,218 +6,261 @@
     <title>Landa Insights Analyzer - Operational Intelligence</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-main: #04101f;
-            --bg-shell: rgba(6, 16, 31, 0.92);
-            --bg-card: rgba(10, 22, 38, 0.92);
-            --bg-card-soft: rgba(11, 27, 46, 0.78);
-            --bg-elevated: rgba(16, 30, 49, 0.98);
-            --text-main: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-soft: rgba(148, 163, 184, 0.14);
-            --shadow-xl: 0 32px 72px rgba(2, 8, 23, 0.45);
+            --bg: #07111d;
+            --bg-deep: #030813;
+            --panel: rgba(10, 18, 31, 0.82);
+            --panel-strong: rgba(12, 23, 40, 0.94);
+            --panel-soft: rgba(18, 31, 51, 0.62);
+            --line: rgba(148, 163, 184, 0.14);
+            --line-strong: rgba(148, 163, 184, 0.24);
+            --text: #f8fafc;
+            --muted: #8fa3b8;
             --healthy: #22c55e;
             --monitor: #eab308;
             --warning: #f97316;
             --critical: #ef4444;
-            --accent: #38bdf8;
-            --accent-strong: #2563eb;
+            --accent: #58c4ff;
+            --accent-soft: rgba(88, 196, 255, 0.16);
+            --shadow: 0 28px 90px rgba(0, 0, 0, 0.34);
+            --radius-xl: 32px;
+            --radius-lg: 22px;
+            --radius-md: 16px;
         }
         * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
             margin: 0;
             font-family: 'Inter', system-ui, sans-serif;
-            color: var(--text-main);
+            color: var(--text);
             background:
-                radial-gradient(circle at top left, rgba(56,189,248,0.12), transparent 26%),
-                radial-gradient(circle at top right, rgba(37,99,235,0.10), transparent 24%),
-                linear-gradient(180deg, #020817, #05111f 55%, #071522 100%);
+                radial-gradient(circle at 12% 0%, rgba(88,196,255,0.14), transparent 28%),
+                radial-gradient(circle at 88% 8%, rgba(34,197,94,0.08), transparent 24%),
+                linear-gradient(180deg, #050b14, #07111d 34%, #091624 100%);
+            min-height: 100vh;
         }
         body::before {
             content: '';
             position: fixed;
             inset: 0;
             pointer-events: none;
-            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+            background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0));
             z-index: -1;
         }
         .layout-shell { min-height: 100vh; display: flex; }
         .sidebar {
-            width: 240px;
-            padding: 1.5rem 1rem;
+            width: 246px;
+            padding: 22px 16px;
             display: flex;
             flex-direction: column;
-            background: rgba(4, 13, 25, 0.95);
-            border-right: 1px solid rgba(148, 163, 184, 0.10);
-            box-shadow: 12px 0 48px rgba(2, 8, 23, 0.32);
-            backdrop-filter: blur(18px);
+            border-right: 1px solid rgba(255,255,255,0.06);
+            background: rgba(4, 11, 21, 0.94);
+            backdrop-filter: blur(24px);
         }
-        .sidebar-header { display: flex; align-items: center; margin-bottom: 2rem; }
+        .sidebar-header { display: flex; align-items: center; margin-bottom: 28px; }
         .logo-mark {
-            width: 34px; height: 34px; border-radius: 12px;
-            background: linear-gradient(145deg, rgba(56,189,248,0.95), rgba(14,116,144,0.2));
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 28px rgba(56,189,248,0.28);
+            width: 36px; height: 36px; border-radius: 14px;
+            background: linear-gradient(145deg, rgba(88,196,255,0.95), rgba(20,83,122,0.3));
+            box-shadow: 0 0 32px rgba(88,196,255,0.28), inset 0 0 0 1px rgba(255,255,255,0.18);
         }
-        .logo-title { font-family: 'Satoshi', system-ui, sans-serif; font-size: 0.82rem; letter-spacing: 0.28em; text-transform: uppercase; }
-        .logo-subtitle { color: var(--text-muted); font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; }
-        .sidebar-nav { display: flex; flex-direction: column; gap: 0.35rem; }
+        .logo-title { font-family: 'Satoshi', sans-serif; font-size: .85rem; letter-spacing: .34em; text-transform: uppercase; }
+        .logo-subtitle { color: var(--muted); font-size: .65rem; letter-spacing: .16em; text-transform: uppercase; }
+        .sidebar-nav { display: grid; gap: 6px; }
         .nav-link {
-            display: block; padding: 0.72rem 0.85rem; border-radius: 0.9rem;
-            color: #dbeafe; text-decoration: none; font-size: 0.86rem;
-            border: 1px solid transparent;
+            text-decoration: none; color: #dbeafe; padding: 12px 14px; border-radius: 14px;
+            border: 1px solid transparent; font-size: .87rem;
         }
-        .nav-link:hover { background: rgba(15, 23, 42, 0.76); }
-        .nav-link-active { background: rgba(56,189,248,0.10); border-color: rgba(56,189,248,0.35); color: #f8fafc; }
-        .sidebar-footer { margin-top: auto; padding-top: 1.25rem; border-top: 1px solid rgba(148, 163, 184, 0.10); }
-        .user-pill { display: flex; align-items: center; gap: 0.65rem; padding: 0.65rem 0.75rem; border-radius: 999px; background: rgba(15,23,42,0.7); border: 1px solid rgba(148,163,184,0.16); }
-        .user-avatar { width: 30px; height: 30px; border-radius: 999px; display: grid; place-items: center; font-size: 0.74rem; font-weight: 700; background: linear-gradient(145deg, rgba(56,189,248,0.95), rgba(37,99,235,0.4)); }
-        .user-name { font-size: 0.8rem; }
-        .user-role { font-size: 0.62rem; letter-spacing: 0.14em; color: var(--text-muted); text-transform: uppercase; }
-        .nav-logout, .btn-ghost, .btn-primary, .btn-chip {
-            border-radius: 999px; padding: 0.72rem 1rem; border: 1px solid transparent;
-            font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+        .nav-link:hover { background: rgba(15, 23, 42, 0.72); }
+        .nav-link-active { background: rgba(88,196,255,0.10); border-color: rgba(88,196,255,0.28); color: #fff; }
+        .sidebar-footer { margin-top: auto; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); }
+        .user-pill {
+            display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 999px;
+            background: rgba(15, 23, 42, 0.72); border: 1px solid rgba(148,163,184,0.18);
         }
-        .nav-logout, .btn-ghost { background: rgba(15, 23, 42, 0.55); border-color: rgba(148, 163, 184, 0.18); color: var(--text-secondary); }
-        .btn-primary { background: linear-gradient(135deg, #38bdf8, #2563eb); color: #f8fafc; box-shadow: 0 18px 34px rgba(37,99,235,0.28); }
-        .btn-chip { background: rgba(56,189,248,0.08); border-color: rgba(56,189,248,0.18); color: #dbeafe; }
-        .main-shell { flex: 1; padding: 2rem; }
-        .page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.25rem; margin-bottom: 1.5rem; }
-        .page-title { font-family: 'Satoshi', system-ui, sans-serif; font-size: 0.95rem; letter-spacing: 0.28em; text-transform: uppercase; }
-        .page-headline { margin-top: 0.55rem; font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1; font-weight: 800; max-width: 12ch; }
-        .page-subtitle { margin-top: 0.75rem; color: var(--text-muted); font-size: 0.98rem; max-width: 56rem; line-height: 1.7; }
-        .app-card {
-            background: linear-gradient(180deg, rgba(11, 22, 38, 0.94), rgba(8, 18, 32, 0.94));
-            border: 1px solid var(--border-soft); border-radius: 1.4rem; box-shadow: var(--shadow-xl); backdrop-filter: blur(22px);
+        .user-avatar {
+            width: 30px; height: 30px; border-radius: 999px; display: grid; place-items: center;
+            background: linear-gradient(145deg, rgba(88,196,255,0.95), rgba(37,99,235,0.36)); font-weight: 800; font-size: .72rem;
         }
-        .section-shell { padding: 1.35rem; }
-        .section-heading { font-family: 'Satoshi', system-ui, sans-serif; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.22em; color: #e2e8f0; }
-        .section-copy { margin-top: 0.45rem; color: var(--text-muted); font-size: 0.92rem; line-height: 1.65; }
-        .status-pill { display: inline-flex; align-items: center; gap: 0.45rem; border-radius: 999px; padding: 0.42rem 0.8rem; font-size: 0.8rem; border: 1px solid rgba(148,163,184,0.24); }
-        .status-success { color: #86efac; background: rgba(34,197,94,0.10); border-color: rgba(34,197,94,0.26); }
-        .status-error { color: #fda4af; background: rgba(239,68,68,0.10); border-color: rgba(239,68,68,0.26); }
-        .status-info { color: #bae6fd; background: rgba(56,189,248,0.10); border-color: rgba(56,189,248,0.26); }
-        .drop-zone {
-            min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; text-align: center;
-            border: 1px dashed rgba(56,189,248,0.28);
-            background: linear-gradient(180deg, rgba(15,23,42,0.72), rgba(2,6,23,0.52));
+        .user-name { font-size: .8rem; }
+        .user-role { font-size: .6rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+        .nav-logout, .ghost-btn, .primary-btn, .soft-btn, .section-pill, .preset-pill {
+            border-radius: 999px; border: 1px solid transparent; cursor: pointer;
+            font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: .73rem;
         }
-        .drop-zone.drag-active { border-color: rgba(56,189,248,0.8); box-shadow: inset 0 0 0 1px rgba(56,189,248,0.32), 0 0 48px rgba(56,189,248,0.12); }
-        .upload-icon { width: 60px; height: 60px; border-radius: 20px; display: grid; place-items: center; background: linear-gradient(145deg, rgba(56,189,248,0.26), rgba(37,99,235,0.12)); }
-        .meta-chip, .selector-chip, .inline-link-chip {
-            display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.48rem 0.8rem; border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.18); background: rgba(15,23,42,0.58); color: #dbeafe; font-size: 0.76rem;
+        .nav-logout, .ghost-btn, .soft-btn {
+            background: rgba(15, 23, 42, 0.58); color: #d7e3f1; border-color: rgba(148,163,184,0.16); padding: 12px 14px;
         }
-        .inline-link-chip { cursor: pointer; }
-        .inline-link-chip:hover { border-color: rgba(56,189,248,0.45); }
-        .selector-group { display: flex; flex-wrap: wrap; gap: 0.65rem; }
-        .selector-chip { cursor: pointer; }
-        .selector-chip.active { background: rgba(56,189,248,0.12); border-color: rgba(56,189,248,0.34); }
-        .filter-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.85rem; }
-        .filter-field label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-muted); margin-bottom: 0.45rem; }
+        .primary-btn {
+            background: linear-gradient(135deg, #69d2ff, #2563eb); color: white; padding: 12px 16px;
+            box-shadow: 0 18px 38px rgba(37,99,235,0.30);
+        }
+        .soft-btn { background: rgba(88,196,255,0.10); border-color: rgba(88,196,255,0.18); }
+        .main-shell { flex: 1; padding: 26px; }
+        .topbar {
+            display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; margin-bottom: 18px;
+        }
+        .eyebrow { font-family: 'Satoshi', sans-serif; letter-spacing: .28em; text-transform: uppercase; font-size: .8rem; color: #d4e7ff; }
+        .page-headline { margin-top: 10px; font-size: clamp(2.2rem, 5vw, 4.3rem); line-height: .95; font-weight: 800; max-width: 13ch; }
+        .page-subtitle { margin-top: 12px; max-width: 64rem; color: var(--muted); line-height: 1.7; font-size: .98rem; }
+        .workspace { display: grid; gap: 18px; }
+        .surface {
+            background: linear-gradient(180deg, rgba(10,18,31,0.90), rgba(8,15,27,0.90));
+            border: 1px solid var(--line); border-radius: var(--radius-xl); box-shadow: var(--shadow); backdrop-filter: blur(24px);
+        }
+        .hero-shell {
+            position: relative; overflow: hidden; padding: 26px; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, .95fr); gap: 18px;
+        }
+        .hero-shell::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(120deg, rgba(88,196,255,0.10), transparent 35%, rgba(34,197,94,0.04) 80%);
+            pointer-events: none;
+        }
+        .hero-panel, .rail-card, .story-card, .evidence-card, .composer-card, .machine-row, .finding-card, .summary-card, .detail-block, .modal-card, .drawer-card {
+            position: relative; z-index: 1; border-radius: var(--radius-lg); background: var(--panel); border: 1px solid rgba(255,255,255,0.06);
+        }
+        .hero-panel { padding: 22px; }
+        .hero-kicker { color: #93ddff; font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; }
+        .hero-title { margin-top: 10px; font-size: clamp(1.8rem, 3vw, 2.8rem); font-weight: 800; line-height: 1.02; max-width: 12ch; }
+        .hero-narrative { margin-top: 16px; padding: 16px 18px; border-radius: 20px; background: rgba(88,196,255,0.08); border: 1px solid rgba(88,196,255,0.14); color: #e5f6ff; line-height: 1.75; }
+        .hero-meta-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+        .hero-metric { padding: 16px; border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+        .hero-metric-label { font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+        .hero-metric-value { margin-top: 8px; font-size: 1.7rem; font-weight: 800; }
+        .hero-metric-note { margin-top: 6px; color: #d0dceb; font-size: .84rem; }
+        .posture-panel { padding: 22px; display: grid; gap: 16px; }
+        .posture-label { font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+        .posture-score { font-size: 4.4rem; line-height: .92; font-weight: 800; font-family: 'Satoshi', sans-serif; }
+        .posture-note { color: #dce9f7; line-height: 1.7; }
+        .severity-stack { display: grid; gap: 10px; }
+        .severity-bar { display: grid; grid-template-columns: 110px 1fr auto; gap: 12px; align-items: center; }
+        .severity-track { height: 10px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; }
+        .severity-fill { height: 100%; border-radius: 999px; }
+        .command-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; align-items: start; }
+        .rail-card { padding: 18px; display: grid; gap: 16px; position: sticky; top: 18px; }
+        .rail-title, .section-title, .drawer-title, .modal-title { font-size: .82rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); font-family: 'Satoshi', sans-serif; }
+        .upload-stage {
+            border-radius: 22px; min-height: 230px; padding: 18px; display: grid; place-items: center; text-align: center;
+            border: 1px dashed rgba(88,196,255,0.28); background: linear-gradient(180deg, rgba(15,23,42,0.72), rgba(4,9,17,0.68));
+        }
+        .upload-stage.drag-active { box-shadow: inset 0 0 0 1px rgba(88,196,255,0.34), 0 0 44px rgba(88,196,255,0.12); border-color: rgba(88,196,255,0.7); }
+        .upload-icon { width: 62px; height: 62px; border-radius: 22px; display: grid; place-items: center; background: rgba(88,196,255,0.10); margin: 0 auto 16px; }
+        .status-pill, .meta-pill, .chip-link {
+            display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 8px 12px; font-size: .74rem;
+            border: 1px solid rgba(148,163,184,0.16); background: rgba(15,23,42,0.58); color: #dbeafe;
+        }
+        .status-pill.success { color: #b9fbc0; border-color: rgba(34,197,94,0.26); background: rgba(34,197,94,0.10); }
+        .status-pill.error { color: #fecaca; border-color: rgba(239,68,68,0.26); background: rgba(239,68,68,0.10); }
+        .status-pill.info { color: #c6eeff; border-color: rgba(88,196,255,0.26); background: rgba(88,196,255,0.10); }
+        .filter-grid { display: grid; gap: 12px; }
+        .filter-field label { display: block; margin-bottom: 6px; font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
         select, input[type="date"], input[type="search"] {
-            width: 100%; border-radius: 1rem; border: 1px solid rgba(148,163,184,0.18); background: rgba(15,23,42,0.72); color: var(--text-main); padding: 0.82rem 0.9rem;
+            width: 100%; padding: 12px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.64);
+            border: 1px solid rgba(148,163,184,0.14); color: var(--text); outline: none;
         }
-        .stack-lg { display: grid; gap: 1.5rem; }
-        .hero-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.95fr); gap: 1.25rem; }
-        .hero-panel { padding: 1.6rem; border-radius: 1.5rem; background: linear-gradient(180deg, rgba(12,23,40,0.96), rgba(9,18,33,0.92)); border: 1px solid rgba(148,163,184,0.14); }
-        .hero-overline { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: #7dd3fc; }
-        .hero-title { margin-top: 0.7rem; font-size: clamp(2rem, 3vw, 2.7rem); line-height: 1.05; font-weight: 800; max-width: 12ch; }
-        .hero-ai-summary { margin-top: 1rem; padding: 1rem 1.1rem; border-radius: 1.2rem; background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.18); color: #e0f2fe; line-height: 1.7; }
-        .hero-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.85rem; margin-top: 1.2rem; }
-        .hero-kpi { padding: 1rem; border-radius: 1.1rem; background: rgba(15,23,42,0.64); border: 1px solid rgba(148,163,184,0.12); }
-        .hero-kpi span { display: block; font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
-        .hero-kpi strong { display: block; margin-top: 0.35rem; font-size: 1.8rem; }
-        .hero-kpi small { display: block; margin-top: 0.4rem; color: #cbd5e1; font-size: 0.82rem; }
-        .distribution-ring-shell { display: grid; gap: 1rem; align-content: start; }
-        .distribution-ring { position: relative; width: 220px; height: 220px; margin: 0 auto; }
-        .distribution-ring-center { position: absolute; inset: 27%; border-radius: 999px; background: rgba(5, 13, 26, 0.96); display: grid; place-items: center; text-align: center; border: 1px solid rgba(148,163,184,0.10); }
-        .distribution-ring-center strong { font-size: 2rem; }
-        .distribution-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
-        .distribution-card { padding: 0.95rem; border-radius: 1rem; background: rgba(15,23,42,0.6); border: 1px solid rgba(148,163,184,0.12); }
-        .distribution-card .label { font-size: 0.74rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); }
-        .distribution-card .value { margin-top: 0.28rem; font-size: 1.2rem; font-weight: 700; }
-        .distribution-card .subtext { margin-top: 0.3rem; font-size: 0.82rem; color: var(--text-secondary); }
-        .critical-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-        .machine-card {
-            width: 100%; text-align: left; padding: 1.15rem; border-radius: 1.3rem; background: linear-gradient(180deg, rgba(14,24,42,0.92), rgba(10,18,32,0.92));
-            border: 1px solid rgba(148,163,184,0.14); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+        .preset-list, .section-list, .meta-flow, .focus-flow { display: flex; flex-wrap: wrap; gap: 8px; }
+        .preset-pill, .section-pill {
+            padding: 9px 12px; background: rgba(255,255,255,0.03); color: #dbeafe; border-color: rgba(148,163,184,0.14);
         }
-        .machine-card:hover { transform: translateY(-2px); border-color: rgba(56,189,248,0.34); box-shadow: 0 18px 38px rgba(2, 8, 23, 0.32); }
-        .machine-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-        .machine-card-title { font-size: 1.08rem; font-weight: 700; }
-        .machine-card-meta { margin-top: 0.3rem; color: var(--text-muted); font-size: 0.84rem; }
-        .severity-badge { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.38rem 0.72rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid currentColor; }
-        .machine-card-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin-top: 1rem; }
-        .machine-card-stat { padding: 0.8rem; border-radius: 1rem; background: rgba(15,23,42,0.56); }
-        .machine-card-stat span { display: block; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
-        .machine-card-stat strong { display: block; margin-top: 0.35rem; font-size: 1rem; }
-        .machine-card-reason { margin-top: 0.9rem; color: #e2e8f0; line-height: 1.6; font-size: 0.9rem; }
-        .machine-card-links { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.9rem; }
-        .insights-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
-        .insight-card { padding: 1.1rem; border-radius: 1.2rem; background: rgba(12,22,38,0.84); border: 1px solid rgba(148,163,184,0.14); }
-        .insight-eyebrow { color: #7dd3fc; font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; }
-        .insight-card h4 { margin-top: 0.65rem; font-size: 1rem; font-weight: 700; }
-        .insight-card p { margin-top: 0.55rem; font-size: 0.9rem; line-height: 1.65; color: var(--text-secondary); }
-        .insight-meta { margin-top: 0.85rem; display: flex; flex-wrap: wrap; gap: 0.45rem; }
-        .analytics-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 1rem; }
-        .analytics-stack { display: grid; gap: 1rem; }
-        .chart-card { padding: 1.2rem; border-radius: 1.35rem; min-height: 360px; }
-        .chart-card.compact { min-height: 300px; }
-        .chart-canvas { width: 100%; height: 280px; }
-        .chart-card.compact .chart-canvas { height: 220px; }
-        .health-list { display: grid; gap: 0.8rem; }
-        .health-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1rem; border-radius: 1rem; background: rgba(15,23,42,0.58); }
-        .health-row-left { display: flex; align-items: center; gap: 0.7rem; }
-        .health-dot { width: 12px; height: 12px; border-radius: 999px; box-shadow: 0 0 18px currentColor; }
-        .summary-block { display: grid; gap: 1rem; }
-        .summary-copy-card { padding: 1.1rem; border-radius: 1.2rem; background: rgba(15,23,42,0.58); border: 1px solid rgba(148,163,184,0.12); }
-        .summary-copy-card h4 { font-size: 0.82rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); }
-        .summary-copy-card p, .summary-copy-card li { margin-top: 0.65rem; color: var(--text-secondary); line-height: 1.75; font-size: 0.92rem; }
-        .modal-overlay, .side-panel { position: fixed; inset: 0; background: rgba(2,6,23,0.72); z-index: 50; }
-        .modal-overlay { display: flex; align-items: center; justify-content: center; padding: 1rem; }
-        .modal-card, .side-panel-card {
-            background: linear-gradient(180deg, rgba(8,18,32,0.98), rgba(5,13,24,0.98)); border: 1px solid rgba(148,163,184,0.16); box-shadow: var(--shadow-xl);
+        .preset-pill.active, .section-pill.active { background: rgba(88,196,255,0.12); border-color: rgba(88,196,255,0.32); color: #fff; }
+        .story-grid { display: grid; gap: 18px; }
+        .story-card { padding: 22px; }
+        .story-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+        .story-lead { margin-top: 10px; font-size: 1.55rem; font-weight: 800; line-height: 1.12; max-width: 18ch; }
+        .story-copy { margin-top: 10px; color: var(--muted); line-height: 1.72; max-width: 54rem; }
+        .signal-list { display: grid; gap: 14px; margin-top: 18px; }
+        .machine-row {
+            width: 100%; text-align: left; padding: 18px; display: grid; grid-template-columns: minmax(0, 1.4fr) 1fr auto; gap: 14px; align-items: center;
+            transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
         }
-        .modal-card { width: min(1020px, 96vw); max-height: 90vh; overflow: auto; border-radius: 1.5rem; padding: 1.35rem; }
-        .side-panel { display: flex; justify-content: flex-end; }
-        .side-panel-card { width: min(760px, 96vw); height: 100%; overflow: auto; padding: 1.35rem; border-left: 1px solid rgba(148,163,184,0.16); }
-        .panel-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-        .panel-title { font-size: 1.8rem; font-weight: 800; }
-        .panel-subtitle { margin-top: 0.35rem; color: var(--text-muted); }
-        .panel-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.8rem; margin-top: 1rem; }
-        .panel-card { padding: 0.95rem; border-radius: 1rem; background: rgba(15,23,42,0.56); }
-        .panel-card span { display: block; color: var(--text-muted); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; }
-        .panel-card strong { display: block; margin-top: 0.35rem; font-size: 1rem; }
-        .panel-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; margin-top: 1rem; }
-        .panel-section { padding: 1rem; border-radius: 1.1rem; background: rgba(15,23,42,0.5); border: 1px solid rgba(148,163,184,0.10); }
-        .panel-section.full-width { grid-column: 1 / -1; }
-        .panel-section h4 { margin-bottom: 0.75rem; font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); }
-        .panel-section p, .panel-section li { color: var(--text-secondary); line-height: 1.7; font-size: 0.9rem; }
-        .detail-table { width: 100%; border-collapse: collapse; }
-        .detail-table th, .detail-table td { padding: 0.75rem; border-bottom: 1px solid rgba(148,163,184,0.10); text-align: left; }
-        .report-shell { color: var(--text-main); }
-        .report-header, .report-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1rem; }
-        .report-filter-box, .report-section { padding: 1rem; border-radius: 1rem; background: rgba(15,23,42,0.58); border: 1px solid rgba(148,163,184,0.10); }
+        .machine-row:hover { transform: translateY(-1px); border-color: rgba(88,196,255,0.24); box-shadow: 0 16px 36px rgba(0,0,0,0.22); }
+        .machine-name { font-size: 1.08rem; font-weight: 700; }
+        .machine-sub { margin-top: 6px; color: var(--muted); font-size: .86rem; }
+        .machine-reason { color: #e7f0fb; line-height: 1.6; font-size: .92rem; }
+        .stat-pair { text-align: right; }
+        .stat-label { font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+        .stat-value { margin-top: 6px; font-weight: 700; }
+        .severity-badge {
+            display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; font-size: .72rem;
+            text-transform: uppercase; letter-spacing: .12em; border: 1px solid currentColor;
+        }
+        .findings-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+        .finding-card { padding: 18px; min-height: 220px; display: grid; align-content: start; }
+        .finding-index { color: #8bdcff; font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; }
+        .finding-title { margin-top: 12px; font-size: 1.04rem; font-weight: 700; line-height: 1.35; }
+        .finding-copy { margin-top: 10px; color: var(--muted); line-height: 1.66; font-size: .92rem; }
+        .finding-meta { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip-link { cursor: pointer; }
+        .chip-link:hover { border-color: rgba(88,196,255,0.3); }
+        .evidence-grid { display: grid; grid-template-columns: 1.25fr .9fr; gap: 18px; }
+        .evidence-stack { display: grid; gap: 18px; }
+        .evidence-card { padding: 20px; min-height: 360px; }
+        .evidence-card.compact { min-height: 260px; }
+        .chart-canvas { width: 100%; height: 280px; margin-top: 14px; }
+        .compact .chart-canvas { height: 180px; }
+        .health-ladder { display: grid; gap: 12px; margin-top: 18px; }
+        .health-row {
+            display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 18px;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+        }
+        .health-row button { all: unset; cursor: pointer; }
+        .health-left { display: flex; align-items: center; gap: 12px; }
+        .health-dot { width: 12px; height: 12px; border-radius: 999px; box-shadow: 0 0 20px currentColor; }
+        .composer-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+        .composer-card { padding: 22px; }
+        .summary-card { padding: 18px; }
+        .summary-body {
+            margin-top: 14px; padding: 18px; border-radius: 20px; background: rgba(4,9,17,0.58); border: 1px solid rgba(255,255,255,0.06);
+            white-space: pre-wrap; color: #e7eef8; line-height: 1.76; font-size: .95rem;
+        }
+        .summary-list { display: grid; gap: 12px; margin-top: 14px; }
+        .summary-list-item { padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+        .empty-state, .loading-state { padding: 28px; text-align: center; color: var(--muted); }
         .hidden { display: none !important; }
-        @media (max-width: 1280px) {
-            .filter-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-            .critical-grid, .insights-grid, .analytics-grid, .panel-grid, .panel-sections, .report-header, .report-grid { grid-template-columns: 1fr; }
+        .drawer, .modal { position: fixed; inset: 0; background: rgba(2, 7, 16, 0.76); z-index: 60; }
+        .drawer { display: flex; justify-content: flex-end; }
+        .drawer-card {
+            width: min(820px, 96vw); height: 100%; padding: 22px; overflow: auto;
+            background: linear-gradient(180deg, rgba(9,17,30,0.98), rgba(5,11,20,0.98)); border-left: 1px solid rgba(255,255,255,0.08);
+        }
+        .modal { display: flex; align-items: center; justify-content: center; padding: 18px; }
+        .modal-card {
+            width: min(1080px, 96vw); max-height: 90vh; overflow: auto; padding: 22px;
+            background: linear-gradient(180deg, rgba(9,17,30,0.98), rgba(5,11,20,0.98));
+        }
+        .drawer-header, .modal-header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+        .drawer-headline, .modal-headline { margin-top: 8px; font-size: 2rem; font-weight: 800; }
+        .drawer-subcopy { margin-top: 10px; color: var(--muted); line-height: 1.7; }
+        .detail-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+        .detail-block { padding: 16px; }
+        .detail-k { font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+        .detail-v { margin-top: 8px; font-size: 1.06rem; font-weight: 700; }
+        .drawer-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+        .drawer-sections .detail-block.full { grid-column: 1 / -1; }
+        .bullet-list { margin: 0; padding-left: 18px; color: #deebf8; line-height: 1.7; }
+        .timeline-list { display: grid; gap: 10px; margin-top: 12px; }
+        .timeline-item { padding: 14px 16px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+        .report-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px; margin-top: 18px; }
+        @media (max-width: 1320px) {
+            .findings-grid, .evidence-grid, .composer-grid, .command-grid, .hero-shell, .report-grid { grid-template-columns: 1fr; }
+            .rail-card { position: static; }
         }
         @media (max-width: 1024px) {
             .layout-shell { flex-direction: column; }
             .sidebar { width: 100%; }
-            .hero-grid, .hero-kpis, .distribution-grid { grid-template-columns: 1fr; }
-            .main-shell { padding: 1rem; }
-            .page-header { flex-direction: column; }
+            .main-shell { padding: 16px; }
+            .hero-meta-grid, .detail-grid, .drawer-sections { grid-template-columns: 1fr 1fr; }
+            .machine-row { grid-template-columns: 1fr; }
+            .stat-pair { text-align: left; }
+        }
+        @media (max-width: 720px) {
+            .hero-meta-grid, .detail-grid, .drawer-sections, .findings-grid { grid-template-columns: 1fr; }
+            .topbar, .story-header { flex-direction: column; }
         }
     </style>
 </head>
@@ -228,7 +271,7 @@
                 <div class="logo-mark"></div>
                 <div class="ml-3 leading-tight">
                     <div class="logo-title">LANDA</div>
-                    <div class="logo-subtitle">Resolved Case Intelligence</div>
+                    <div class="logo-subtitle">Operational Intelligence</div>
                 </div>
             </div>
             <nav class="sidebar-nav">
@@ -244,7 +287,7 @@
                     <div class="user-avatar" id="nav-user-avatar">EX</div>
                     <div class="flex flex-col leading-tight">
                         <span class="user-name" id="nav-user-name">Expert User</span>
-                        <span class="user-role" id="nav-user-role">EXPERT ACCESS</span>
+                        <span class="user-role" id="nav-user-role">Expert Access</span>
                     </div>
                 </div>
                 <button onclick="logout()" class="nav-logout mt-3 w-full">Logout</button>
@@ -252,182 +295,197 @@
         </aside>
 
         <main class="main-shell">
-            <header class="page-header">
+            <header class="topbar">
                 <div>
-                    <div class="page-title">Operational Intelligence / Insights Analyzer</div>
-                    <div class="page-headline">Fleet signals, redesigned for decisions.</div>
-                    <p class="page-subtitle">A premium operations dashboard for Landa digital printing fleets. Keep the analytics engine, remove the noise, and surface what matters first: machine health, critical risks, repeated failures, and the next best actions.</p>
+                    <div class="eyebrow">Insights Analyzer / Fleet Intelligence</div>
+                    <div class="page-headline">Operational intelligence with stronger judgment.</div>
+                    <p class="page-subtitle">Upload Landa Insights exports and turn raw machine events into a curated operational story: what needs attention now, which systems are driving risk, where availability is being lost, and what management should focus on next.</p>
                 </div>
-                <div class="flex flex-wrap gap-3 justify-end">
-                    <button id="copy-summary" class="btn-ghost">Copy Executive Summary</button>
-                    <button id="print-report" class="btn-ghost">Print View</button>
-                    <button id="export-report" class="btn-primary">Open Report</button>
+                <div class="flex flex-wrap gap-2 items-center">
+                    <button class="soft-btn" id="copy-summary-inline">Copy executive summary</button>
+                    <button class="ghost-btn" id="export-report">Open report view</button>
+                    <button class="primary-btn" id="print-report">Print / Save PDF</button>
                 </div>
             </header>
 
-            <section class="app-card section-shell mb-6">
-                <div class="grid grid-cols-1 xl:grid-cols-[1.5fr,0.9fr] gap-6">
-                    <div>
-                        <div id="drop-zone" class="drop-zone app-card section-shell">
-                            <div class="upload-icon">
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-cyan-100"><path d="M12 16V4m0 0 4 4m-4-4-4 4M5 20h14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            </div>
-                            <div>
-                                <h2 class="text-2xl font-semibold">Upload Insight export</h2>
-                                <p class="text-slate-400 mt-3 max-w-2xl">Supports Excel (.xlsx) and CSV exports. Existing file parsing and analytics stay intact while the experience shifts to a cleaner fleet command center.</p>
-                            </div>
-                            <div class="flex flex-wrap justify-center gap-3">
-                                <label class="btn-primary cursor-pointer">
-                                    Select file
+            <div class="workspace">
+                <section class="surface hero-shell">
+                    <div class="hero-panel">
+                        <div class="hero-kicker">Executive posture</div>
+                        <div class="hero-title">What the fleet is telling you right now.</div>
+                        <div class="hero-narrative" id="hero-narrative">Upload a CSV or XLSX export to generate a premium operational brief that prioritizes risk, recurring failures, downtime impact, and fleet-wide issue signals.</div>
+                        <div class="hero-meta-grid" id="hero-metrics"></div>
+                    </div>
+                    <div class="posture-panel">
+                        <div>
+                            <div class="posture-label">Fleet health score</div>
+                            <div class="posture-score" id="fleet-score">—</div>
+                            <div class="posture-note" id="fleet-posture-copy">No dataset loaded yet.</div>
+                        </div>
+                        <div class="severity-stack" id="severity-stack"></div>
+                        <div class="focus-flow" id="focus-flow"></div>
+                    </div>
+                </section>
+
+                <div class="command-grid">
+                    <aside class="rail-card">
+                        <div>
+                            <div class="rail-title">Data source</div>
+                            <div class="upload-stage" id="drop-zone">
+                                <div>
+                                    <div class="upload-icon">
+                                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M4 20h16"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="text-lg font-semibold">Drop export file here</div>
+                                    <p class="text-slate-400 text-sm mt-2 max-w-xs">Supports Excel and CSV insight exports. Existing parsing and analytics logic are preserved and re-presented.</p>
+                                    <div class="mt-4 flex flex-wrap justify-center gap-2">
+                                        <button class="primary-btn" type="button" onclick="document.getElementById('file-input').click()">Choose file</button>
+                                        <button class="ghost-btn" type="button" id="reset-analysis">Reset</button>
+                                    </div>
                                     <input id="file-input" type="file" accept=".csv,.xlsx" class="hidden">
-                                </label>
-                                <button id="reset-analysis" class="btn-ghost">Reset</button>
+                                </div>
                             </div>
-                            <div id="upload-status" class="status-pill status-info">Awaiting file…</div>
+                            <div class="mt-3"><span class="status-pill info" id="upload-status">Awaiting upload.</span></div>
+                            <div class="meta-flow mt-3" id="upload-meta"></div>
                         </div>
-                    </div>
-                    <div class="stack-lg">
-                        <div class="app-card section-shell">
-                            <div class="section-heading">Dataset intelligence</div>
-                            <p class="section-copy">Upload context, column normalization, and source confidence at a glance.</p>
-                            <div class="mt-4 text-base font-semibold" id="dataset-name">No file loaded</div>
-                            <div class="text-sm text-slate-400 mt-1" id="upload-meta">Upload a file to generate metrics.</div>
-                            <div id="column-map" class="mt-4 flex flex-wrap gap-2"></div>
+
+                        <div>
+                            <div class="rail-title">Analysis scope</div>
+                            <div class="filter-grid mt-3">
+                                <div class="filter-field"><label for="filter-date-from">Date from</label><input id="filter-date-from" type="date"></div>
+                                <div class="filter-field"><label for="filter-date-to">Date to</label><input id="filter-date-to" type="date"></div>
+                                <div class="filter-field"><label for="filter-machine">Machine</label><select id="filter-machine"></select></div>
+                                <div class="filter-field"><label for="filter-subsystem">Subsystem</label><select id="filter-subsystem"></select></div>
+                                <div class="filter-field"><label for="filter-error-state">Error state</label><select id="filter-error-state"></select></div>
+                                <div class="filter-field"><label for="filter-model">Model</label><select id="filter-model"></select></div>
+                                <div class="filter-field"><label for="filter-version">Version</label><select id="filter-version"></select></div>
+                                <div class="filter-field"><label for="filter-search">Search</label><input id="filter-search" type="search" placeholder="Search alerts, machines, subsystems"></div>
+                            </div>
                         </div>
-                        <div class="app-card section-shell">
-                            <div class="section-heading">Action-required summary</div>
-                            <p class="section-copy">The few fleet issues worth attention first.</p>
-                            <ul id="action-summary" class="mt-4 space-y-3 text-sm text-slate-200"></ul>
+
+                        <div>
+                            <div class="rail-title">Curated view modes</div>
+                            <div class="preset-list mt-3" id="view-presets"></div>
                         </div>
-                    </div>
+
+                        <div>
+                            <div class="rail-title">Visible sections</div>
+                            <div class="section-list mt-3" id="section-selector"></div>
+                        </div>
+
+                        <div>
+                            <div class="rail-title">Column mapping</div>
+                            <div class="meta-flow mt-3" id="column-map"></div>
+                        </div>
+                    </aside>
+
+                    <section class="story-grid">
+                        <div id="loading-state" class="surface loading-state hidden"><span>Analyzing file…</span></div>
+                        <div id="empty-state" class="surface empty-state">Upload a dataset to unlock the full operational intelligence experience.</div>
+
+                        <div id="analysis-shell" class="hidden story-grid">
+                            <section class="story-card dashboard-section" data-section="attention">
+                                <div class="story-header">
+                                    <div>
+                                        <div class="section-title">Attention now</div>
+                                        <div class="story-lead">The presses that deserve action first.</div>
+                                        <div class="story-copy">A ranked shortlist that combines error volume, dominant-source concentration, downtime impact, recovery loops, and worsening trend signals into one clear escalation view.</div>
+                                    </div>
+                                    <div class="meta-flow" id="alerts-strip"></div>
+                                </div>
+                                <div class="signal-list" id="problematic-machines"></div>
+                            </section>
+
+                            <section class="story-card dashboard-section" data-section="findings">
+                                <div class="section-title">Intelligence layer</div>
+                                <div class="story-lead">Curated findings, not just raw counts.</div>
+                                <div class="story-copy">Automatic insight detection highlights recurring machine patterns, fleet-wide issue signals, downtime anomalies, and concentrated root-cause candidates.</div>
+                                <div class="findings-grid" id="smart-insights"></div>
+                            </section>
+
+                            <section class="dashboard-section" data-section="evidence">
+                                <div class="evidence-grid">
+                                    <div class="evidence-card surface">
+                                        <div class="section-title">Signal trajectory</div>
+                                        <div class="story-lead">Are machine events stabilizing or worsening over time?</div>
+                                        <div class="story-copy">Daily event volume shows whether the selected fleet slice is getting noisier, quieter, or entering repeating escalation bands.</div>
+                                        <div id="chart-error-trend" class="chart-canvas"></div>
+                                    </div>
+                                    <div class="evidence-stack">
+                                        <div class="evidence-card compact surface">
+                                            <div class="section-title">Failure concentration</div>
+                                            <div class="story-copy">Dominant subsystems across the filtered fleet.</div>
+                                            <div id="chart-subsystem-distribution" class="chart-canvas"></div>
+                                        </div>
+                                        <div class="evidence-card compact surface">
+                                            <div class="section-title">Top recurring errors</div>
+                                            <div class="story-copy">Repeated error names surfacing above alert thresholds.</div>
+                                            <div id="chart-top-errors" class="chart-canvas"></div>
+                                        </div>
+                                        <div class="evidence-card compact surface">
+                                            <div class="section-title">Fleet health ladder</div>
+                                            <div class="story-copy">Jump straight into healthy, monitor, warning, and critical machine cohorts.</div>
+                                            <div class="health-ladder" id="fleet-health-grid"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="story-card dashboard-section" data-section="summary">
+                                <div class="section-title">Executive summary composer</div>
+                                <div class="story-lead">A cleaner management-ready brief.</div>
+                                <div class="story-copy">Structured for email, handoff, and leadership updates: severity distribution, critical machines, recurring issues, availability impact, and recommended next focus areas.</div>
+                                <div class="composer-grid mt-5">
+                                    <div class="composer-card">
+                                        <div class="flex flex-wrap gap-2 items-center justify-between">
+                                            <div class="meta-flow" id="executive-summary-meta"></div>
+                                            <button class="primary-btn" id="copy-summary">Copy summary</button>
+                                        </div>
+                                        <div class="summary-body" id="executive-summary"></div>
+                                    </div>
+                                    <div class="summary-card">
+                                        <div class="section-title">Priority focus areas</div>
+                                        <div class="summary-list" id="action-summary"></div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </section>
                 </div>
-            </section>
-
-            <div id="loading-state" class="app-card section-shell hidden mb-6 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin"></div>
-                <span class="text-slate-200">Analyzing file…</span>
-            </div>
-
-            <div id="empty-state" class="app-card section-shell text-center py-20">
-                <h3 class="text-3xl font-semibold">Operational intelligence will appear here</h3>
-                <p class="text-slate-400 mt-4 max-w-3xl mx-auto">Upload a fleet export to generate a redesigned executive dashboard with critical machine alerts, smart insights, focused analytics, and exportable management summaries.</p>
-            </div>
-
-            <div id="analysis-shell" class="hidden stack-lg">
-                <section class="app-card section-shell">
-                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
-                        <div>
-                            <div class="section-heading">Active filters</div>
-                            <div class="section-copy">All sections react instantly to the current machine, subsystem, severity, model, version, date, and keyword selection.</div>
-                        </div>
-                        <div id="alerts-strip" class="flex flex-wrap gap-2"></div>
-                    </div>
-                    <div class="filter-grid">
-                        <div class="filter-field"><label>Date from</label><input id="filter-date-from" type="date"></div>
-                        <div class="filter-field"><label>Date to</label><input id="filter-date-to" type="date"></div>
-                        <div class="filter-field"><label>Machine</label><select id="filter-machine"></select></div>
-                        <div class="filter-field"><label>Subsystem</label><select id="filter-subsystem"></select></div>
-                        <div class="filter-field"><label>Error state</label><select id="filter-error-state"></select></div>
-                        <div class="filter-field"><label>Model</label><select id="filter-model"></select></div>
-                        <div class="filter-field"><label>Version</label><select id="filter-version"></select></div>
-                    </div>
-                    <div class="filter-field mt-4"><label>Search</label><input id="filter-search" type="search" placeholder="Search machine, subsystem, alert title, body, or state"></div>
-                </section>
-
-                <section class="app-card section-shell">
-                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                        <div>
-                            <div class="section-heading">Dashboard selector</div>
-                            <div class="section-copy">Show only the sections you want to review. The main view stays clean; the drill-down panel keeps depth on demand.</div>
-                        </div>
-                        <div id="section-selector" class="selector-group"></div>
-                    </div>
-                </section>
-
-                <section class="dashboard-section" data-section="summary">
-                    <div id="kpi-grid"></div>
-                </section>
-
-                <section class="app-card section-shell dashboard-section" data-section="machines">
-                    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
-                        <div>
-                            <div class="section-heading">Critical machines</div>
-                            <div class="section-copy">Top 5–8 machines only. Each alert card explains severity, downtime, dominant failure source, and why it was elevated.</div>
-                        </div>
-                    </div>
-                    <div id="problematic-machines" class="critical-grid"></div>
-                </section>
-
-                <section class="app-card section-shell dashboard-section" data-section="insights">
-                    <div class="section-heading">Smart insights</div>
-                    <div class="section-copy">Automated detection for repeated errors, subsystem overload, high-duration anomalies, and concentrated issue patterns.</div>
-                    <div id="smart-insights" class="insights-grid mt-5"></div>
-                </section>
-
-                <section class="dashboard-section" data-section="trends">
-                    <div class="analytics-grid">
-                        <div class="app-card chart-card">
-                            <div class="section-heading">Error trend</div>
-                            <div class="section-copy">How alert volume evolves across the selected period.</div>
-                            <div id="chart-error-trend" class="chart-canvas mt-5"></div>
-                        </div>
-                        <div class="analytics-stack">
-                            <div class="app-card chart-card compact">
-                                <div class="section-heading">Fleet health</div>
-                                <div class="section-copy">Severity posture across the filtered fleet.</div>
-                                <div id="fleet-health-grid" class="health-list mt-5"></div>
-                            </div>
-                            <div class="app-card chart-card compact">
-                                <div class="section-heading">Top subsystems</div>
-                                <div class="section-copy">Click a bar or segment to drill into the issue cluster.</div>
-                                <div id="chart-subsystem-distribution" class="chart-canvas mt-5"></div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="app-card chart-card dashboard-section" data-section="subsystems">
-                    <div class="section-heading">Top errors</div>
-                    <div class="section-copy">Only the most repeated alerts stay visible here. Click an error to open the detailed panel.</div>
-                    <div id="chart-top-errors" class="chart-canvas mt-5"></div>
-                </section>
-
-                <section class="app-card section-shell">
-                    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
-                        <div>
-                            <div class="section-heading">Executive summary output</div>
-                            <div class="section-copy">A clean operations summary for email, print, and management reviews.</div>
-                        </div>
-                        <button id="copy-summary-inline" class="btn-chip">Copy Executive Summary</button>
-                    </div>
-                    <div id="executive-summary"></div>
-                </section>
             </div>
         </main>
     </div>
 
-    <div id="machine-panel" class="side-panel hidden">
-        <div class="side-panel-card">
-            <div class="flex justify-end mb-4">
-                <button id="machine-panel-close" class="btn-ghost">Close</button>
+    <div id="machine-panel" class="drawer hidden">
+        <div class="drawer-card">
+            <div class="drawer-header">
+                <div>
+                    <div class="drawer-title">Drill-down</div>
+                    <div class="drawer-headline" id="machine-panel-title">Machine investigation</div>
+                    <div class="drawer-subcopy" id="machine-panel-subtitle"></div>
+                </div>
+                <button class="ghost-btn" id="machine-panel-close">Close</button>
             </div>
             <div id="machine-panel-content"></div>
         </div>
     </div>
 
-    <div id="report-modal" class="modal-overlay hidden">
+    <div id="report-modal" class="modal hidden">
         <div class="modal-card">
-            <div class="flex items-center justify-between gap-3 mb-4">
+            <div class="modal-header">
                 <div>
-                    <div class="section-heading">Exportable report view</div>
-                    <div class="section-copy">A print-friendly, management-ready report generated from the same filtered dashboard state.</div>
+                    <div class="modal-title">Report view</div>
+                    <div class="modal-headline">Operational briefing</div>
                 </div>
-                <button id="report-modal-close" class="btn-ghost">Close</button>
+                <button class="ghost-btn" id="report-modal-close">Close</button>
             </div>
             <div id="report-modal-content"></div>
         </div>
     </div>
 
+    <script src="main.js"></script>
     <script src="insights-analyzer.js"></script>
 </body>
 </html>
