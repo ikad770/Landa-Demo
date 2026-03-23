@@ -101,6 +101,36 @@
         .health-value { font-size:1rem; font-weight:600; margin-top:0.2rem; }
         .chart-card { height:340px; }
         .chart-canvas { height:280px; }
+        .executive-shell { display:grid; grid-template-columns:minmax(0, 1.35fr) minmax(320px, 0.9fr); gap:1.25rem; }
+        .summary-hero { padding:1.2rem; background:linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.88)); border:1px solid rgba(148,163,184,0.2); border-radius:1rem; }
+        .summary-kpi-grid { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:0.85rem; margin-top:1rem; }
+        .summary-kpi { padding:0.95rem; border-radius:0.9rem; background:rgba(15,23,42,0.75); border:1px solid rgba(148,163,184,0.14); }
+        .summary-kpi span { display:block; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.16em; color:var(--text-muted); }
+        .summary-kpi strong { display:block; margin-top:0.35rem; font-size:1.55rem; }
+        .summary-kpi small { display:block; margin-top:0.35rem; color:#cbd5e1; font-size:0.78rem; }
+        .ai-summary { margin-top:1rem; padding:1rem 1.05rem; border-radius:1rem; background:rgba(37,99,235,0.12); border:1px solid rgba(96,165,250,0.28); color:#dbeafe; line-height:1.6; }
+        .segmented-bar { display:flex; width:100%; height:14px; border-radius:999px; overflow:hidden; background:rgba(15,23,42,0.85); margin-top:1rem; }
+        .segment { height:100%; }
+        .distribution-list { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:0.75rem; margin-top:1rem; }
+        .distribution-item { padding:0.85rem 0.9rem; border-radius:0.9rem; background:rgba(15,23,42,0.75); border:1px solid rgba(148,163,184,0.16); }
+        .distribution-item .topline { display:flex; justify-content:space-between; gap:0.75rem; align-items:center; }
+        .distribution-item span { font-size:0.74rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--text-muted); }
+        .distribution-item strong { font-size:1.1rem; }
+        .selector-group { display:flex; flex-wrap:wrap; gap:0.6rem; }
+        .selector-chip { border-radius:999px; border:1px solid rgba(148,163,184,0.28); background:rgba(15,23,42,0.75); color:#cbd5e1; padding:0.55rem 0.9rem; font-size:0.78rem; }
+        .selector-chip.active { background:rgba(37,99,235,0.18); color:#dbeafe; border-color:rgba(96,165,250,0.5); }
+        .insight-card { padding:1rem; border-radius:1rem; background:rgba(15,23,42,0.84); border:1px solid rgba(148,163,184,0.18); }
+        .insight-card h4 { font-size:0.95rem; font-weight:700; }
+        .insight-card p { margin-top:0.45rem; color:#cbd5e1; font-size:0.86rem; line-height:1.6; }
+        .insight-card .meta { margin-top:0.8rem; color:var(--text-muted); font-size:0.78rem; }
+        .machine-list { display:flex; flex-direction:column; gap:0.85rem; }
+        .machine-list-item { width:100%; padding:1rem; border-radius:1rem; border:1px solid rgba(148,163,184,0.18); background:rgba(15,23,42,0.82); text-align:left; transition:transform .2s ease, border-color .2s ease; }
+        .machine-list-item:hover { transform:translateY(-2px); border-color:rgba(34,211,238,0.45); }
+        .machine-list-top { display:flex; justify-content:space-between; gap:1rem; align-items:flex-start; }
+        .machine-stats { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:0.65rem; margin-top:0.9rem; }
+        .machine-stat { padding:0.7rem 0.75rem; border-radius:0.8rem; background:rgba(2,6,23,0.4); }
+        .machine-stat span { display:block; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-muted); }
+        .machine-stat strong { display:block; margin-top:0.3rem; font-size:0.95rem; }
         .spotlight-card { padding:1rem; text-align:left; transition: transform .2s ease, border-color .2s ease; }
         .spotlight-card:hover { transform:translateY(-2px); border-color:rgba(34,211,238,0.55); }
         .spotlight-top, .spotlight-score { display:flex; justify-content:space-between; gap:1rem; align-items:center; }
@@ -140,7 +170,7 @@
         @media (max-width: 1024px) {
             .layout-shell { flex-direction:column; }
             .sidebar { width:100%; }
-            .filter-grid, .panel-grid, .panel-sections, .report-header, .report-grid { grid-template-columns:1fr; }
+            .filter-grid, .panel-grid, .panel-sections, .report-header, .report-grid, .executive-shell, .summary-kpi-grid, .distribution-list, .machine-stats { grid-template-columns:1fr; }
         }
     </style>
 </head>
@@ -180,7 +210,7 @@
                     <p class="page-subtitle">Upload machine Insight exports to detect problematic presses early, understand repeat failure behavior, rank fleet risk, and generate management-ready operational summaries.</p>
                 </div>
                 <div class="flex flex-wrap gap-3 justify-end">
-                    <button id="copy-summary" class="btn-ghost">Copy Summary</button>
+                    <button id="copy-summary" class="btn-ghost">Copy Summary for Email</button>
                     <button id="print-report" class="btn-ghost">Print View</button>
                     <button id="export-report" class="btn-primary">Open Report</button>
                 </div>
@@ -255,62 +285,48 @@
                     <div class="filter-field mt-4"><label>Search</label><input id="filter-search" type="search" placeholder="Search machine, error text, alert body, or subsystem"></div>
                 </section>
 
-                <section>
-                    <div id="kpi-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+                <section class="glass-card">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+                        <div>
+                            <div class="section-title">Dashboard selector</div>
+                            <div class="section-subtitle mt-2">Show only the sections you need to reduce noise while preserving drill-down access.</div>
+                        </div>
+                        <div id="section-selector" class="selector-group"></div>
+                    </div>
                 </section>
 
-                <section class="grid grid-cols-1 xl:grid-cols-[1.4fr_1fr] gap-6">
-                    <div class="glass-card">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <div class="section-title">Problematic machines spotlight</div>
-                                <div class="section-subtitle mt-2">Highest-risk presses based on severity, downtime, repeat failures, concentration, trend, and recovery loops.</div>
-                            </div>
+                <section class="glass-card dashboard-section" data-section="summary">
+                    <div id="kpi-grid"></div>
+                </section>
+
+                <section class="glass-card dashboard-section" data-section="machines">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <div class="section-title">Problematic machines</div>
+                            <div class="section-subtitle mt-2">Top machines needing attention now, with clear reasons and fast next steps.</div>
                         </div>
-                        <div id="problematic-machines" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                     </div>
+                    <div id="problematic-machines" class="machine-list"></div>
+                </section>
+
+                <section class="glass-card dashboard-section" data-section="insights">
+                    <div class="section-title">Smart insights</div>
+                    <div class="section-subtitle mt-2">Automatically detected operational patterns that require attention.</div>
+                    <div id="smart-insights" class="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-4"></div>
+                </section>
+
+                <section class="grid grid-cols-1 xl:grid-cols-3 gap-6 dashboard-section" data-section="trends">
+                    <div class="glass-card chart-card xl:col-span-2"><div id="chart-error-trend" class="chart-canvas"></div></div>
                     <div class="glass-card">
                         <div class="section-title">Fleet health overview</div>
-                        <div class="section-subtitle mt-2">Immediate risk posture across the filtered fleet.</div>
+                        <div class="section-subtitle mt-2">Immediate severity posture across the filtered fleet.</div>
                         <div id="fleet-health-grid" class="grid grid-cols-1 gap-3 mt-4"></div>
                     </div>
                 </section>
 
-                <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <div class="glass-card chart-card"><div id="chart-errors-per-machine" class="chart-canvas"></div></div>
-                    <div class="glass-card chart-card"><div id="chart-downtime-per-machine" class="chart-canvas"></div></div>
-                    <div class="glass-card chart-card"><div id="chart-error-trend" class="chart-canvas"></div></div>
-                    <div class="glass-card chart-card"><div id="chart-downtime-trend" class="chart-canvas"></div></div>
+                <section class="grid grid-cols-1 xl:grid-cols-2 gap-6 dashboard-section" data-section="subsystems">
                     <div class="glass-card chart-card"><div id="chart-subsystem-distribution" class="chart-canvas"></div></div>
-                    <div class="glass-card chart-card"><div id="chart-error-state-distribution" class="chart-canvas"></div></div>
-                    <div class="glass-card chart-card"><div id="chart-recovery-analysis" class="chart-canvas"></div></div>
-                    <div class="glass-card chart-card"><div id="chart-pre-error-state" class="chart-canvas"></div></div>
-                    <div class="glass-card chart-card xl:col-span-2"><div id="chart-version-analysis" class="chart-canvas"></div></div>
-                    <div class="glass-card chart-card xl:col-span-2"><div id="chart-heatmap" class="chart-canvas"></div></div>
-                </section>
-
-                <section class="glass-card">
-                    <div class="section-title">Machine ranking table</div>
-                    <div class="section-subtitle mt-2">Click a machine for drill-down details, recent events, recurring clusters, and proactive focus areas.</div>
-                    <div class="overflow-x-auto mt-4">
-                        <table class="machine-table">
-                            <thead>
-                                <tr>
-                                    <th>Machine</th>
-                                    <th>Model</th>
-                                    <th>Total Errors</th>
-                                    <th>Total Downtime</th>
-                                    <th>Top Error</th>
-                                    <th>Top Subsystem</th>
-                                    <th>Severity</th>
-                                    <th>Risk Score</th>
-                                    <th>Trend</th>
-                                    <th>Interpretation</th>
-                                </tr>
-                            </thead>
-                            <tbody id="machine-table-body"></tbody>
-                        </table>
-                    </div>
+                    <div class="glass-card chart-card"><div id="chart-top-errors" class="chart-canvas"></div></div>
                 </section>
 
                 <section class="glass-card">
