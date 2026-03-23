@@ -12,165 +12,212 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-main: #020617;
-            --bg-surface: rgba(15, 23, 42, 0.98);
-            --bg-surface-soft: rgba(15, 23, 42, 0.78);
-            --border-soft: rgba(51, 65, 85, 0.9);
-            --border-strong: rgba(148, 163, 184, 0.7);
-            --accent-blue: #2563eb;
-            --accent-cyan: #06b6d4;
-            --text-main: #e5e7eb;
+            --bg-main: #04101f;
+            --bg-shell: rgba(6, 16, 31, 0.92);
+            --bg-card: rgba(10, 22, 38, 0.92);
+            --bg-card-soft: rgba(11, 27, 46, 0.78);
+            --bg-elevated: rgba(16, 30, 49, 0.98);
+            --text-main: #f8fafc;
+            --text-secondary: #cbd5e1;
             --text-muted: #94a3b8;
+            --border-soft: rgba(148, 163, 184, 0.14);
+            --shadow-xl: 0 32px 72px rgba(2, 8, 23, 0.45);
+            --healthy: #22c55e;
+            --monitor: #eab308;
+            --warning: #f97316;
+            --critical: #ef4444;
+            --accent: #38bdf8;
+            --accent-strong: #2563eb;
         }
+        * { box-sizing: border-box; }
         body {
+            margin: 0;
             font-family: 'Inter', system-ui, sans-serif;
-            background: radial-gradient(circle at 0% 0%, rgba(37,99,235,0.18), transparent 48%), radial-gradient(circle at 100% 0%, rgba(6,182,212,0.16), transparent 42%), radial-gradient(circle at 50% 100%, rgba(14,165,233,0.08), transparent 42%), #020617;
             color: var(--text-main);
+            background:
+                radial-gradient(circle at top left, rgba(56,189,248,0.12), transparent 26%),
+                radial-gradient(circle at top right, rgba(37,99,235,0.10), transparent 24%),
+                linear-gradient(180deg, #020817, #05111f 55%, #071522 100%);
         }
         body::before {
             content: '';
             position: fixed;
             inset: 0;
-            background: linear-gradient(180deg, rgba(2,6,23,0.18), rgba(2,6,23,0.72));
             pointer-events: none;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
             z-index: -1;
         }
         .layout-shell { min-height: 100vh; display: flex; }
         .sidebar {
-            width: 240px; background: rgba(10, 16, 30, 0.98); border-right: 1px solid rgba(15, 23, 42, 0.95); box-shadow: 4px 0 24px rgba(15, 23, 42, 0.85), 0 0 0 1px rgba(15, 23, 42, 1); padding: 1.25rem 1rem; display: flex; flex-direction: column;
+            width: 240px;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            background: rgba(4, 13, 25, 0.95);
+            border-right: 1px solid rgba(148, 163, 184, 0.10);
+            box-shadow: 12px 0 48px rgba(2, 8, 23, 0.32);
+            backdrop-filter: blur(18px);
         }
-        .sidebar-header { display: flex; align-items: center; margin-bottom: 1.75rem; }
-        .logo-mark { height: 32px; width: 32px; border-radius: 0.75rem; background: #020617; position: relative; box-shadow: 0 0 0 1px rgba(15,23,42,1), 0 0 18px rgba(34,211,238,0.8); overflow: hidden; }
-        .logo-mark::before { content:''; position:absolute; width:18px; height:18px; border-radius:999px; background: radial-gradient(circle at 30% 30%, #22d3ee, #0f172a); top:7px; left:7px; box-shadow:0 0 18px rgba(34,211,238,0.9); }
-        .logo-title { font-family: 'Satoshi', system-ui, sans-serif; font-size: 0.78rem; letter-spacing: 0.26em; text-transform: uppercase; }
-        .logo-subtitle { font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
-        .sidebar-nav { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; }
-        .nav-link { display:block; border-radius:0.6rem; padding:0.5rem 0.75rem; font-size:0.83rem; color:#cbd5f5; }
-        .nav-link:hover { background: rgba(15, 23, 42, 0.96); color: #eff6ff; }
-        .nav-link-active { background: rgba(37, 99, 235, 0.16); color: var(--accent-cyan); border: 1px solid rgba(37, 99, 235, 0.6); }
-        .sidebar-footer { margin-top:auto; padding-top:1.25rem; border-top:1px solid rgba(30,41,59,0.9); display:flex; flex-direction:column; gap:0.5rem; }
-        .user-pill { display:flex; align-items:center; gap:0.45rem; padding:0.35rem 0.75rem; border-radius:999px; background:rgba(15,23,42,0.96); border:1px solid var(--border-strong); box-shadow:0 10px 26px rgba(15,23,42,0.98), 0 0 0 1px rgba(30,64,175,0.4); }
-        .user-avatar { width:24px; height:24px; border-radius:999px; background: radial-gradient(circle at 30% 20%, var(--accent-cyan), #0f172a); font-size:0.7rem; font-weight:600; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 1px rgba(15,23,42,1), 0 0 14px rgba(34,211,238,0.9); }
-        .user-name { font-size:0.8rem; }
-        .user-role { font-size:0.6rem; text-transform:uppercase; letter-spacing:0.16em; color:var(--text-muted); }
-        .nav-logout { border-radius:999px; padding:0.45rem 0.85rem; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.16em; border:1px solid rgba(148,163,184,0.65); color:var(--text-muted); }
-        .main-shell { flex:1; min-height:100vh; padding:1.75rem 2rem; }
-        .page-header { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:1.5rem; }
-        .page-title { font-family:'Satoshi', system-ui, sans-serif; font-size:0.95rem; letter-spacing:0.28em; text-transform:uppercase; }
-        .page-subtitle { color:var(--text-muted); font-size:0.85rem; max-width:48rem; }
-        .glass-card, .metric-card, .panel-card, .spotlight-card, .health-card {
-            background: var(--bg-surface);
-            border-radius: 1rem;
-            border: 1px solid var(--border-strong);
-            box-shadow: 0 16px 42px rgba(15,23,42,0.98), 0 0 0 1px rgba(15,23,42,1);
+        .sidebar-header { display: flex; align-items: center; margin-bottom: 2rem; }
+        .logo-mark {
+            width: 34px; height: 34px; border-radius: 12px;
+            background: linear-gradient(145deg, rgba(56,189,248,0.95), rgba(14,116,144,0.2));
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 28px rgba(56,189,248,0.28);
         }
-        .glass-card { padding:1.1rem; }
-        .metric-card { padding:1rem 1.1rem; }
-        .metric-label { font-size:0.72rem; text-transform:uppercase; letter-spacing:0.18em; color:var(--text-muted); }
-        .metric-value { font-size:1.9rem; font-weight:700; margin-top:0.3rem; }
-        .metric-detail { color:var(--text-muted); font-size:0.83rem; margin-top:0.35rem; }
-        .section-title { font-family:'Satoshi', system-ui, sans-serif; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.22em; color:#e2e8f0; }
-        .section-subtitle { color:var(--text-muted); font-size:0.82rem; }
-        .btn-primary, .btn-ghost {
-            border-radius:999px; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.16em; font-weight:600; padding:0.7rem 1rem;
+        .logo-title { font-family: 'Satoshi', system-ui, sans-serif; font-size: 0.82rem; letter-spacing: 0.28em; text-transform: uppercase; }
+        .logo-subtitle { color: var(--text-muted); font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; }
+        .sidebar-nav { display: flex; flex-direction: column; gap: 0.35rem; }
+        .nav-link {
+            display: block; padding: 0.72rem 0.85rem; border-radius: 0.9rem;
+            color: #dbeafe; text-decoration: none; font-size: 0.86rem;
+            border: 1px solid transparent;
         }
-        .btn-primary { background-image: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan)); border:1px solid rgba(191,219,254,0.7); color:#03111f; box-shadow:0 16px 34px rgba(37,99,235,0.65); }
-        .btn-ghost { border:1px solid rgba(148,163,184,0.55); background:rgba(2,6,23,0.18); color:rgba(226,232,240,0.92); }
+        .nav-link:hover { background: rgba(15, 23, 42, 0.76); }
+        .nav-link-active { background: rgba(56,189,248,0.10); border-color: rgba(56,189,248,0.35); color: #f8fafc; }
+        .sidebar-footer { margin-top: auto; padding-top: 1.25rem; border-top: 1px solid rgba(148, 163, 184, 0.10); }
+        .user-pill { display: flex; align-items: center; gap: 0.65rem; padding: 0.65rem 0.75rem; border-radius: 999px; background: rgba(15,23,42,0.7); border: 1px solid rgba(148,163,184,0.16); }
+        .user-avatar { width: 30px; height: 30px; border-radius: 999px; display: grid; place-items: center; font-size: 0.74rem; font-weight: 700; background: linear-gradient(145deg, rgba(56,189,248,0.95), rgba(37,99,235,0.4)); }
+        .user-name { font-size: 0.8rem; }
+        .user-role { font-size: 0.62rem; letter-spacing: 0.14em; color: var(--text-muted); text-transform: uppercase; }
+        .nav-logout, .btn-ghost, .btn-primary, .btn-chip {
+            border-radius: 999px; padding: 0.72rem 1rem; border: 1px solid transparent;
+            font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+        }
+        .nav-logout, .btn-ghost { background: rgba(15, 23, 42, 0.55); border-color: rgba(148, 163, 184, 0.18); color: var(--text-secondary); }
+        .btn-primary { background: linear-gradient(135deg, #38bdf8, #2563eb); color: #f8fafc; box-shadow: 0 18px 34px rgba(37,99,235,0.28); }
+        .btn-chip { background: rgba(56,189,248,0.08); border-color: rgba(56,189,248,0.18); color: #dbeafe; }
+        .main-shell { flex: 1; padding: 2rem; }
+        .page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.25rem; margin-bottom: 1.5rem; }
+        .page-title { font-family: 'Satoshi', system-ui, sans-serif; font-size: 0.95rem; letter-spacing: 0.28em; text-transform: uppercase; }
+        .page-headline { margin-top: 0.55rem; font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1; font-weight: 800; max-width: 12ch; }
+        .page-subtitle { margin-top: 0.75rem; color: var(--text-muted); font-size: 0.98rem; max-width: 56rem; line-height: 1.7; }
+        .app-card {
+            background: linear-gradient(180deg, rgba(11, 22, 38, 0.94), rgba(8, 18, 32, 0.94));
+            border: 1px solid var(--border-soft); border-radius: 1.4rem; box-shadow: var(--shadow-xl); backdrop-filter: blur(22px);
+        }
+        .section-shell { padding: 1.35rem; }
+        .section-heading { font-family: 'Satoshi', system-ui, sans-serif; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.22em; color: #e2e8f0; }
+        .section-copy { margin-top: 0.45rem; color: var(--text-muted); font-size: 0.92rem; line-height: 1.65; }
+        .status-pill { display: inline-flex; align-items: center; gap: 0.45rem; border-radius: 999px; padding: 0.42rem 0.8rem; font-size: 0.8rem; border: 1px solid rgba(148,163,184,0.24); }
+        .status-success { color: #86efac; background: rgba(34,197,94,0.10); border-color: rgba(34,197,94,0.26); }
+        .status-error { color: #fda4af; background: rgba(239,68,68,0.10); border-color: rgba(239,68,68,0.26); }
+        .status-info { color: #bae6fd; background: rgba(56,189,248,0.10); border-color: rgba(56,189,248,0.26); }
         .drop-zone {
-            min-height: 220px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:1rem; text-align:center; border:1px dashed rgba(56,189,248,0.45); background:linear-gradient(180deg, rgba(15,23,42,0.86), rgba(2,6,23,0.74));
+            min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; text-align: center;
+            border: 1px dashed rgba(56,189,248,0.28);
+            background: linear-gradient(180deg, rgba(15,23,42,0.72), rgba(2,6,23,0.52));
         }
-        .drop-zone.drag-active { border-color: rgba(34,211,238,0.95); box-shadow:0 0 0 1px rgba(34,211,238,0.4), 0 0 40px rgba(34,211,238,0.18); }
-        .upload-icon { width:56px; height:56px; border-radius:18px; background:radial-gradient(circle at 30% 20%, rgba(34,211,238,0.55), rgba(15,23,42,1)); display:grid; place-items:center; box-shadow:0 0 24px rgba(34,211,238,0.16); }
-        .status-pill { display:inline-flex; align-items:center; gap:0.45rem; border-radius:999px; padding:0.42rem 0.8rem; font-size:0.8rem; border:1px solid rgba(148,163,184,0.45); }
-        .status-success { color:#6ee7b7; background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.45); }
-        .status-error { color:#fda4af; background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.45); }
-        .status-info { color:#bae6fd; background:rgba(56,189,248,0.12); border-color:rgba(56,189,248,0.45); }
-        .meta-chip { display:inline-flex; align-items:center; gap:0.35rem; border-radius:999px; border:1px solid rgba(148,163,184,0.3); background:rgba(2,6,23,0.28); color:#cbd5e1; padding:0.3rem 0.65rem; font-size:0.72rem; }
-        .accent-chip { border-color: rgba(34,211,238,0.45); }
-        .filter-grid { display:grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap:0.75rem; }
-        .filter-field label { display:block; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.18em; color:var(--text-muted); margin-bottom:0.45rem; }
-        .input-shell, select, input[type="date"], input[type="search"] {
-            width:100%; border-radius:0.95rem; border:1px solid rgba(100,116,139,0.45); background:rgba(2,6,23,0.42); color:#e2e8f0; padding:0.72rem 0.8rem;
+        .drop-zone.drag-active { border-color: rgba(56,189,248,0.8); box-shadow: inset 0 0 0 1px rgba(56,189,248,0.32), 0 0 48px rgba(56,189,248,0.12); }
+        .upload-icon { width: 60px; height: 60px; border-radius: 20px; display: grid; place-items: center; background: linear-gradient(145deg, rgba(56,189,248,0.26), rgba(37,99,235,0.12)); }
+        .meta-chip, .selector-chip, .inline-link-chip {
+            display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.48rem 0.8rem; border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.18); background: rgba(15,23,42,0.58); color: #dbeafe; font-size: 0.76rem;
         }
-        .health-card { padding:0.9rem 1rem; display:flex; gap:0.8rem; align-items:center; }
-        .health-dot { width:14px; height:14px; border-radius:999px; box-shadow:0 0 18px currentColor; }
-        .health-label { font-size:0.78rem; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-muted); }
-        .health-value { font-size:1rem; font-weight:600; margin-top:0.2rem; }
-        .chart-card { height:340px; }
-        .chart-canvas { height:280px; }
-        .executive-shell { display:grid; grid-template-columns:minmax(0, 1.35fr) minmax(320px, 0.9fr); gap:1.25rem; }
-        .summary-hero { padding:1.2rem; background:linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.88)); border:1px solid rgba(148,163,184,0.2); border-radius:1rem; }
-        .summary-kpi-grid { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:0.85rem; margin-top:1rem; }
-        .summary-kpi { padding:0.95rem; border-radius:0.9rem; background:rgba(15,23,42,0.75); border:1px solid rgba(148,163,184,0.14); }
-        .summary-kpi span { display:block; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.16em; color:var(--text-muted); }
-        .summary-kpi strong { display:block; margin-top:0.35rem; font-size:1.55rem; }
-        .summary-kpi small { display:block; margin-top:0.35rem; color:#cbd5e1; font-size:0.78rem; }
-        .ai-summary { margin-top:1rem; padding:1rem 1.05rem; border-radius:1rem; background:rgba(37,99,235,0.12); border:1px solid rgba(96,165,250,0.28); color:#dbeafe; line-height:1.6; }
-        .segmented-bar { display:flex; width:100%; height:14px; border-radius:999px; overflow:hidden; background:rgba(15,23,42,0.85); margin-top:1rem; }
-        .segment { height:100%; }
-        .distribution-list { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:0.75rem; margin-top:1rem; }
-        .distribution-item { padding:0.85rem 0.9rem; border-radius:0.9rem; background:rgba(15,23,42,0.75); border:1px solid rgba(148,163,184,0.16); }
-        .distribution-item .topline { display:flex; justify-content:space-between; gap:0.75rem; align-items:center; }
-        .distribution-item span { font-size:0.74rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--text-muted); }
-        .distribution-item strong { font-size:1.1rem; }
-        .selector-group { display:flex; flex-wrap:wrap; gap:0.6rem; }
-        .selector-chip { border-radius:999px; border:1px solid rgba(148,163,184,0.28); background:rgba(15,23,42,0.75); color:#cbd5e1; padding:0.55rem 0.9rem; font-size:0.78rem; }
-        .selector-chip.active { background:rgba(37,99,235,0.18); color:#dbeafe; border-color:rgba(96,165,250,0.5); }
-        .insight-card { padding:1rem; border-radius:1rem; background:rgba(15,23,42,0.84); border:1px solid rgba(148,163,184,0.18); }
-        .insight-card h4 { font-size:0.95rem; font-weight:700; }
-        .insight-card p { margin-top:0.45rem; color:#cbd5e1; font-size:0.86rem; line-height:1.6; }
-        .insight-card .meta { margin-top:0.8rem; color:var(--text-muted); font-size:0.78rem; }
-        .machine-list { display:flex; flex-direction:column; gap:0.85rem; }
-        .machine-list-item { width:100%; padding:1rem; border-radius:1rem; border:1px solid rgba(148,163,184,0.18); background:rgba(15,23,42,0.82); text-align:left; transition:transform .2s ease, border-color .2s ease; }
-        .machine-list-item:hover { transform:translateY(-2px); border-color:rgba(34,211,238,0.45); }
-        .machine-list-top { display:flex; justify-content:space-between; gap:1rem; align-items:flex-start; }
-        .machine-stats { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:0.65rem; margin-top:0.9rem; }
-        .machine-stat { padding:0.7rem 0.75rem; border-radius:0.8rem; background:rgba(2,6,23,0.4); }
-        .machine-stat span { display:block; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-muted); }
-        .machine-stat strong { display:block; margin-top:0.3rem; font-size:0.95rem; }
-        .spotlight-card { padding:1rem; text-align:left; transition: transform .2s ease, border-color .2s ease; }
-        .spotlight-card:hover { transform:translateY(-2px); border-color:rgba(34,211,238,0.55); }
-        .spotlight-top, .spotlight-score { display:flex; justify-content:space-between; gap:1rem; align-items:center; }
-        .spotlight-machine { font-size:1rem; font-weight:700; }
-        .spotlight-meta, .spotlight-reasons, .spotlight-actions { color:var(--text-muted); font-size:0.82rem; margin-top:0.5rem; }
-        .severity-badge { display:inline-flex; padding:0.25rem 0.55rem; border-radius:999px; border:1px solid; font-size:0.72rem; font-weight:600; letter-spacing:0.08em; }
-        .machine-table { width:100%; border-collapse:collapse; }
-        .machine-table th { font-size:0.72rem; text-transform:uppercase; letter-spacing:0.16em; color:var(--text-muted); text-align:left; padding:0.95rem 0.9rem; border-bottom:1px solid rgba(100,116,139,0.24); }
-        .machine-table td { padding:0.95rem 0.9rem; border-bottom:1px solid rgba(100,116,139,0.15); vertical-align:top; font-size:0.88rem; }
-        .table-link { color:#67e8f9; text-decoration:none; font-weight:600; }
-        .summary-block p { margin-bottom:0.8rem; color:#dbeafe; line-height:1.65; }
-        .modal-overlay { position:fixed; inset:0; background:rgba(2,6,23,0.78); display:flex; align-items:center; justify-content:center; padding:1rem; z-index:40; }
-        .modal-card { width:min(980px, 96vw); max-height:88vh; overflow:auto; border-radius:1.2rem; border:1px solid rgba(148,163,184,0.35); background:rgba(2,6,23,0.96); padding:1.2rem; box-shadow:0 28px 80px rgba(0,0,0,0.55); }
-        .side-panel { position:fixed; inset:0; background:rgba(2,6,23,0.76); z-index:50; display:flex; justify-content:flex-end; }
-        .side-panel-card { width:min(700px, 96vw); height:100%; overflow:auto; background:rgba(2,6,23,0.98); border-left:1px solid rgba(148,163,184,0.28); box-shadow:-24px 0 48px rgba(0,0,0,0.45); padding:1.2rem; }
-        .panel-header { display:flex; justify-content:space-between; gap:1rem; align-items:flex-start; }
-        .panel-title { font-size:1.4rem; font-weight:700; }
-        .panel-subtitle { color:var(--text-muted); margin-top:0.2rem; }
-        .panel-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:0.75rem; margin-top:1rem; }
-        .panel-card { padding:0.95rem; }
-        .panel-card span { display:block; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.16em; }
-        .panel-card strong { display:block; margin-top:0.35rem; font-size:1rem; }
-        .panel-sections { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:0.9rem; margin-top:1rem; }
-        .panel-section { background:var(--bg-surface-soft); border-radius:1rem; border:1px solid rgba(148,163,184,0.18); padding:1rem; }
-        .panel-section.full-width { grid-column:1 / -1; }
-        .panel-section h4 { font-size:0.8rem; text-transform:uppercase; letter-spacing:0.18em; color:#cbd5e1; margin-bottom:0.7rem; }
-        .panel-section p, .panel-section li { color:#cbd5e1; font-size:0.88rem; line-height:1.6; }
-        .detail-table { width:100%; border-collapse:collapse; }
-        .detail-table th, .detail-table td { padding:0.7rem; border-bottom:1px solid rgba(100,116,139,0.18); text-align:left; }
-        .report-shell { color:#e2e8f0; }
-        .report-header, .report-grid { display:grid; grid-template-columns:1.5fr 1fr; gap:1rem; }
-        .report-filter-box, .report-section { border:1px solid rgba(148,163,184,0.2); border-radius:1rem; background:rgba(15,23,42,0.72); padding:1rem; }
-        .hidden { display:none !important; }
+        .inline-link-chip { cursor: pointer; }
+        .inline-link-chip:hover { border-color: rgba(56,189,248,0.45); }
+        .selector-group { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+        .selector-chip { cursor: pointer; }
+        .selector-chip.active { background: rgba(56,189,248,0.12); border-color: rgba(56,189,248,0.34); }
+        .filter-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.85rem; }
+        .filter-field label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-muted); margin-bottom: 0.45rem; }
+        select, input[type="date"], input[type="search"] {
+            width: 100%; border-radius: 1rem; border: 1px solid rgba(148,163,184,0.18); background: rgba(15,23,42,0.72); color: var(--text-main); padding: 0.82rem 0.9rem;
+        }
+        .stack-lg { display: grid; gap: 1.5rem; }
+        .hero-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.95fr); gap: 1.25rem; }
+        .hero-panel { padding: 1.6rem; border-radius: 1.5rem; background: linear-gradient(180deg, rgba(12,23,40,0.96), rgba(9,18,33,0.92)); border: 1px solid rgba(148,163,184,0.14); }
+        .hero-overline { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: #7dd3fc; }
+        .hero-title { margin-top: 0.7rem; font-size: clamp(2rem, 3vw, 2.7rem); line-height: 1.05; font-weight: 800; max-width: 12ch; }
+        .hero-ai-summary { margin-top: 1rem; padding: 1rem 1.1rem; border-radius: 1.2rem; background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.18); color: #e0f2fe; line-height: 1.7; }
+        .hero-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.85rem; margin-top: 1.2rem; }
+        .hero-kpi { padding: 1rem; border-radius: 1.1rem; background: rgba(15,23,42,0.64); border: 1px solid rgba(148,163,184,0.12); }
+        .hero-kpi span { display: block; font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
+        .hero-kpi strong { display: block; margin-top: 0.35rem; font-size: 1.8rem; }
+        .hero-kpi small { display: block; margin-top: 0.4rem; color: #cbd5e1; font-size: 0.82rem; }
+        .distribution-ring-shell { display: grid; gap: 1rem; align-content: start; }
+        .distribution-ring { position: relative; width: 220px; height: 220px; margin: 0 auto; }
+        .distribution-ring-center { position: absolute; inset: 27%; border-radius: 999px; background: rgba(5, 13, 26, 0.96); display: grid; place-items: center; text-align: center; border: 1px solid rgba(148,163,184,0.10); }
+        .distribution-ring-center strong { font-size: 2rem; }
+        .distribution-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
+        .distribution-card { padding: 0.95rem; border-radius: 1rem; background: rgba(15,23,42,0.6); border: 1px solid rgba(148,163,184,0.12); }
+        .distribution-card .label { font-size: 0.74rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); }
+        .distribution-card .value { margin-top: 0.28rem; font-size: 1.2rem; font-weight: 700; }
+        .distribution-card .subtext { margin-top: 0.3rem; font-size: 0.82rem; color: var(--text-secondary); }
+        .critical-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+        .machine-card {
+            width: 100%; text-align: left; padding: 1.15rem; border-radius: 1.3rem; background: linear-gradient(180deg, rgba(14,24,42,0.92), rgba(10,18,32,0.92));
+            border: 1px solid rgba(148,163,184,0.14); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+        }
+        .machine-card:hover { transform: translateY(-2px); border-color: rgba(56,189,248,0.34); box-shadow: 0 18px 38px rgba(2, 8, 23, 0.32); }
+        .machine-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+        .machine-card-title { font-size: 1.08rem; font-weight: 700; }
+        .machine-card-meta { margin-top: 0.3rem; color: var(--text-muted); font-size: 0.84rem; }
+        .severity-badge { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.38rem 0.72rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid currentColor; }
+        .machine-card-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+        .machine-card-stat { padding: 0.8rem; border-radius: 1rem; background: rgba(15,23,42,0.56); }
+        .machine-card-stat span { display: block; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
+        .machine-card-stat strong { display: block; margin-top: 0.35rem; font-size: 1rem; }
+        .machine-card-reason { margin-top: 0.9rem; color: #e2e8f0; line-height: 1.6; font-size: 0.9rem; }
+        .machine-card-links { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.9rem; }
+        .insights-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+        .insight-card { padding: 1.1rem; border-radius: 1.2rem; background: rgba(12,22,38,0.84); border: 1px solid rgba(148,163,184,0.14); }
+        .insight-eyebrow { color: #7dd3fc; font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; }
+        .insight-card h4 { margin-top: 0.65rem; font-size: 1rem; font-weight: 700; }
+        .insight-card p { margin-top: 0.55rem; font-size: 0.9rem; line-height: 1.65; color: var(--text-secondary); }
+        .insight-meta { margin-top: 0.85rem; display: flex; flex-wrap: wrap; gap: 0.45rem; }
+        .analytics-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 1rem; }
+        .analytics-stack { display: grid; gap: 1rem; }
+        .chart-card { padding: 1.2rem; border-radius: 1.35rem; min-height: 360px; }
+        .chart-card.compact { min-height: 300px; }
+        .chart-canvas { width: 100%; height: 280px; }
+        .chart-card.compact .chart-canvas { height: 220px; }
+        .health-list { display: grid; gap: 0.8rem; }
+        .health-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1rem; border-radius: 1rem; background: rgba(15,23,42,0.58); }
+        .health-row-left { display: flex; align-items: center; gap: 0.7rem; }
+        .health-dot { width: 12px; height: 12px; border-radius: 999px; box-shadow: 0 0 18px currentColor; }
+        .summary-block { display: grid; gap: 1rem; }
+        .summary-copy-card { padding: 1.1rem; border-radius: 1.2rem; background: rgba(15,23,42,0.58); border: 1px solid rgba(148,163,184,0.12); }
+        .summary-copy-card h4 { font-size: 0.82rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); }
+        .summary-copy-card p, .summary-copy-card li { margin-top: 0.65rem; color: var(--text-secondary); line-height: 1.75; font-size: 0.92rem; }
+        .modal-overlay, .side-panel { position: fixed; inset: 0; background: rgba(2,6,23,0.72); z-index: 50; }
+        .modal-overlay { display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        .modal-card, .side-panel-card {
+            background: linear-gradient(180deg, rgba(8,18,32,0.98), rgba(5,13,24,0.98)); border: 1px solid rgba(148,163,184,0.16); box-shadow: var(--shadow-xl);
+        }
+        .modal-card { width: min(1020px, 96vw); max-height: 90vh; overflow: auto; border-radius: 1.5rem; padding: 1.35rem; }
+        .side-panel { display: flex; justify-content: flex-end; }
+        .side-panel-card { width: min(760px, 96vw); height: 100%; overflow: auto; padding: 1.35rem; border-left: 1px solid rgba(148,163,184,0.16); }
+        .panel-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+        .panel-title { font-size: 1.8rem; font-weight: 800; }
+        .panel-subtitle { margin-top: 0.35rem; color: var(--text-muted); }
+        .panel-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.8rem; margin-top: 1rem; }
+        .panel-card { padding: 0.95rem; border-radius: 1rem; background: rgba(15,23,42,0.56); }
+        .panel-card span { display: block; color: var(--text-muted); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; }
+        .panel-card strong { display: block; margin-top: 0.35rem; font-size: 1rem; }
+        .panel-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; margin-top: 1rem; }
+        .panel-section { padding: 1rem; border-radius: 1.1rem; background: rgba(15,23,42,0.5); border: 1px solid rgba(148,163,184,0.10); }
+        .panel-section.full-width { grid-column: 1 / -1; }
+        .panel-section h4 { margin-bottom: 0.75rem; font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); }
+        .panel-section p, .panel-section li { color: var(--text-secondary); line-height: 1.7; font-size: 0.9rem; }
+        .detail-table { width: 100%; border-collapse: collapse; }
+        .detail-table th, .detail-table td { padding: 0.75rem; border-bottom: 1px solid rgba(148,163,184,0.10); text-align: left; }
+        .report-shell { color: var(--text-main); }
+        .report-header, .report-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1rem; }
+        .report-filter-box, .report-section { padding: 1rem; border-radius: 1rem; background: rgba(15,23,42,0.58); border: 1px solid rgba(148,163,184,0.10); }
+        .hidden { display: none !important; }
         @media (max-width: 1280px) {
             .filter-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            .critical-grid, .insights-grid, .analytics-grid, .panel-grid, .panel-sections, .report-header, .report-grid { grid-template-columns: 1fr; }
         }
         @media (max-width: 1024px) {
-            .layout-shell { flex-direction:column; }
-            .sidebar { width:100%; }
-            .filter-grid, .panel-grid, .panel-sections, .report-header, .report-grid, .executive-shell, .summary-kpi-grid, .distribution-list, .machine-stats { grid-template-columns:1fr; }
+            .layout-shell { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .hero-grid, .hero-kpis, .distribution-grid { grid-template-columns: 1fr; }
+            .main-shell { padding: 1rem; }
+            .page-header { flex-direction: column; }
         }
     </style>
 </head>
@@ -200,32 +247,34 @@
                         <span class="user-role" id="nav-user-role">EXPERT ACCESS</span>
                     </div>
                 </div>
-                <button onclick="logout()" class="nav-logout">Logout</button>
+                <button onclick="logout()" class="nav-logout mt-3 w-full">Logout</button>
             </div>
         </aside>
+
         <main class="main-shell">
             <header class="page-header">
                 <div>
                     <div class="page-title">Operational Intelligence / Insights Analyzer</div>
-                    <p class="page-subtitle">Upload machine Insight exports to detect problematic presses early, understand repeat failure behavior, rank fleet risk, and generate management-ready operational summaries.</p>
+                    <div class="page-headline">Fleet signals, redesigned for decisions.</div>
+                    <p class="page-subtitle">A premium operations dashboard for Landa digital printing fleets. Keep the analytics engine, remove the noise, and surface what matters first: machine health, critical risks, repeated failures, and the next best actions.</p>
                 </div>
                 <div class="flex flex-wrap gap-3 justify-end">
-                    <button id="copy-summary" class="btn-ghost">Copy Summary for Email</button>
+                    <button id="copy-summary" class="btn-ghost">Copy Executive Summary</button>
                     <button id="print-report" class="btn-ghost">Print View</button>
                     <button id="export-report" class="btn-primary">Open Report</button>
                 </div>
             </header>
 
-            <section class="glass-card mb-6">
-                <div class="flex flex-col xl:flex-row gap-6">
-                    <div class="flex-1">
-                        <div id="drop-zone" class="drop-zone glass-card">
+            <section class="app-card section-shell mb-6">
+                <div class="grid grid-cols-1 xl:grid-cols-[1.5fr,0.9fr] gap-6">
+                    <div>
+                        <div id="drop-zone" class="drop-zone app-card section-shell">
                             <div class="upload-icon">
                                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-cyan-100"><path d="M12 16V4m0 0 4 4m-4-4-4 4M5 20h14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold">Upload Insight export</h2>
-                                <p class="text-slate-400 mt-2 max-w-2xl">Supports Excel (.xlsx) and CSV exports with flexible column mapping for machine, alert, state, subsystem, recovery, and duration fields.</p>
+                                <h2 class="text-2xl font-semibold">Upload Insight export</h2>
+                                <p class="text-slate-400 mt-3 max-w-2xl">Supports Excel (.xlsx) and CSV exports. Existing file parsing and analytics stay intact while the experience shifts to a cleaner fleet command center.</p>
                             </div>
                             <div class="flex flex-wrap justify-center gap-3">
                                 <label class="btn-primary cursor-pointer">
@@ -237,39 +286,39 @@
                             <div id="upload-status" class="status-pill status-info">Awaiting file…</div>
                         </div>
                     </div>
-                    <div class="w-full xl:w-[420px] flex flex-col gap-4">
-                        <div class="glass-card">
-                            <div class="section-title">Dataset intelligence</div>
-                            <div class="section-subtitle mt-2">Normalized schema mapping and upload context.</div>
-                            <div class="mt-4 text-sm text-slate-200 font-medium" id="dataset-name">No file loaded</div>
+                    <div class="stack-lg">
+                        <div class="app-card section-shell">
+                            <div class="section-heading">Dataset intelligence</div>
+                            <p class="section-copy">Upload context, column normalization, and source confidence at a glance.</p>
+                            <div class="mt-4 text-base font-semibold" id="dataset-name">No file loaded</div>
                             <div class="text-sm text-slate-400 mt-1" id="upload-meta">Upload a file to generate metrics.</div>
                             <div id="column-map" class="mt-4 flex flex-wrap gap-2"></div>
                         </div>
-                        <div class="glass-card">
-                            <div class="section-title">Action-required summary</div>
-                            <div class="section-subtitle mt-2">Fleet-level issues that need preventive attention first.</div>
+                        <div class="app-card section-shell">
+                            <div class="section-heading">Action-required summary</div>
+                            <p class="section-copy">The few fleet issues worth attention first.</p>
                             <ul id="action-summary" class="mt-4 space-y-3 text-sm text-slate-200"></ul>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <div id="loading-state" class="glass-card hidden mb-6 flex items-center gap-3">
+            <div id="loading-state" class="app-card section-shell hidden mb-6 flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin"></div>
                 <span class="text-slate-200">Analyzing file…</span>
             </div>
 
-            <div id="empty-state" class="glass-card text-center py-16">
-                <h3 class="text-2xl font-semibold">Operational analytics will appear here</h3>
-                <p class="text-slate-400 mt-3 max-w-2xl mx-auto">The page will compute machine risk, recurring alerts, subsystem concentrations, recovery loops, trend deterioration, executive summaries, and exportable reports after upload.</p>
+            <div id="empty-state" class="app-card section-shell text-center py-20">
+                <h3 class="text-3xl font-semibold">Operational intelligence will appear here</h3>
+                <p class="text-slate-400 mt-4 max-w-3xl mx-auto">Upload a fleet export to generate a redesigned executive dashboard with critical machine alerts, smart insights, focused analytics, and exportable management summaries.</p>
             </div>
 
-            <div id="analysis-shell" class="hidden space-y-6">
-                <section class="glass-card">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <div id="analysis-shell" class="hidden stack-lg">
+                <section class="app-card section-shell">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
                         <div>
-                            <div class="section-title">Active filters</div>
-                            <div class="section-subtitle mt-2">All dashboards, rankings, and summaries react to the current machine and date selection.</div>
+                            <div class="section-heading">Active filters</div>
+                            <div class="section-copy">All sections react instantly to the current machine, subsystem, severity, model, version, date, and keyword selection.</div>
                         </div>
                         <div id="alerts-strip" class="flex flex-wrap gap-2"></div>
                     </div>
@@ -282,57 +331,76 @@
                         <div class="filter-field"><label>Model</label><select id="filter-model"></select></div>
                         <div class="filter-field"><label>Version</label><select id="filter-version"></select></div>
                     </div>
-                    <div class="filter-field mt-4"><label>Search</label><input id="filter-search" type="search" placeholder="Search machine, error text, alert body, or subsystem"></div>
+                    <div class="filter-field mt-4"><label>Search</label><input id="filter-search" type="search" placeholder="Search machine, subsystem, alert title, body, or state"></div>
                 </section>
 
-                <section class="glass-card">
-                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+                <section class="app-card section-shell">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                         <div>
-                            <div class="section-title">Dashboard selector</div>
-                            <div class="section-subtitle mt-2">Show only the sections you need to reduce noise while preserving drill-down access.</div>
+                            <div class="section-heading">Dashboard selector</div>
+                            <div class="section-copy">Show only the sections you want to review. The main view stays clean; the drill-down panel keeps depth on demand.</div>
                         </div>
                         <div id="section-selector" class="selector-group"></div>
                     </div>
                 </section>
 
-                <section class="glass-card dashboard-section" data-section="summary">
+                <section class="dashboard-section" data-section="summary">
                     <div id="kpi-grid"></div>
                 </section>
 
-                <section class="glass-card dashboard-section" data-section="machines">
-                    <div class="flex items-center justify-between mb-4">
+                <section class="app-card section-shell dashboard-section" data-section="machines">
+                    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
                         <div>
-                            <div class="section-title">Problematic machines</div>
-                            <div class="section-subtitle mt-2">Top machines needing attention now, with clear reasons and fast next steps.</div>
+                            <div class="section-heading">Critical machines</div>
+                            <div class="section-copy">Top 5–8 machines only. Each alert card explains severity, downtime, dominant failure source, and why it was elevated.</div>
                         </div>
                     </div>
-                    <div id="problematic-machines" class="machine-list"></div>
+                    <div id="problematic-machines" class="critical-grid"></div>
                 </section>
 
-                <section class="glass-card dashboard-section" data-section="insights">
-                    <div class="section-title">Smart insights</div>
-                    <div class="section-subtitle mt-2">Automatically detected operational patterns that require attention.</div>
-                    <div id="smart-insights" class="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-4"></div>
+                <section class="app-card section-shell dashboard-section" data-section="insights">
+                    <div class="section-heading">Smart insights</div>
+                    <div class="section-copy">Automated detection for repeated errors, subsystem overload, high-duration anomalies, and concentrated issue patterns.</div>
+                    <div id="smart-insights" class="insights-grid mt-5"></div>
                 </section>
 
-                <section class="grid grid-cols-1 xl:grid-cols-3 gap-6 dashboard-section" data-section="trends">
-                    <div class="glass-card chart-card xl:col-span-2"><div id="chart-error-trend" class="chart-canvas"></div></div>
-                    <div class="glass-card">
-                        <div class="section-title">Fleet health overview</div>
-                        <div class="section-subtitle mt-2">Immediate severity posture across the filtered fleet.</div>
-                        <div id="fleet-health-grid" class="grid grid-cols-1 gap-3 mt-4"></div>
+                <section class="dashboard-section" data-section="trends">
+                    <div class="analytics-grid">
+                        <div class="app-card chart-card">
+                            <div class="section-heading">Error trend</div>
+                            <div class="section-copy">How alert volume evolves across the selected period.</div>
+                            <div id="chart-error-trend" class="chart-canvas mt-5"></div>
+                        </div>
+                        <div class="analytics-stack">
+                            <div class="app-card chart-card compact">
+                                <div class="section-heading">Fleet health</div>
+                                <div class="section-copy">Severity posture across the filtered fleet.</div>
+                                <div id="fleet-health-grid" class="health-list mt-5"></div>
+                            </div>
+                            <div class="app-card chart-card compact">
+                                <div class="section-heading">Top subsystems</div>
+                                <div class="section-copy">Click a bar or segment to drill into the issue cluster.</div>
+                                <div id="chart-subsystem-distribution" class="chart-canvas mt-5"></div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
-                <section class="grid grid-cols-1 xl:grid-cols-2 gap-6 dashboard-section" data-section="subsystems">
-                    <div class="glass-card chart-card"><div id="chart-subsystem-distribution" class="chart-canvas"></div></div>
-                    <div class="glass-card chart-card"><div id="chart-top-errors" class="chart-canvas"></div></div>
+                <section class="app-card chart-card dashboard-section" data-section="subsystems">
+                    <div class="section-heading">Top errors</div>
+                    <div class="section-copy">Only the most repeated alerts stay visible here. Click an error to open the detailed panel.</div>
+                    <div id="chart-top-errors" class="chart-canvas mt-5"></div>
                 </section>
 
-                <section class="glass-card">
-                    <div class="section-title">Executive summary</div>
-                    <div class="section-subtitle mt-2">Professional summary for operations and management teams, ready for export or email copy.</div>
-                    <div id="executive-summary" class="mt-4"></div>
+                <section class="app-card section-shell">
+                    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
+                        <div>
+                            <div class="section-heading">Executive summary output</div>
+                            <div class="section-copy">A clean operations summary for email, print, and management reviews.</div>
+                        </div>
+                        <button id="copy-summary-inline" class="btn-chip">Copy Executive Summary</button>
+                    </div>
+                    <div id="executive-summary"></div>
                 </section>
             </div>
         </main>
@@ -351,8 +419,8 @@
         <div class="modal-card">
             <div class="flex items-center justify-between gap-3 mb-4">
                 <div>
-                    <div class="section-title">Exportable report view</div>
-                    <div class="section-subtitle mt-2">HTML / print-friendly report for email or PDF workflows.</div>
+                    <div class="section-heading">Exportable report view</div>
+                    <div class="section-copy">A print-friendly, management-ready report generated from the same filtered dashboard state.</div>
                 </div>
                 <button id="report-modal-close" class="btn-ghost">Close</button>
             </div>
